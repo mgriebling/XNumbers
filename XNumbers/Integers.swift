@@ -850,100 +850,106 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		}
 	} // RShift;
 
-func (a: Integer) Store*(w: Storable.Writer) RAISES IO.Error;
-var
-i: LONGINT;
-{
-w.WriteNum(a.size);
-FOR i = 0 TO ABS(a.size)-1 {
-w.WriteInt(a.digit[i]);
-}
-} // Store;
+	//func (a: Integer) Store*(w: Storable.Writer) RAISES IO.Error;
+	//var
+	//i: LONGINT;
+	//{
+	//w.WriteNum(a.size);
+	//FOR i = 0 TO ABS(a.size)-1 {
+	//w.WriteInt(a.digit[i]);
+	//}
+	//} // Store;
+	//
+	//func (a: Integer) Load*(r: Storable.Reader) RAISES IO.Error;
+	//var
+	//i: LONGINT;
+	//{
+	//r.ReadNum(a.size);
+	//NEW(a.digit, ABS(a.size));
+	//FOR i = 0 TO ABS(a.size)-1 {
+	//r.ReadInt(a.digit[i]);
+	//}
+	//} // Load;
 
-func (a: Integer) Load*(r: Storable.Reader) RAISES IO.Error;
-var
-i: LONGINT;
-{
-r.ReadNum(a.size);
-NEW(a.digit, ABS(a.size));
-FOR i = 0 TO ABS(a.size)-1 {
-r.ReadInt(a.digit[i]);
-}
-} // Load;
+	/* MG */
+	func GCD (n: Integer) -> Integer {
+		/** Pre: x,y >= 0; Post: return gcd(x,y) */
+		var swap: Integer
+		var x = self
+		var y = n
+		
+		/* Euclid's gcd algorithm  (very elegant and very ancient!) */
+		
+		/* To start everything must be non-negative and x>=y */
+		x=x.Abs(); y=y.Abs()
+		
+		if x.Cmp(y) < 0 {
+			swap=x; x=y; y=swap
+		}
+		
+		while y.NonZero() {
+			swap=x.Mod(y)		/* division algorithm */
+			x=y; y=swap			/* set up next iteration */
+		}
+		return x
+	} // GCD;
 
-/* MG */
-func (x: Integer) GCD* (y: Integer) : Integer;
-/** Pre: x,y >= 0; Post: return gcd(x,y) */
-var
-swap: Integer;
-{
-/* Euclid's gcd algorithm  (very elegant and very ancient!) */
+	/* MG */
+	func Power (exp: Int) -> Integer {
+		/** Pre: exp>=0; Post: return x**exp */
+		var y: Integer
+		var x = self
+		var lexp = exp
+		if exp<0 { return Integer.zero }  /* x**-exp = 0 */
+		y = Integer.one
+		while true {
+			if (lexp & 1) != 0 { y=y.Mul(x) }
+			lexp = lexp / 2
+			if lexp == 0 { break }
+			x=x.Mul(x)
+		}
+		return y
+	} // Power;
 
-/* To start everything must be non-negative and x>=y */
-x=x.Abs(); y=y.Abs();
+	/* MG */
+	func Factorial (x: Int) -> Integer {
+		/** Pre: x>=0; Post: return x!=x(x-1)(x-2)...(2)(1) */
+		var f, xi: Integer
+		var base = Digit(Integer.base)
+		var lx = Digit(x)
+		
+		if x<0 {
+			return Integer.zero						/* out of range */
+		}
+		if x<2 { return Integer.one }				/* 0! & 1! */
+		f=Integer.one; xi=Integer(value: x)
+		while lx>1 {
+			f=f.Mul(xi); lx--						/* f=f*x */
+			xi.digit[0] = lx % base					/* convert to Integer */
+			if xi.digit.count > 1 {
+				xi.digit[1] = (lx / base) % base
+				if xi.digit.count > 2 {
+					xi.digit[2] = lx / (base * base)
+				} //
+			}
+		}
+		return f
+	} // Factorial;
 
-IF x.Cmp(y) < 0 THEN
-swap=x; x=y; y=swap
-}
-
-while y.NonZero() {
-swap=x.Mod(y);     /* division algorithm */
-x=y; y=swap;		/* set up next iteration */
-}
-return x;
-} // GCD;
-
-/* MG */
-func (x: Integer) Power* (exp: LONGINT) : Integer;
-/** Pre: exp>=0; Post: return x**exp */
-var y: Integer;
-{
-IF exp<0 THEN return zero }  /* x**-exp = 0 */
-y=one;
-LOOP
-IF ODD(exp{ y=y.Mul(x) }
-exp=exp / 2;
-IF exp=0 THEN EXIT }
-x=x.Mul(x)
-}
-return y
-} // Power;
-
-/* MG */
-func Factorial* (x: LONGINT) : Integer;
-/** Pre: x>=0; Post: return x!=x(x-1)(x-2)...(2)(1) */
-var f, xi: Integer;
-{
-IF x<0 THEN
-return zero                           /* out of range */
-}
-IF x<2 THEN return one }             /* 0! & 1! */
-f=one; xi=NewInt(x);
-while x>1 {
-f=f.Mul(xi); DEC(x);                 /* f=f*x */
-xi.digit[0]=SHORT(x % base);       /* convert to Integer */
-IF xi.size>1 THEN
-xi.digit[1]=SHORT((x / base) % base);
-IF xi.size>2 THEN
-xi.digit[2]=SHORT(x / (base*base));
-} //
-}
-}
-return f
-} // Factorial;
-
-/* MG */
-func Ran{m* (digits: LONGINT) : Integer;
-/** Pre: x>0; Post: return digits-length ran{m number */
-let a=16385; c=1;
-var n: Integer; i: LONGINT; s: Time.TimeStamp;
-{
-assert(digits>0, 109); Time.GetTime(s);
-n=NewInstance(2215*digits / 10000);     /* n=digits*log32768(10) */
-n.digit[0]=SHORT((a*SHORT(s.msecs % B)+c) % B);
-FOR i=1 TO LEN(n.digit^)-1 { n.digit[i]=SHORT((a*n.digit[i-1]+c) % B) }
-return n
-} // Ran{m;
+	/* MG */
+	func Random (digits: Int) -> Integer {
+		/** Pre: x>0; Post: return digits-length random number */
+		let a=16385
+		let c=1
+		var n: Integer
+		var i: Int
+		var s: Time.TimeStamp;
+		assert(digits>0, 109); Time.GetTime(s);
+		n=NewInstance(2215*digits / 10000);     /* n=digits*log32768(10) */
+		n.digit[0]=SHORT((a*SHORT(s.msecs % B)+c) % B);
+		FOR i=1 TO LEN(n.digit^)-1 { n.digit[i]=SHORT((a*n.digit[i-1]+c) % B) }
+		return n
+	} // Random
 
 
 /* ******************************************************* */
@@ -956,13 +962,13 @@ i: LONGINT;
 i=x; return S.VAL(SET, i)
 } // Set;
 
-func Int (x: SET) : INTEGER;
+func Int1 (x: SET) : INTEGER;
 var
 i: LONGINT;
 {
 i=S.VAL(LONGINT, x);
 return SHORT(i)
-} // Int;
+} // Int1;
 
 func And (x, y: INTEGER) : INTEGER;
 {
