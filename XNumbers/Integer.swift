@@ -522,14 +522,14 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		/* Unsigned long division with remainder -- the algorithm.  */
 		
 		var sizeV, sizeW, j, k, i: Int
-		var d, vj, zz: TwoDigits
+		var d, vj, zz: Digit
 		var v, w, a: Integer
 		var q, z, carry: TwoDigits
 		
 		sizeV = v1.digit.count; sizeW = w1.digit.count
-		d = TwoDigits(Integer.base / (w1.digit[sizeW-1]+1))
-		v = MulAdd1(v1, n:Digit(d), add:0)
-		w = MulAdd1(w1, n:Digit(d), add:0)
+		d = Integer.base / (w1.digit[sizeW-1]+1)
+		v = MulAdd1(v1, n:d, add:0)
+		w = MulAdd1(w1, n:d, add:0)
 		
 		assert((sizeV >= sizeW) && (sizeW > 1), "DivRemAbs assertion 1 failed")
 		assert(sizeW == w.digit.count, "DivRemAbs assertion 2 failed")
@@ -542,30 +542,30 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 			if j >= sizeV {
 				vj = 0
 			} else {
-				vj = TwoDigits(v.digit[j])
+				vj = v.digit[j]
 			}
 			carry = 0
-			let base = TwoDigits(Integer.base)
+			let base = Integer.base
 			
-			if vj == TwoDigits(w.digit[sizeW-1]) {
+			if vj == w.digit[sizeW-1] {
 				q = TwoDigits(Integer.mask)
 			} else {
-				q = (vj*base + TwoDigits(v.digit[j-1])) / TwoDigits(w.digit[sizeW-1])
+				q = TwoDigits((vj*base + v.digit[j-1]) / w.digit[sizeW-1])
 			}
 
-			let cond1 = vj*base + TwoDigits(v.digit[j-1]) - q*TwoDigits(w.digit[sizeW-1])
-			while (TwoDigits(w.digit[sizeW-2])*q) > (cond1*base + TwoDigits(v.digit[j-2])) {
+			let cond1 = vj*base + v.digit[j-1] - Digit(q)*w.digit[sizeW-1]
+			while (TwoDigits(w.digit[sizeW-2])*q) > TwoDigits(cond1*base + v.digit[j-2]) {
 				q--
 			}
 			
 			i = 0;
 			while (i < sizeW) && (i+k < sizeV) {
 				z = TwoDigits(w.digit[i])*q
-				zz = z / base
-				carry += TwoDigits(v.digit[i+k]) - z + zz*base
-				v.digit[i+k] = Digit(carry % base)
+				zz = Digit(z) / base
+				carry += TwoDigits(v.digit[i+k]) - z + TwoDigits(zz*base)
+				v.digit[i+k] = Digit(carry) % base
 				carry = carry >> TwoDigits(Integer.shift)
-				carry -= zz
+				carry -= TwoDigits(zz)
 				i++
 			}
 			
@@ -577,13 +577,13 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 			if carry == 0 {
 				a.digit[k] = Digit(q)
 			} else {
-//				assert(carry == -1, "DivRemAbs carry != -1")
+				assert(carry == -1, "DivRemAbs carry != -1")
 				a.digit[k] = Digit(q-1)
 				carry = 0
 				i = 0
 				while (i < sizeW) && (i+k < sizeV) {
 					carry += TwoDigits(v.digit[i+k] + w.digit[i])
-					v.digit[i+k] = Digit(carry % base)
+					v.digit[i+k] = Digit(carry) % base
 					carry = carry >> TwoDigits(Integer.shift)
 					i++
 				}
