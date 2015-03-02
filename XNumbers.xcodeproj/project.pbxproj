@@ -27,6 +27,10 @@
 		4748DA8B1AA26F2500EB8DF3 /* XNumbers */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = XNumbers; sourceTree = BUILT_PRODUCTS_DIR; };
 		4748DA8E1AA26F2500EB8DF3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4748DA951AA26F4F00EB8DF3 /* Integers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Integers.swift; sourceTree = "<group>"; };
+		47852EAA1AA483BE001D469F /* IntegersOld.Mod */ = {isa = PBXFileReference; lastKnownFileType = text; path = IntegersOld.Mod; sourceTree = "<group>"; };
+		47852EAB1AA483D3001D469F /* RealsOld.Mod */ = {isa = PBXFileReference; lastKnownFileType = text; path = RealsOld.Mod; sourceTree = "<group>"; };
+		47852EAC1AA483E1001D469F /* Rationals.Mod */ = {isa = PBXFileReference; lastKnownFileType = text; path = Rationals.Mod; sourceTree = "<group>"; };
+		47852EAD1AA483EC001D469F /* Complex.Mod */ = {isa = PBXFileReference; lastKnownFileType = text; path = Complex.Mod; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +65,10 @@
 			children = (
 				4748DA8E1AA26F2500EB8DF3 /* main.swift */,
 				4748DA951AA26F4F00EB8DF3 /* Integers.swift */,
+				47852EAA1AA483BE001D469F /* IntegersOld.Mod */,
+				47852EAB1AA483D3001D469F /* RealsOld.Mod */,
+				47852EAC1AA483E1001D469F /* Rationals.Mod */,
+				47852EAD1AA483EC001D469F /* Complex.Mod */,
 			);
 			path = XNumbers;
 			sourceTree = "<group>";
@@ -237,6 +245,7 @@
 				4748DA941AA26F2500EB8DF3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

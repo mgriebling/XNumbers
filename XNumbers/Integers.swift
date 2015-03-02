@@ -818,7 +818,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		var loMask, hiMask: Int
 		var z: Integer
 		
-		assert(n >= 0, "RShift assertion: shift is negative");
+		assert(n >= 0, "RShift assertion: shift is negative")
 		if self.negative {
 			var a = self.Invert()
 			a = a.RShift(n)
