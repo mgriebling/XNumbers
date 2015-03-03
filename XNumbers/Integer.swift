@@ -527,9 +527,10 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		var q, z, carry: TwoDigits
 		
 		sizeV = v1.digit.count; sizeW = w1.digit.count
-		d = Integer.base / (w1.digit[sizeW-1]+1)
+		d = Digit(TwoDigits(Integer.base) / TwoDigits(w1.digit[sizeW-1]+1))
 		v = MulAdd1(v1, n:d, add:0)
 		w = MulAdd1(w1, n:d, add:0)
+//		println("v=\(v); w=\(w)")
 		
 		assert((sizeV >= sizeW) && (sizeW > 1), "DivRemAbs assertion 1 failed")
 		assert(sizeW == w.digit.count, "DivRemAbs assertion 2 failed")
@@ -545,25 +546,24 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 				vj = v.digit[j]
 			}
 			carry = 0
-			let base = Integer.base
-			
-			if vj == w.digit[sizeW-1] {
+			let base = TwoDigits(Integer.base)
+			let wdigit = TwoDigits(w.digit[sizeW-1])
+			if TwoDigits(vj) == wdigit {
 				q = TwoDigits(Integer.mask)
 			} else {
-				q = TwoDigits((vj*base + v.digit[j-1]) / w.digit[sizeW-1])
+				q = (TwoDigits(vj)*base + TwoDigits(v.digit[j-1])) / wdigit
 			}
 
-			let cond1 = vj*base + v.digit[j-1] - Digit(q)*w.digit[sizeW-1]
-			while (TwoDigits(w.digit[sizeW-2])*q) > TwoDigits(cond1*base + v.digit[j-2]) {
+			while (TwoDigits(w.digit[sizeW-2])*q) > ((TwoDigits(vj)*base + TwoDigits(v.digit[j-1]) - q*wdigit)*base + TwoDigits(v.digit[j-2])) {
 				q--
 			}
 			
-			i = 0;
-			while (i < sizeW) && (i+k < sizeV) {
+			i = 0
+			while (i < sizeW) && ((i+k) < sizeV) {
 				z = TwoDigits(w.digit[i])*q
-				zz = Digit(z) / base
-				carry += TwoDigits(v.digit[i+k]) - z + TwoDigits(zz*base)
-				v.digit[i+k] = Digit(carry) % base
+				zz = Digit(z / base)
+				carry += TwoDigits(v.digit[i+k]) - z + TwoDigits(zz)*base
+				v.digit[i+k] = Digit(carry % base)
 				carry = carry >> TwoDigits(Integer.shift)
 				carry -= TwoDigits(zz)
 				i++
@@ -583,7 +583,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 				i = 0
 				while (i < sizeW) && (i+k < sizeV) {
 					carry += TwoDigits(v.digit[i+k] + w.digit[i])
-					v.digit[i+k] = Digit(carry) % base
+					v.digit[i+k] = Digit(carry % base)
 					carry = carry >> TwoDigits(Integer.shift)
 					i++
 				}
@@ -959,11 +959,12 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		let B = Integer.mask
 		var n: Integer
 		var i: Int
-		var s: Time.TimeStamp;
-		assert(digits>0, "Assertion failed in Random"); Time.GetTime(s);
-		n=NewInstance(2215*digits / 10000);     /* n=digits*log32768(10) */
-		n.digit[0]=SHORT((a*SHORT(s.msecs % B)+c) % B);
-		FOR i=1 TO LEN(n.digit^)-1 { n.digit[i]=SHORT((a*n.digit[i-1]+c) % B) }
+		let d = NSDate()
+		var s = Digit(d.timeIntervalSince1970)
+		assert(digits>0, "Assertion in Random")
+		n = Integer(size: 2215*digits / 10000)     /* n=digits*log32768(10) */
+		n.digit[0] = (a*(s % B)+c) % B
+		for i=1; i<n.digit.count; i++ { n.digit[i] = (a*n.digit[i-1]+c) % B }
 		return n
 	} // Random
 
@@ -1102,7 +1103,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		n=Integer(str: "-10000000000000", inputBase:10)
 		print("-10000000000000="); OutInt(n)
 		n=Integer(str: "-10000000000000000", inputBase: 2)
-		print("-10000000000000B="); OutInt(n)
+		print("-10000000000000000B="); OutInt(n)
 		print("-10000000000000000B="); print(n.description(2)); println("B")
 		n=Integer(value: -8)
 		print("-8^3="); OutInt(n.Power(3))
