@@ -10,3 +10,8 @@ import Foundation
 
 println("Hello, World!")
 
+var n: Integer = Integer.zero
+
+n.Test()
+
+

@@ -75,8 +75,8 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 	Ported
 	*/
 
-	typealias Digit = Int32;
-	typealias TwoDigits = Int64;
+	typealias Digit = Int32
+	typealias TwoDigits = Int64
 	private typealias LONGINT = Int32
 	
 	private static let shift : Digit = 15                            /* minimum is 6 */
@@ -127,6 +127,12 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 	
 	init (size : Int) {
 		self.digit = [Digit](count:size, repeatedValue:0)
+//		let size = self.digit.count
+//		var i = 0
+//		for value in self.digit {
+//			println("digit[\(i)] = \(value)")
+//			i++
+//		}
 		self.negative = false
 	}
 	
@@ -137,6 +143,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 	}
 	
 	init (str: String, inputBase: Int) {
+		self.init(size:0)
 		self = self.ToInteger(str, inputBase: inputBase)
 	}
 	
@@ -146,15 +153,15 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 	
 	init (value: Int) {
 		let maxDigits = (sizeof(Digit)*8+Integer.shift-2) / Integer.shift
-		var lvalue : Digit = Digit(value)
+		var lvalue = value
 		var size, i: Int
+		var nflag = false
 		
 		if value == 0 {
-			self = Integer.zero
+			self.init(size: 0)
 		} else {
-			negative = false
 			if lvalue < 0 {
-				if lvalue == Digit(Int.min) { /* handle overflow for -MIN(LONGINT) */
+				if lvalue == Int.min { /* handle overflow for -MIN(LONGINT) */
 					self.init(value: Int(lvalue+1))
 					if digit[0] == Integer.mask {
 						self = AddAbs(self, b: Integer.one)
@@ -162,16 +169,17 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 					} else {
 						digit[0]++
 					}
+					return
 				} else {
-					lvalue = -lvalue;
-					negative = true;
+					lvalue = -lvalue
+					nflag = true
 				}
 			}
 			if Integer.base == (1 << 15) {		/* unwind loop for standard case */
 				self.init(size:3)				/* number not normalized */
-				self.digit[0] = lvalue % Integer.base
-				self.digit[1] = (lvalue / Integer.base) % Integer.base
-				self.digit[2] = lvalue / (Integer.base * Integer.base)
+				self.digit[0] = Digit(lvalue) % Integer.base
+				self.digit[1] = (Digit(lvalue) / Integer.base) % Integer.base
+				self.digit[2] = Digit(lvalue) / (Integer.base * Integer.base)
 				if digit[2] != 0 {
 					// already at the correct size
 				} else if digit[1] != 0 {
@@ -183,16 +191,17 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 				self.init(size: Int(maxDigits))
 				i = 0;
 				while (lvalue != 0) {
-					digit[i] = lvalue % Integer.base
-					lvalue = lvalue / Integer.base
+					digit[i] = Digit(lvalue) % Integer.base
+					lvalue = lvalue / Int(Integer.base)
 					i++
 				}
 				digit.removeRange(i..<Int(maxDigits))
 			}
+			negative = nflag
 		}
 	}
 
-	private func Normalize(var a: Integer) {
+	private func Normalize(inout a: Integer) {
 		var i, j: Int
 		j = a.digit.count
 		i = j
@@ -209,15 +218,15 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 	var
 	i: LONGINT;
 	{
-	Out.String (msg);
-	Out.String(": size=");
+	println (msg);
+	println(": size=");
 	Out.LongInt(big.size,0);
-	Out.String (", digits=");
+	println (", digits=");
 	FOR i = 0 TO ABS(big.size)-1 {
 	Out.Int(big.digit[i], 0);
 	Out.Char(" ");
 	}
-	Out.String (", base=");
+	println (", base=");
 	Out.LongInt(base, 0);
 	Out.Ln;
 	} // Dump;*/
@@ -252,7 +261,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 			i++
 		}
 		z.digit[i] = carry
-		Normalize(z)
+		Normalize(&z)
 		return z
 	}
 
@@ -362,7 +371,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		}
 		assert(borrow == 0, "SubAbs borrow != 0")
 		z.negative = sign
-		Normalize(z)
+		Normalize(&z)
 		return z;
 	} // SubAbs;
 
@@ -400,7 +409,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 			}
 			i++
 		}
-		Normalize(z)
+		Normalize(&z)
 		return z
 	} // MulAbs;
 
@@ -452,12 +461,12 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		return z
 	} // Mul;
 
-	private func InplaceDivRem1 (var pout: [Digit], var pin: [Digit], psize: Int, n: Digit) -> Digit {
+	private func InplaceDivRem1 (inout pout: [Digit], inout pin: [Digit], psize: Int, n: Digit) -> Digit {
 		/* Divide long @oparam{pin}, with @oparam{size} digits, by non-zero digit
 		@oparam{n}, storing quotient in @oparam{pout}, and returning the remainder.
 		@oparam{pin[0]} and @oparam{pout[0]} point at the LSD.  It's OK for
 		@samp{pin=pout} on entry, which saves oodles of mallocs/frees in
-		long_format, but that should be {ne with great care since longs are
+		long_format, but that should be done with great care since longs are
 		immutable.  */
 		var rem, hi: LONGINT
 		var size = psize
@@ -474,17 +483,18 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		return rem
 	} // InplaceDivRem1;
 
-	private func DivRem1 (a: Integer, n: Digit, var rem: Digit) -> Integer {
+	private func DivRem1 (a: Integer, n: Digit, inout rem: Digit) -> Integer {
 		/* Divide a long integer by a digit, returning both the quotient
 		(as function result) and the remainder (through *prem).
 		The sign of a is ignored; n should not be zero. */
 		var size = a.digit.count
 		var z: Integer
+		var y = a
 		
 		assert((n > 0) && (n < Integer.base), "DivRem1 assertion failed")
 		z = Integer(size: size)
-		rem = InplaceDivRem1(z.digit, pin:a.digit, psize:size, n:n)
-		Normalize(z)
+		rem = InplaceDivRem1(&z.digit, pin:&y.digit, psize:size, n:n)
+		Normalize(&z)
 		return z
 	} // DivRem1;
 
@@ -504,22 +514,22 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 			i++
 		}
 		z.digit[i] = carry
-		Normalize(z)
+		Normalize(&z)
 		return z
 	} // MulAdd1;
 
-	private func DivRemAbs (v1: Integer, w1: Integer, var rem: Integer) -> Integer {
+	private func DivRemAbs (v1: Integer, w1: Integer, inout rem: Integer) -> Integer {
 		/* Unsigned long division with remainder -- the algorithm.  */
 		
 		var sizeV, sizeW, j, k, i: Int
-		var d, vj, zz: TwoDigits
+		var d, vj, zz: Digit
 		var v, w, a: Integer
 		var q, z, carry: TwoDigits
 		
 		sizeV = v1.digit.count; sizeW = w1.digit.count
-		d = TwoDigits(Integer.base / (w1.digit[sizeW-1]+1))
-		v = MulAdd1(v1, n:Digit(d), add:0)
-		w = MulAdd1(w1, n:Digit(d), add:0)
+		d = Integer.base / (w1.digit[sizeW-1]+1)
+		v = MulAdd1(v1, n:d, add:0)
+		w = MulAdd1(w1, n:d, add:0)
 		
 		assert((sizeV >= sizeW) && (sizeW > 1), "DivRemAbs assertion 1 failed")
 		assert(sizeW == w.digit.count, "DivRemAbs assertion 2 failed")
@@ -532,28 +542,30 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 			if j >= sizeV {
 				vj = 0
 			} else {
-				vj = TwoDigits(v.digit[j])
+				vj = v.digit[j]
 			}
 			carry = 0
+			let base = Integer.base
 			
-			if vj == TwoDigits(w.digit[sizeW-1]) {
+			if vj == w.digit[sizeW-1] {
 				q = TwoDigits(Integer.mask)
 			} else {
-				q = TwoDigits((vj*TwoDigits(Integer.base) + TwoDigits(v.digit[j-1])) / TwoDigits(w.digit[sizeW-1]))
+				q = TwoDigits((vj*base + v.digit[j-1]) / w.digit[sizeW-1])
 			}
-			let cond1 = vj*TwoDigits(Integer.base) + TwoDigits(v.digit[j-1]) - q*TwoDigits(w.digit[sizeW-1])
-			while TwoDigits(w.digit[sizeW-2])*q > cond1*TwoDigits(Integer.base) + TwoDigits(v.digit[j-2]) {
+
+			let cond1 = vj*base + v.digit[j-1] - Digit(q)*w.digit[sizeW-1]
+			while (TwoDigits(w.digit[sizeW-2])*q) > TwoDigits(cond1*base + v.digit[j-2]) {
 				q--
 			}
 			
 			i = 0;
 			while (i < sizeW) && (i+k < sizeV) {
 				z = TwoDigits(w.digit[i])*q
-				zz = z / TwoDigits(Integer.base)
-				carry += TwoDigits(v.digit[i+k]) - z + zz*TwoDigits(Integer.base)
-				v.digit[i+k] = Digit(carry % TwoDigits(Integer.base))
+				zz = Digit(z) / base
+				carry += TwoDigits(v.digit[i+k]) - z + TwoDigits(zz*base)
+				v.digit[i+k] = Digit(carry) % base
 				carry = carry >> TwoDigits(Integer.shift)
-				carry -= zz
+				carry -= TwoDigits(zz)
 				i++
 			}
 			
@@ -571,19 +583,20 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 				i = 0
 				while (i < sizeW) && (i+k < sizeV) {
 					carry += TwoDigits(v.digit[i+k] + w.digit[i])
-					v.digit[i+k] = Digit(carry % TwoDigits(Integer.base))
+					v.digit[i+k] = Digit(carry) % base
 					carry = carry >> TwoDigits(Integer.shift)
 					i++
 				}
 			}
 			j--; k--
 		}
-		Normalize(a)
-		rem = DivRem1(v, n:Digit(d), rem:Digit(d))
+		Normalize(&a)
+		var dx : Digit = 0
+		rem = DivRem1(v, n:Digit(d), rem:&dx)
 		return a
 	} // DivRemAbs;
 
-	private func DivRem (a: Integer, b: Integer, var div:Integer, var rem: Integer) {
+	private func DivRem (a: Integer, b: Integer, inout div:Integer, inout rem: Integer) {
 		var sizeA, sizeB: Int
 		var remDigit: Digit
 		var z: Integer
@@ -598,10 +611,10 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		} else {
 			if sizeB == 1 {
 				remDigit = 0
-				z = DivRem1(a, n:b.digit[0], rem:remDigit)
+				z = DivRem1(a, n:b.digit[0], rem:&remDigit)
 				rem = Integer(value:Int(remDigit))
 			} else {
-				z = DivRemAbs(a, w1:b, rem:rem)
+				z = DivRemAbs(a, w1:b, rem:&rem)
 			}
 			
 			/* Set the signs.  The quotient z has the sign of a*b; the remainder r
@@ -612,8 +625,8 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		}
 	} // DivRem;
 
-	func DivMod (w: Integer, var div: Integer, var mod: Integer) {
-		DivRem(self, b:w, div:div, rem:mod)
+	func DivMod (w: Integer, inout div: Integer, inout mod: Integer) {
+		DivRem(self, b:w, div:&div, rem:&mod)
 		
 		/* Makes the DIV/MOD results compliant with most Oberon-2 implementations. */
 		if self.negative != w.negative {
@@ -624,13 +637,15 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 
 	func Div (w: Integer) -> Integer {
 		var div, mod: Integer
-		self.DivMod(w, div:div, mod:mod)
+		div = Integer.zero; mod = div
+		self.DivMod(w, div:&div, mod:&mod)
 		return div
 	} // Div;
 	
 	func Mod (w: Integer) -> Integer {
 		var div, mod: Integer
-		self.DivMod(w, div:div, mod:mod)
+		div = Integer.zero; mod = div
+		self.DivMod(w, div:&div, mod:&mod)
 		return mod
 	} // Mod;
 
@@ -706,7 +721,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 			/* Repeatedly divide by powbase. */
 			do {
 				ntostore = power
-				rem = InplaceDivRem1(scratch.digit, pin:scratch.digit, psize:size, n:powbase)
+				rem = InplaceDivRem1(&scratch.digit, pin:&scratch.digit, psize:size, n:powbase)
 				if scratch.digit[size-1] == 0 {
 					size--
 				}
@@ -809,7 +824,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		} else {
 			assert(accum == 0, "Invert assertion: remShift == 0")
 		}
-		Normalize(z)
+		Normalize(&z)
 		return z
 	} // LShift;
 
@@ -839,12 +854,12 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 				while i < newSize {
 					z.digit[i] = (self.digit[j] >> Digit(loShift)) & Digit(loMask)
 					if i+1 < newSize {
-						z.digit[i] += SHORT(S.VAL(LONGINT, S.VAL(SET, ASH(a.digit[j+1], hiShift))*hiMask))
+						z.digit[i] += (self.digit[j+1] << Digit(hiShift)) & Digit(hiMask)
 					}
 					i++
 					j++
 				}
-				Normalize(z)
+				Normalize(&z)
 				return z
 			}
 		}
@@ -939,8 +954,9 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 	/* MG */
 	func Random (digits: Int) -> Integer {
 		/** Pre: x>0; Post: return digits-length random number */
-		let a=16385
-		let c=1
+		let a = Digit(16385)
+		let c = Digit(1)
+		let B = Integer.mask
 		var n: Integer
 		var i: Int
 		var s: Time.TimeStamp;
@@ -952,210 +968,153 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 	} // Random
 
 
-/* ******************************************************* */
-/*  Logical operations                                     */
-
-func Set (x: INTEGER) : SET;
-var
-i: LONGINT;
-{
-i=x; return S.VAL(SET, i)
-} // Set;
-
-func Int1 (x: SET) : INTEGER;
-var
-i: LONGINT;
-{
-i=S.VAL(LONGINT, x);
-return SHORT(i)
-} // Int1;
-
-func And (x, y: INTEGER) : INTEGER;
-{
-return Int(Set(x) * Set(y));
-} // And;
-
-func Or (x, y: INTEGER) : INTEGER;
-{
-return Int(Set(x) + Set(y));
-} // Or;
-
-func Xor (x, y: INTEGER) : INTEGER;
-{
-return Int(Set(x) / Set(y));
-} // Xor;
-
-func Dup (x: Integer; max: LONGINT) : Integer;
-var
-y: Integer;
-i: LONGINT;
-{
-y=NewInstance(max);
-FOR i=0 TO x.size-1 {
-y.digit[i]=x.digit[i]
-}
-return y
-} // Dup;
-
-/* MG */
-func (x: Integer) And * (y : Integer) : Integer;
-/** Post: return bitwise x and y */
-var
-i, max : LONGINT;
-a, b, z : Integer;
-{
-max=x.size; i=y.size;
-IF max>i THEN a=x; b=Dup(y, max); z=b
-else a=Dup(x, i); b=y; z=a; max=i
-}
-FOR i=0 TO max-1 {
-z.digit[i]=And(a.digit[i], b.digit[i])
-}
-Normalize(z);
-return z
-} // And;
+	/* ******************************************************* */
+	/*  Logical operations                                     */
+	
+	private func Dup (x: Integer, max: Int) -> Integer {
+		var y: Integer
+		var i: Int
+		y = Integer(size: max)
+		for i=0; i<x.digit.count; i++ {
+			y.digit[i] = x.digit[i]
+		}
+		return y
+	} // Dup;
 
 	/* MG */
-	func (x: Integer) Or * (y : Integer) : Integer;
-	/** Post: return bitwise x or y */
-	var
-	i, max : LONGINT;
-	a, b, z : Integer;
-	{
-	max=x.size; i=y.size;
-	IF max>i THEN a=x; b=Dup(y, max); z=b
-	else a=Dup(x, i); b=y; z=a; max=i
-	}
-	FOR i=0 TO max-1 {
-	z.digit[i]=Or(a.digit[i], b.digit[i])
-	}
-	Normalize(z);
-	return z
+	func And (y : Integer) -> Integer {
+		/** Post: return bitwise x and y */
+		var i, max : Int
+		var a, b, z : Integer
+		max=self.digit.count; i=y.digit.count
+		if max > i {
+			a=self; b=Dup(y, max:max); z=b
+		} else {
+			a=Dup(self, max:i); b=y; z=a; max=i
+		}
+		for i=0; i<max; i++ {
+			z.digit[i] = a.digit[i] & b.digit[i]
+		}
+		Normalize(&z)
+		return z
+	} // And;
+
+	/* MG */
+	func Or (y : Integer) -> Integer {
+		/** Post: return bitwise x or y */
+		var i, max : Int
+		var a, b, z : Integer
+		max=self.digit.count; i=y.digit.count
+		if max>i {
+			a=self; b=Dup(y, max:max); z=b
+		} else {
+			a=Dup(self, max:i); b=y; z=a; max=i
+		}
+		for i=0; i<max; i++ {
+			z.digit[i] = a.digit[i] | b.digit[i]
+		}
+		Normalize(&z)
+		return z
 	} // Or;
 	
 	/* MG */
-	func (x: Integer) Xor * (y : Integer) : Integer;
-	/** Post: return bitwise x xor y */
-	var
-	i, max : LONGINT;
-	a, b, z : Integer;
-	{
-	max=x.size; i=y.size;
-	IF max>i THEN a=x; b=Dup(y, max); z=b
-	else a=Dup(x, i); b=y; z=a; max=i
-	}
-	FOR i=0 TO max-1 {
-	z.digit[i]=Xor(a.digit[i], b.digit[i])
-	}
-	Normalize(z);
-	return z
-	} // Xor;
+	func Xor (y : Integer) -> Integer {
+		/** Post: return bitwise x xor y */
+		var i, max : Int
+		var a, b, z : Integer
+		max=self.digit.count; i=y.digit.count
+		if max>i {
+			a=self; b=Dup(y, max:max); z=b
+		} else {
+			a=Dup(self, max:i); b=y; z=a; max=i
+		}
+		for i=0; i<max; i++ {
+			z.digit[i] = a.digit[i] ^ b.digit[i]
+		}
+		Normalize(&z)
+		return z
+	} // Xor
 	
 	/* MG */
-	func (x: Integer) SetBit * (bit: LONGINT) : Integer {
-	/** Post: Set 'bit' in 'x' */
-	var
-	y: Integer;
-	y=one.LShift(bit);
-	return x.Or(y)
-	} // SetBit;
+	func SetBit(bit: Int) -> Integer {
+		/** Post: Set 'bit' in 'x' */
+		var y: Integer
+		y=Integer.one.LShift(bit)
+		return self.Or(y)
+	} // SetBit
 	
 	/* MG */
-	func (x: Integer) ClearBit * (bit: LONGINT) : Integer {
-	/** Post: Clear 'bit' in 'x' */
-	var
-	y: Integer;
-	y=one.LShift(bit);
-	return x.And(y.Invert())
-	} // ClearBit;
+	func ClearBit(bit: Int) -> Integer {
+		/** Post: Clear 'bit' in 'x' */
+		var y: Integer
+		y=Integer.one.LShift(bit)
+		return self.And(y.Invert())
+	} // ClearBit
 	
 	/* MG */
-	func (x: Integer) ToggleBit * (bit: LONGINT) : Integer {
-	/** Post: Toggle the 'bit' in 'x' */
-	return x.Xor(one.LShift(bit))
-	} // ToggleBit;
+	func ToggleBit(bit: Int) -> Integer {
+		/** Post: Toggle the 'bit' in 'x' */
+		return self.Xor(Integer.one.LShift(bit))
+	} // ToggleBit
 
-/*
-func OutInt (n: Integer);
-{
-Out.Object(n)
-} // OutInt;
-
-func Test;
-var
-s, n, m: Integer;
-str: STRING;
-{
-Out.String("ZERO="); OutInt(zero); Out.Ln;
-Out.String("ONE="); OutInt(one); Out.Ln;
-n=NewLatin1("123456789012345678900000000000000000000", 10);
-m=NewLatin1(                   "55554444333322221111", 10);
-CASE n.Cmp(m) OF
-| 0: Out.String("n=m")
-| 1: Out.String("n>m")
-| else Out.String("n<m")
-}
-Out.Ln;
-Out.String("n="); OutInt(n); Out.Ln;
-Out.String("m="); OutInt(m); Out.Ln;
-s=n.Mul(m);
-Out.String("n*m="); OutInt(s); Out.Ln;
-s=n.Mul(m);
-Out.String("(n*m) / m="); OutInt(s.Div(m)); Out.Ln;
-s=n.Add(m);
-Out.String("n+m="); OutInt(s); Out.Ln;
-s=n.Sub(m);
-Out.String("n-m="); OutInt(s); Out.Ln;
-s=n.Div(m);
-Out.String("n / m ="); OutInt(s); Out.Ln;
-s=n.Mod(m);
-Out.String("n % m="); OutInt(s); Out.Ln;
-s=n.Div(m); s=s.Mul(m); s=s.Add(n.Mod(m));
-Out.String("m*(n / m)+(n % m)="); OutInt(s); Out.Ln;
-n=NewInt(2);
-s=n.Power(64);
-Out.String("2^64="); OutInt(s); Out.Ln;
-n=NewLatin1("-FFFF", 16);
-Out.String("-FFFF="); OutInt(n); Out.Ln;
-Out.String("-FFFF="); str=n.Format(16); Out.Object(str); Out.String("H"); Out.Ln;
-n=NewLatin1("-10000000000000", 10);
-Out.String("-10000000000000="); OutInt(n); Out.Ln;
-n=NewLatin1("-10000000000000000", 2);
-Out.String("-10000000000000B="); OutInt(n); Out.Ln;
-Out.String("-10000000000000000B="); str=n.Format(2); Out.Object(str); Out.String("B"); Out.Ln;
-n=NewInt(-8);
-Out.String("-8^3="); OutInt(n.Power(3)); Out.Ln;
-Out.String("69!="); OutInt(Factorial(69)); Out.Ln;
-n=NewLatin1("123456789012345", 10);
-Out.String("GCD(123456789012345, 87654321)="); OutInt(n.GCD(NewInt(87654321))); Out.Ln;
-Out.String("Ran{m(50)="); OutInt(Ran{m(50)); Out.Ln;
-Out.String("New(987654321)="); OutInt(NewInt(987654321)); Out.Ln;
-Out.String("zero SetBit 16="); OutInt(zero.SetBit(16)); Out.Ln;
-Out.String("one ClearBit 0="); OutInt(one.ClearBit(0)); Out.Ln;
-Out.String("zero ToggleBit 16="); OutInt(zero.ToggleBit(16)); Out.Ln;
-} // Test;
-*/
-
-//func Init * ();
-//var
-//i: LONGINT;
-//{
-//FOR i = 0 TO LEN(powerOf2)-1 {
-//powerOf2[i] = -1;
-//}
-//powerOf2[ 2] = 1;
-//powerOf2[ 4] = 2;
-//powerOf2[ 8] = 3;
-//powerOf2[16] = 4;
-//powerOf2[32] = 5;
-//
-//zero = NewInstance(0);
-//one = NewInstance(1); one.digit[0] = 1;
-//} // Init;
-//
-//{
-//Init;
-///* Test */
 	
-} // Integers.
+	private func OutInt (n: Integer) {
+		println(n.description)
+	} // OutInt;
+	
+	func Test() {
+		var s, n, m: Integer
+		var str: String
+		
+		print("ZERO="); OutInt(Integer.zero)
+		print("ONE="); OutInt(Integer.one)
+		n=Integer(str: "123456789012345678900000000000000000000")
+		let nsize = n.digit.count
+		m=Integer(str:                    "55554444333322221111")
+		let msize = m.digit.count
+		switch n.Cmp(m) {
+		case 0: println("n=m")
+		case 1: println("n>m")
+		default: println("n<m")
+		}
+		print("n="); OutInt(n)
+		print("m="); OutInt(m)
+		s=n.Mul(m)
+		print("n*m="); OutInt(s);
+		s=n.Div(m)
+		print("(n*m) / m="); OutInt(s.Div(m))
+		s=n.Add(m);
+		print("n+m="); OutInt(s)
+		s=n.Sub(m);
+		print("n-m="); OutInt(s)
+		s=n.Div(m);
+		print("n / m ="); OutInt(s)
+		s=n.Mod(m);
+		print("n % m="); OutInt(s)
+		s=n.Div(m); s=s.Mul(m); s=s.Add(n.Mod(m));
+		print("m*(n / m)+(n % m)="); OutInt(s)
+		n=Integer(value: 2)
+		s=n.Power(64)
+		print("2^64="); OutInt(s)
+		n=Integer(str: "-FFFF", inputBase:16)
+		print("-FFFF="); OutInt(n)
+		print("-FFFF="); print(n.description(16)); println("H")
+		n=Integer(str: "-10000000000000", inputBase:10)
+		print("-10000000000000="); OutInt(n)
+		n=Integer(str: "-10000000000000000", inputBase: 2)
+		print("-10000000000000B="); OutInt(n)
+		print("-10000000000000000B="); print(n.description(2)); println("B")
+		n=Integer(value: -8)
+		print("-8^3="); OutInt(n.Power(3))
+		print("69!="); OutInt(Factorial(69))
+		n=Integer(str: "123456789012345")
+		print("GCD(123456789012345, 87654321)="); OutInt(n.GCD(Integer(value: 87654321)))
+		print("Random(50)="); OutInt(Random(50))
+		print("New(987654321)="); OutInt(Integer(value:987654321))
+		print("zero SetBit 16="); OutInt(Integer.zero.SetBit(16))
+		print("one ClearBit 0="); OutInt(Integer.one.ClearBit(0))
+		print("zero ToggleBit 16="); OutInt(Integer.zero.ToggleBit(16))
+	} // Test
+	
+} // Integer
 
