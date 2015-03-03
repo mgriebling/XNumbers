@@ -944,7 +944,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		var n: Integer
 		var i: Int
 		var s: Time.TimeStamp;
-		assert(digits>0, 109); Time.GetTime(s);
+		assert(digits>0, "Assertion failed in Random"); Time.GetTime(s);
 		n=NewInstance(2215*digits / 10000);     /* n=digits*log32768(10) */
 		n.digit[0]=SHORT((a*SHORT(s.msecs % B)+c) % B);
 		FOR i=1 TO LEN(n.digit^)-1 { n.digit[i]=SHORT((a*n.digit[i-1]+c) % B) }
