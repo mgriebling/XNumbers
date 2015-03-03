@@ -127,12 +127,6 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 	
 	init (size : Int) {
 		self.digit = [Digit](count:size, repeatedValue:0)
-//		let size = self.digit.count
-//		var i = 0
-//		for value in self.digit {
-//			println("digit[\(i)] = \(value)")
-//			i++
-//		}
 		self.negative = false
 	}
 	
@@ -214,22 +208,14 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		}
 	}
 
-	/*func Dump (msg: ARRAY OF CHAR; big: Integer);
-	var
-	i: LONGINT;
-	{
-	println (msg);
-	println(": size=");
-	Out.LongInt(big.size,0);
-	println (", digits=");
-	FOR i = 0 TO ABS(big.size)-1 {
-	Out.Int(big.digit[i], 0);
-	Out.Char(" ");
-	}
-	println (", base=");
-	Out.LongInt(base, 0);
-	Out.Ln;
-	} // Dump;*/
+	func Dump (msg: String, big: Integer) {
+		var i: Int
+		println("\(msg): size=\(big.digit.count), digits=")
+		for i = 0; i<big.digit.count; i++ {
+			print("\(big.digit[i]) ")
+		}
+		println(", base=\(Integer.base)")
+	}  // Dump;
 
 	private func AddAbs (a: Integer, b: Integer) -> Integer {
 		/** Adds the absolute values of two integers.  */
@@ -532,6 +518,9 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		w = MulAdd1(w1, n:d, add:0)
 //		println("v=\(v); w=\(w)")
 		
+		Dump("v=", big: v);
+		Dump("w=", big: w);
+		
 		assert((sizeV >= sizeW) && (sizeW > 1), "DivRemAbs assertion 1 failed")
 		assert(sizeW == w.digit.count, "DivRemAbs assertion 2 failed")
 		sizeV = v.digit.count
@@ -687,6 +676,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 				assert(accumBits >= baseBits, "Assert in describe")
 				do {
 					d = Int(accum % TwoDigits(outputBase))  /* expensive, a mask op would do */
+					assert(d >= 0, "Assertion failed: Description d < 0")
 					let index = advance(conversion.startIndex, d)
 					c = conversion[index]
 					str = [c] + str
@@ -731,6 +721,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 				do {
 					nextrem = rem / Digit(outputBase)
 					d = rem - nextrem * Digit(outputBase)
+					assert(d >= 0, "Assertion failed: Description d < 0")
 					let index = advance(conversion.startIndex, d)
 					c = conversion[index]
 					str = [c] + str
@@ -1069,9 +1060,11 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		
 		print("ZERO="); OutInt(Integer.zero)
 		print("ONE="); OutInt(Integer.one)
-		n=Integer(str: "123456789012345678900000000000000000000")
+//		n=Integer(str: "123456789012345678900000000000000000000")
+		n=Integer(str: "1000000000")
 		let nsize = n.digit.count
-		m=Integer(str:                    "55554444333322221111")
+//		m=Integer(str:                    "55554444333322221111")
+		m=Integer(str:                    "100000")
 		let msize = m.digit.count
 		switch n.Cmp(m) {
 		case 0: println("n=m")
@@ -1081,7 +1074,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		print("n="); OutInt(n)
 		print("m="); OutInt(m)
 		s=n.Mul(m)
-		print("n*m="); OutInt(s);
+		print("n*m="); OutInt(s)  // answer = 6858573312757064451919193291071207257900000000000000000000
 		s=n.Div(m)
 		print("(n*m) / m="); OutInt(s.Div(m))
 		s=n.Add(m);
@@ -1089,7 +1082,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		s=n.Sub(m);
 		print("n-m="); OutInt(s)
 		s=n.Div(m);
-		print("n / m ="); OutInt(s)
+		print("n / m ="); OutInt(s) // answer = 2222266652000240026 R 43398759628555611114
 		s=n.Mod(m);
 		print("n % m="); OutInt(s)
 		s=n.Div(m); s=s.Mul(m); s=s.Add(n.Mod(m));
