@@ -518,8 +518,8 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		w = MulAdd1(w1, n:d, add:0)
 //		println("v=\(v); w=\(w)")
 		
-		Dump("v=", big: v);
-		Dump("w=", big: w);
+//		Dump("v=", big: v);
+//		Dump("w=", big: w);
 		
 		assert((sizeV >= sizeW) && (sizeW > 1), "DivRemAbs assertion 1 failed")
 		assert(sizeW == w.digit.count, "DivRemAbs assertion 2 failed")
@@ -536,14 +536,16 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 			}
 			carry = 0
 			let base = TwoDigits(Integer.base)
-			let wdigit = TwoDigits(w.digit[sizeW-1])
-			if TwoDigits(vj) == wdigit {
-				q = TwoDigits(Integer.mask)
+			let mask = TwoDigits(Integer.mask)
+			let w1digit = TwoDigits(w.digit[sizeW-1])
+			let w2digit = TwoDigits(w.digit[sizeW-2])
+			if TwoDigits(vj) == w1digit {
+				q = mask
 			} else {
-				q = (TwoDigits(vj)*base + TwoDigits(v.digit[j-1])) / wdigit
+				q = (TwoDigits(vj)*base + TwoDigits(v.digit[j-1])) / w1digit
 			}
 
-			while (TwoDigits(w.digit[sizeW-2])*q) > ((TwoDigits(vj)*base + TwoDigits(v.digit[j-1]) - q*wdigit)*base + TwoDigits(v.digit[j-2])) {
+			while (w2digit*q) > ((TwoDigits(vj)*base + TwoDigits(v.digit[j-1]) - q*w1digit)*base + TwoDigits(v.digit[j-2])) {
 				q--
 			}
 			
@@ -552,8 +554,8 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 				z = TwoDigits(w.digit[i])*q
 				zz = Digit(z / base)
 				carry += TwoDigits(v.digit[i+k]) - z + TwoDigits(zz)*base
-				v.digit[i+k] = Digit(carry % base)
-				carry = carry >> TwoDigits(Integer.shift)
+				v.digit[i+k] = Digit(carry & mask)
+				carry >>= TwoDigits(Integer.shift)
 				carry -= TwoDigits(zz)
 				i++
 			}
@@ -572,7 +574,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 				i = 0
 				while (i < sizeW) && (i+k < sizeV) {
 					carry += TwoDigits(v.digit[i+k] + w.digit[i])
-					v.digit[i+k] = Digit(carry % base)
+					v.digit[i+k] = Digit(carry & mask)
 					carry = carry >> TwoDigits(Integer.shift)
 					i++
 				}
@@ -1060,12 +1062,10 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		
 		print("ZERO="); OutInt(Integer.zero)
 		print("ONE="); OutInt(Integer.one)
-//		n=Integer(str: "123456789012345678900000000000000000000")
-		n=Integer(str: "1000000000")
-		let nsize = n.digit.count
-//		m=Integer(str:                    "55554444333322221111")
-		m=Integer(str:                    "100000")
-		let msize = m.digit.count
+		n=Integer(str: "123456789012345678900000000000000000000")
+//		n=Integer(str: "1000000000")
+		m=Integer(str:                    "55554444333322221111")
+//		m=Integer(str:                    "100000")
 		switch n.Cmp(m) {
 		case 0: println("n=m")
 		case 1: println("n>m")
@@ -1075,7 +1075,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		print("m="); OutInt(m)
 		s=n.Mul(m)
 		print("n*m="); OutInt(s)  // answer = 6858573312757064451919193291071207257900000000000000000000
-		s=n.Div(m)
+		s=n.Mul(m)
 		print("(n*m) / m="); OutInt(s.Div(m))
 		s=n.Add(m);
 		print("n+m="); OutInt(s)
