@@ -1,5 +1,5 @@
 //
-//  Integers.swift
+//  Integer.swift
 //  XNumbers
 //
 //  Created by Mike Griebling on 28 Feb 2015.
@@ -1056,7 +1056,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		println(n.description)
 	} // OutInt;
 	
-	func Test() {
+	private func Test() {
 		var s, n, m: Integer
 		var str: String
 		

@@ -10,8 +10,8 @@ import Foundation
 
 println("Hello, World!")
 
-var n: Integer = Integer.zero
+var n = Integer(str: "1234567890")
 
-n.Test()
+println("n = \(n)")
 
 
