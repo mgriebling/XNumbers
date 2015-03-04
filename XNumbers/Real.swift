@@ -9,118 +9,118 @@
 import Foundation
 
 /*
-	Reals - Mathematical functions for an arbitrary-precision floating
-	point representation named Real.
-	
-	Copyright (C) 1997-2004 Michael Griebling
-	From an original FORTRAN library MPFUN by David H. Bailey, NASA Ames
-	Research Center which is available from:
-	
-	http://crd.lbl.gov/~dhbailey/mpdist/index.html
-	
-	Source translated with permission of the original author.
- 
-	This module is free software; you can redistribute it and/or modify
-	it under the terms of the GNU Lesser General Public License as
-	published by the Free Software Foundation; either version 2 of the
-	License, or (at your option) any later version.
-		
-	This module is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU Lesser General Public License for more details.
- 
-	You should have received a copy of the GNU Lesser General Public
-	License along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-	
-	*/
+Reals - Mathematical functions for an arbitrary-precision floating
+point representation named Real.
+
+Copyright (C) 1997-2004 Michael Griebling
+From an original FORTRAN library MPFUN by David H. Bailey, NASA Ames
+Research Center which is available from:
+
+http://crd.lbl.gov/~dhbailey/mpdist/index.html
+
+Source translated with permission of the original author.
+
+This module is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+This module is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+*/
 
 /*
-	From the author's description:
-	
-	The following information is a brief description of this program.  For
-	full details and instructions for usage, see the paper "A Portable High
-	Performance Multiprecision Package", available from the author.
-	
-	This package of Fortran subroutines performs multiprecision floating point
-	arithmetic.  If sufficient main memory is available, the maximum precision
-	level is at least 16 million digits.  The maximum dynamic range is at
-	least 10^(+-14,000,000).  It employs advanced algorithms, including an
-	FFT-based multiplication routine [Not yet in Oberon-2--MG] and some recently discovered
-	quadratically convergent algorithms for pi, exp and log.  The package also
-	features extensive debug and self-checking facilities, so that it can be
-	used as a rigorous system integrity test.  All of the routines in this
-	package have been written to facilitate vector, parallel processing and/or
-	RISC processing.
-		
-	My comments:
-	
-	The current algorithms are not optimized for really large numbers.  if there
-	is some interest, I will be porting those algorithms as well from the original
-	author.  The existing algorithms will work in a reasonable time for most numbers
-	and are hard-limited via a constant `maxDigits' to a maximum of about 500 digits.
-	This constant can be easily increased.  Of course, performance will suffer.  The
-	actual working precision is adjustable via the `SetWords' routine.  The actual
-	number of words will { be reflected in the `curMant' read-only constant.
-	Each word gives about 7.22 digits of precision.  The default precision is set
-	to `maxDigits'.
-	
-	There may be a couple of bugs in several routines which affect the accuracy
-	in the last few places of the result.  This shouldn't make much difference to
-	casual users as long as the precision is set to be 10-20 digits more than you
-	need.
-	
-	Modified to use the new OO2C Boxed data type to facilitate I/O.
-	*/
+From the author's description:
+
+The following information is a brief description of this program.  For
+full details and instructions for usage, see the paper "A Portable High
+Performance Multiprecision Package", available from the author.
+
+This package of Fortran subroutines performs multiprecision floating point
+arithmetic.  If sufficient main memory is available, the maximum precision
+level is at least 16 million digits.  The maximum dynamic range is at
+least 10^(+-14,000,000).  It employs advanced algorithms, including an
+FFT-based multiplication routine [Not yet in Oberon-2--MG] and some recently discovered
+quadratically convergent algorithms for pi, exp and log.  The package also
+features extensive debug and self-checking facilities, so that it can be
+used as a rigorous system integrity test.  All of the routines in this
+package have been written to facilitate vector, parallel processing and/or
+RISC processing.
+
+My comments:
+
+The current algorithms are not optimized for really large numbers.  if there
+is some interest, I will be porting those algorithms as well from the original
+author.  The existing algorithms will work in a reasonable time for most numbers
+and are hard-limited via a constant `maxDigits' to a maximum of about 500 digits.
+This constant can be easily increased.  Of course, performance will suffer.  The
+actual working precision is adjustable via the `SetWords' routine.  The actual
+number of words will { be reflected in the `curMant' read-only constant.
+Each word gives about 7.22 digits of precision.  The default precision is set
+to `maxDigits'.
+
+There may be a couple of bugs in several routines which affect the accuracy
+in the last few places of the result.  This shouldn't make much difference to
+casual users as long as the precision is set to be 10-20 digits more than you
+need.
+
+Modified to use the new OO2C Boxed data type to facilitate I/O.
+*/
 
 // IMPORT rm = LRealMath, rx = LRealMathExt, Object, Object:Boxed, IO, ADT:Storable, Out;
 
 struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
-
-private static let DEBUG = false
-private static let ZERO = 0.0
-private static let ONE  = 1.0
-private static let HALF = 0.5
-private static let invLn2 = 1.4426950408889633
-private static let Ln2 = 0.693147180559945309
-
-/* numeric precision-setting constants */
-static let maxDigits=520                                  /* initial precision level in digits */
-static let outDigits=56                                   /* initial output precision level in digits */
-static let log10eps=10-maxDigits                          /* log10 of initial eps level */
-static let digsPerWord=7.224719896
-static let maxMant=Int(Double(maxDigits)/digsPerWord+ONE+HALF)	  /* hardcoded maximum mantissa words */
-static let maxExp=2000000                                 /* maximum exponent */
-
-/* internal scaling constants */
-private static let mpbbx=4096.0
-private static let radix=mpbbx*mpbbx
-private static let mpbx2=radix*radix
-private static let mprbx=ONE/mpbbx
-private static let invRadix=mprbx*mprbx
-private static let mprx2=invRadix*invRadix
-private static let mprxx=16*mprx2
-
-/* miscellaneous constants */
-private static let NBT=24
-private static let NPR=32
-private static let MPIRD=1
-private static let NIT=3
-
-enum status {
-case Okay
-case Overflow
-case Underflow
-case DivideByZero
-case TooFewDigits
-case TooManyDigits
-case IllegalNumber
-case UndefinedStorage
-case IllegalOperator
-case MismatchBraces
-case IllegalArgument
-}
+	
+	private static let DEBUG = false
+	private static let ZERO = 0.0
+	private static let ONE  = 1.0
+	private static let HALF = 0.5
+	private static let invLn2 = 1.4426950408889633
+	private static let Ln2 = 0.693147180559945309
+	
+	/* numeric precision-setting constants */
+	static let maxDigits=520                                  /* initial precision level in digits */
+	static let outDigits=56                                   /* initial output precision level in digits */
+	static let log10eps=10-maxDigits                          /* log10 of initial eps level */
+	static let digsPerWord=7.224719896
+	static let maxMant=Int(Double(maxDigits)/digsPerWord+ONE+HALF)	  /* hardcoded maximum mantissa words */
+	static let maxExp=2000000                                 /* maximum exponent */
+	
+	/* internal scaling constants */
+	private static let mpbbx=4096.0
+	private static let radix=mpbbx*mpbbx
+	private static let mpbx2=radix*radix
+	private static let mprbx=ONE/mpbbx
+	private static let invRadix=mprbx*mprbx
+	private static let mprx2=invRadix*invRadix
+	private static let mprxx=16*mprx2
+	
+	/* miscellaneous constants */
+	private static let NBT=24
+	private static let NPR=32
+	private static let MPIRD=1
+	private static let NIT=3
+	
+	enum status {
+		case Okay
+		case Overflow
+		case Underflow
+		case DivideByZero
+		case TooFewDigits
+		case TooManyDigits
+		case IllegalNumber
+		case UndefinedStorage
+		case IllegalOperator
+		case MismatchBraces
+		case IllegalArgument
+	}
 
 
 var real: [Double]
@@ -128,21 +128,21 @@ var real: [Double]
 typealias FixedLReal = [Double](count: maxMant+8, repeatedValue: 0) // ARRAY maxMant+8 OF LONGREAL;
 typealias FixedReal = [Float](count: maxMant+8, repeatedValue: 0)	// ARRAY maxMant+8 OF REAL;
 private struct Real8 {
-
+	var r: [Float](count:8, repeatedValue: 0)
 }
 
-var
-err*, curMant-, debug*, numBits, sigDigs-: LONGINT;
-xONE: Real8;
-eps-, ln2-, pi-, ln10-, one-, zero-: Real;
-fact100000, fact200000, fact300000: Real;
-Seed: Real;
-status*: LONGINT;
+var err*,
+	curMant-, debug*, numBits, sigDigs-: LONGINT;
+var xONE: Real8;
+let eps-, ln2-, pi-, ln10-, one-, zero-: Real;
+private var fact100000, fact200000, fact300000: Real;
+private var Seed: Real;
+var status: LONGINT;
 
 /*---------------------------------------------------------*/
 /* Internal basic operator definitions                     */
 
-func Min (x, y: LONGINT) -> LONGINT;
+	func Min (x, y: LONGINT) -> LONGINT {
  
 if x<y { RETURN x } else { RETURN y }
 } //Min;
