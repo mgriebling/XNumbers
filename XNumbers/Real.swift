@@ -138,14 +138,16 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 	static var err : Int = 0
 	static var debug : Int = 0
 	
-	private var curMant: Int, numBits: Int, sigDigs: Int
+	private var curMant: Int
+	private var numBits: Int
+	private var sigDigs: Int
 	var currentMantissa : Int {
 		return curMant
 	}
 	var significantDigits: Int {
 		return sigDigs
 	}
-	static let eps, ln2, pi, ln10, one, zero: Real
+//	static let eps, ln2, pi, ln10, one, zero: Real
 	
 	/* Speed up very large factorials */
 	private static let fact100000 = Real(fromString: "2.82422940796034787429342157802453551847749492609122485057891808654297795090106301787" +
@@ -171,14 +173,27 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 	static var status = Status.Okay
 	
 	/*---------------------------------------------------------*/
-	/* Initializers											   */
+	/* Constructors                                            */
+	/*---------------------------------------------------------*/
+	
+	init (size: Int) {
+		self.real = RealArray(count: size, repeatedValue:0)
+		self.curMant = Real.maxMant+1
+		self.numBits = 22
+		self.sigDigs = Real.maxDigits
+	} //New;
+	
 	init (fromString: String) {
 		// TBD
 		
 	}
 	
 	init (fromInteger: Int) {
-		 NumbExpToReal (a: Double, n: Int, inout b: RealArray)
+
+	}
+	
+	init (fromDouble: Double) {
+		
 	}
 
 	/*---------------------------------------------------------*/
@@ -214,7 +229,7 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 	} //ToInt;
 	
 	private func ODD (x: Int) -> Bool {
-		return (x&1) != 0;
+		return (x&1) != 0
 	}
 
 	private func ipower (x: Double, base: Int) -> Double {
@@ -226,7 +241,7 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		
 		/* compute x**base using an optimised algorithm from Knuth, slightly
 		altered : p442, The Art Of Computer Programming, Vol 2 */
-		y = 1; if ibase<0 { neg = true; ibase  =  -ibase } else { neg =  false }
+		y = 1; if ibase<0 { neg = true; ibase  =  -ibase } else { neg = false }
 		for ;; {
 			if ODD(ibase) { y = y*ix };
 			ibase = ibase / 2; if ibase==0 { break };
@@ -964,7 +979,7 @@ ia = Sign(ONE, a[0]); na = Min(Int(abs(a[0])), curMant);
 if na=0 { Zero(b); return };
 
 /* error checking */
-if ia<0 { Out.String("*** Sqrt: Argument is negative!");
+if ia<0 { println("*** Sqrt: Argument is negative!");
 Out.Ln; err = 70; return
 };
 nws = curMant;
@@ -1057,19 +1072,19 @@ if na=0 { Zero(b); return };
 /* error checking */
 if ia<0 { 
 if ODD(n) { a[0] = -a[0] /* continue with abs(a) */
-} else { Out.String("*** Root: Argument is negative!");
+} else { println("*** Root: Argument is negative!");
 Out.Ln; err = 70; return
 }
 };
 if (n<=0) || (n>maxN) { 
-Out.String("*** Root: Improper value of n!"); Out.Ln;
+println("*** Root: Improper value of n!"); Out.Ln;
 err = 60; return
 };
 nws = curMant;
 
 /* if n = 1 or 2 use faster local routines */
 if n=1 { copy(a, b); b[0] = Sign(b[0], ia); return
-ELSif n=2 { Sqrt(b, a); return
+} else if n=2 { Sqrt(b, a); return
 };
 
 /* determine the least integer mq such that 2^mq >= curMant */
@@ -1228,7 +1243,7 @@ if na=0 { Zero(b); return };
 
 /* check if `a' can be represented exactly as an integer */
 if ma>=curMant { 
-Out.String("*** Entier: Argument is too large!"); Out.Ln;
+println("*** Entier: Argument is too large!"); Out.Ln;
 };
 
 /* place integer part of a in b */
@@ -1267,7 +1282,7 @@ if na=0 { Zero(b); return };
 
 /* check if `a' can be represented exactly as an integer */
 if ma>=curMant { 
-Out.String("*** RoundInt: Argument is too large!"); Out.Ln;
+println("*** RoundInt: Argument is too large!"); Out.Ln;
 err = 56; return
 };
 
@@ -1319,15 +1334,15 @@ Zero(k1);
 This exception is necessary because Ln calls Exp to
 initialize ln2 */
 if (abs(t1-Ln2)>invRadix) & (ln2=NIL) { 
-Out.String("*** Exp: ln2 must be precomputed!"); Out.Ln;
+println("*** Exp: ln2 must be precomputed!"); Out.Ln;
 err = 34; return
 };
 
 /* check for overflows and underflows */
 if t1>=1.0D9 { 
 if t1>ZERO { 
-Out.String("*** Exp: Argument is too large "); Out.LongReal(t1, 0, 0);
-Out.String(" x 10^"); Out.Int(n1, 0); Out.Ln; err = 35
+println("*** Exp: Argument is too large "); Out.LongReal(t1, 0, 0);
+println(" x 10^"); Out.Int(n1, 0); Out.Ln; err = 35
 } else { Zero(b)
 };
 return
@@ -1361,7 +1376,7 @@ copy(xONE, k2); copy(xONE, k3); l1 = 0;
 for ;; {
 INC(l1);
 if l1=10000 { 
-Out.String("*** Exp: Iteration limit exceeded!"); Out.Ln;
+println("*** Exp: Iteration limit exceeded!"); Out.Ln;
 err = 36; curMant = SHORT(nws); return
 };
 t2 = l1;
@@ -1415,14 +1430,14 @@ if err != 0 { Zero(b); return };
 
 /* check for error inputs */
 ia = Sign(ONE, a[0]); na = Min(Int(abs(a[0])), curMant);
-if (ia<0) || (na=0) { Out.String("*** Ln: Argument is less than or equal to zero!");
+if (ia<0) || (na=0) { println("*** Ln: Argument is less than or equal to zero!");
 Out.Ln; err = 50; return
 };
 
 /* unless the input is close to 2, ln2 must be known */
 RealToNumbExp(a, t1, n1);
 if ((abs(t1-2.0D0)>1.0D-3) || (n1 != 0)) & (ln2=NIL) { 
-Out.String("*** Ln: Ln(2) must be precomputed!"); Out.Ln; err = 51; return
+println("*** Ln: Ln(2) must be precomputed!"); Out.Ln; err = 51; return
 };
 
 /* check if input is exactly one */
@@ -1489,7 +1504,7 @@ ia = Sign(ONE, a[0]); na = Min(Int(abs(a[0])), curMant);
 if na=0 { copy(xONE, cos); Zero(sin); return };
 
 /* check if pi has been precomputed */
-if pi=NIL { Out.String("*** SinCos: pi must be precomputed!");
+if pi=NIL { println("*** SinCos: pi must be precomputed!");
 Out.Ln; err = 28; return
 };
 
@@ -1528,7 +1543,7 @@ copy(k1, k0); Mul(k2, k0, k0); l1 = 0;
 for ;; {
 INC(l1);
 if l1=10000 { 
-Out.String("*** SinCos: Iteration limit exceeded!"); Out.Ln;
+println("*** SinCos: Iteration limit exceeded!"); Out.Ln;
 err = 29; curMant = nws; return
 };
 t2 = -(2.0D0*l1)*(2.0D0*l1+ONE);
@@ -1640,13 +1655,13 @@ iy = Sign(ONE, y[0]); ny = Min(Int(abs(y[0])), curMant);
 
 /* check if both x and y are zero */
 if (nx=0) & (ny=0) { 
-Out.String("*** ATan2: Both arguments are zero!"); Out.Ln;
+println("*** ATan2: Both arguments are zero!"); Out.Ln;
 err = 7; return
 };
 
 /* check if pi has been precomputed */
 if pi=NIL { 
-Out.String("*** ATan2: Pi must be precomputed!"); Out.Ln;
+println("*** ATan2: Pi must be precomputed!"); Out.Ln;
 err = 8; return
 };
 
@@ -1656,7 +1671,7 @@ if iy>0 { Muld(a, pi.real^, HALF, 0)
 } else { Muld(a, pi.real^, -HALF, 0)
 };
 return
-ELSif ny=0 { 
+} else if ny=0 { 
 if ix>0 { Zero(a) } else { copy(pi.real^, a) };
 return
 };
@@ -1704,20 +1719,7 @@ if ~iq & (k=mq-NIT) { iq = true } else { break }
 curMant = nws; Round(a)
 } //ATan2;
 
-/*---------------------------------------------------------*/
-/*                                                         */
-/* The following routines are intended for external users  */
-/*                                                         */
-/*---------------------------------------------------------*/
-/* Constructors                                            */
 
-func New (size: Int) -> Real;
-var
-x: Real;
- 
-NEW(x); NEW(x.real, size);
-return x
-} //New;
 
 func Long * (x: Double) -> Real;
 var
@@ -1793,7 +1795,7 @@ func ToReal (str: String) -> Real {
 		
 		/* check for leading sign */
 		if str[cc]="+" { INC(cc); return 1
-			ELSif str[cc]="-" { INC(cc); return -1
+			} else if str[cc]="-" { INC(cc); return -1
 			} else { return 1
 			}
 		} //GetSign;
@@ -1981,11 +1983,11 @@ MaxExpWidth  =  ExpWidth;
 if ((ExpWidth = 0) & (Aexp > sigDigs)) || (ExpWidth > 0) { 
 /* force scientific notation */
 if Aexp > 999999 { ExpWidth  =  7
-ELSif Aexp > 99999 { ExpWidth  =  6
-ELSif Aexp > 9999 { ExpWidth  =  5
-ELSif Aexp > 999 { ExpWidth  =  4
-ELSif Aexp > 99 { ExpWidth  =  3
-ELSif Aexp > 9 { ExpWidth  =  2
+} else if Aexp > 99999 { ExpWidth  =  6
+} else if Aexp > 9999 { ExpWidth  =  5
+} else if Aexp > 999 { ExpWidth  =  4
+} else if Aexp > 99 { ExpWidth  =  3
+} else if Aexp > 9 { ExpWidth  =  2
 } else { ExpWidth  =  1
 };
 };
@@ -2040,7 +2042,7 @@ REPEAT
 GetDigit();
 if InCnt > nx { 
 DEC(Decimal)
-ELSif InCnt = nx { 
+} else if InCnt = nx { 
 ConcatChar('.');
 };
 INC(InCnt);
@@ -2071,7 +2073,7 @@ return b
 func (x: Real) Sign * (): Int;
  
 if x.real[0] < 0.0 { return -1
-ELSif x.real[0] > 0.0 { return 1
+} else if x.real[0] > 0.0 { return 1
 } else { return 0
 }
 } //Sign;
@@ -2303,11 +2305,11 @@ status = IllegalArgument; return zero  /* out of range */
 };
 f = New(curMant+4);
 if n<2 { return one                /* 0! & 1! */
-ELSif n>=300000 { 
+} else if n>=300000 { 
 copy(fact300000.real^, f.real^); min = 300000
-ELSif n>=200000 { 
+} else if n>=200000 { 
 copy(fact200000.real^, f.real^); min = 200000
-ELSif n>=100000 { 
+} else if n>=100000 { 
 copy(fact100000.real^, f.real^); min = 100000
 ELSE
 copy(one.real^, f.real^); min = 1;
@@ -2364,7 +2366,7 @@ t: FixedReal; r: Real;
 r = New(curMant+4);
 abs(t, z.real^);
 if Cmp(t, xONE)>0 { 
-Out.String("*** Illegal arcsin argument!"); Out.Ln; err = 20
+println("*** Illegal arcsin argument!"); Out.Ln; err = 20
 ELSE
 Mul(t, t, t); Sub(t, xONE, t); Sqrt(t, t);  /* t = Sqrt(1 - z^2) */
 ATan2(r.real^, t, z.real^)                  /* r = ATan(z/Sqrt(1-z^2)) */
@@ -2380,7 +2382,7 @@ t: FixedReal; r: Real;
 r = New(curMant+4);
 abs(t, z.real^);
 if Cmp(t, xONE)>0 { 
-Out.String("*** Illegal arccos argument!"); Out.Ln; err = 21
+println("*** Illegal arccos argument!"); Out.Ln; err = 21
 ELSE
 Mul(t, t, t); Sub(t, xONE, t); Sqrt(t, t);  /* t = Sqrt(1 - z^2) */
 ATan2(r.real^, z.real^, t)                  /* r = ATan(Sqrt(1-z^2)/z) */
@@ -2461,82 +2463,81 @@ func OutReal (n: Real);
 Out.Object(n.ToString())
 } //OutReal;
 
-func Test;
-var
-s, n, m: Real;
+private func Test {
+var s, n, m: Real;
  
-Out.String("zero="); OutReal(zero); Out.Ln;
-Out.String("one="); OutReal(one); Out.Ln;
-Out.String("pi="); OutReal(pi); Out.Ln;
-Out.String("ln2="); OutReal(ln2); Out.Ln;
-Out.String("ln10="); OutReal(ln10); Out.Ln;
-Out.String("eps="); OutReal(eps); Out.Ln;
-Out.String("log10(eps)="); OutReal(eps.Log(Long(10))); Out.Ln;
+println("zero="); OutReal(zero); Out.Ln;
+println("one="); OutReal(one); Out.Ln;
+println("pi="); OutReal(pi); Out.Ln;
+println("ln2="); OutReal(ln2); Out.Ln;
+println("ln10="); OutReal(ln10); Out.Ln;
+println("eps="); OutReal(eps); Out.Ln;
+println("log10(eps)="); OutReal(eps.Log(Long(10))); Out.Ln;
 n = ToReal("123456789012345678901234567890123456789");
 m = ToReal("0.123456789012345678901234567890123456790");
 CASE n.Cmp(m) OF
-| 0: Out.String("n=m")
-| 1: Out.String("n>m")
-| } else { Out.String("n<m")
+| 0: println("n=m")
+| 1: println("n>m")
+| } else { println("n<m")
 };
 Out.Ln;
-Out.String("n="); OutReal(n); Out.Ln;
-Out.String("m="); OutReal(m); Out.Ln;
+println("n="); OutReal(n); Out.Ln;
+println("m="); OutReal(m); Out.Ln;
 s = n.Mul(m);
-Out.String("n*m="); OutReal(s); Out.Ln;
+println("n*m="); OutReal(s); Out.Ln;
 s = n.Add(m);
-Out.String("n+m="); OutReal(s); Out.Ln;
+println("n+m="); OutReal(s); Out.Ln;
 s = n.Sub(m);
-Out.String("n-m="); OutReal(s); Out.Ln;
+println("n-m="); OutReal(s); Out.Ln;
 s = n.Div(m);
-Out.String("n/m="); OutReal(s); Out.Ln;
+println("n/m="); OutReal(s); Out.Ln;
 n = Long(1);
 s = n.Div(Long(3));
-Out.String("1/3="); OutReal(s); Out.Ln;
-Out.String("1/3+1/3="); OutReal(s.Add(s)); Out.Ln;
-Out.String("1/3*1/3="); OutReal(s.Mul(s)); Out.Ln;
-Out.String("1/3*3="); OutReal(s.Mul(Long(3))); Out.Ln;
+println("1/3="); OutReal(s); Out.Ln;
+println("1/3+1/3="); OutReal(s.Add(s)); Out.Ln;
+println("1/3*1/3="); OutReal(s.Mul(s)); Out.Ln;
+println("1/3*3="); OutReal(s.Mul(Long(3))); Out.Ln;
 n = Long(2.0);
 s = n.Power(Long(64));
-Out.String("2^64="); OutReal(s); Out.Ln;
+println("2^64="); OutReal(s); Out.Ln;
 n = ToReal("1.010E-10");
-Out.String("1.010E-10="); OutReal(n); Out.Ln;
+println("1.010E-10="); OutReal(n); Out.Ln;
 n = ToReal("-12.0E+10");
-Out.String("-12.0E+10="); OutReal(n); Out.Ln;
+println("-12.0E+10="); OutReal(n); Out.Ln;
 n = ToReal("0.00045E-10");
-Out.String("0.00045E-10="); OutReal(n); Out.Ln;
+println("0.00045E-10="); OutReal(n); Out.Ln;
 n = ToReal("-12 345 678");
-Out.String("-12 345 678="); OutReal(n); Out.Ln;
+println("-12 345 678="); OutReal(n); Out.Ln;
 n = ToReal("1E10000");
-Out.String("1E10000="); OutReal(n); Out.Ln;
+println("1E10000="); OutReal(n); Out.Ln;
 pi.SinCos(m, n);
-Out.String("Sin(pi)="); OutReal(m); Out.Ln;
-Out.String("Cos(pi)="); OutReal(n); Out.Ln;
+println("Sin(pi)="); OutReal(m); Out.Ln;
+println("Cos(pi)="); OutReal(n); Out.Ln;
 m = pi.Div(Long(8));
 m.SinCos(m, n);
-Out.String("Sin(pi/8)="); OutReal(m); Out.Ln;
-Out.String("Cos(pi/8)="); OutReal(n); Out.Ln;
+println("Sin(pi/8)="); OutReal(m); Out.Ln;
+println("Cos(pi/8)="); OutReal(n); Out.Ln;
 m = Long(1);
 m.SinCos(m, n);
-Out.String("Sin(1)="); OutReal(m); Out.Ln;
-Out.String("Cos(1)="); OutReal(n); Out.Ln;
+println("Sin(1)="); OutReal(m); Out.Ln;
+println("Cos(1)="); OutReal(n); Out.Ln;
 m = Long(-8);
-Out.String("-8^(-1/3)="); OutReal(m.IRoot(3)); Out.Ln;
+println("-8^(-1/3)="); OutReal(m.IRoot(3)); Out.Ln;
 m = Long(2); m = m.Power(Long(64));
-Out.String("(2^64)^(-1/64)="); OutReal(m.IRoot(64)); Out.Ln;
+println("(2^64)^(-1/64)="); OutReal(m.IRoot(64)); Out.Ln;
 m = Long(4);
-Out.String("4*arctan(1)="); OutReal(m.Mul(one.Arctan())); Out.Ln;
+println("4*arctan(1)="); OutReal(m.Mul(one.Arctan())); Out.Ln;
 m = one.Sin();
-Out.String("arcsin(sin(1))="); OutReal(m.Arcsin()); Out.Ln;
+println("arcsin(sin(1))="); OutReal(m.Arcsin()); Out.Ln;
 m = one.Cos();
-Out.String("arccos(cos(1))="); OutReal(m.Arccos()); Out.Ln;
+println("arccos(cos(1))="); OutReal(m.Arccos()); Out.Ln;
 m = Long(3.6);
-Out.String("Int(3.6)="); OutReal(m.Int()); Out.Ln;
+println("Int(3.6)="); OutReal(m.Int()); Out.Ln;
 m = Long(-3.6);
-Out.String("Int(-3.6)="); OutReal(m.Int()); Out.Ln;
+println("Int(-3.6)="); OutReal(m.Int()); Out.Ln;
 } //Test;
 
-func SetDigits * (digits: Int);
+func SetDigits (digits: Int) {
 /** Sets the number of active words in all Real computations.
 One word contains about 7.22 digits. */
 var
@@ -2551,11 +2552,9 @@ sigDigs = digits
 } //SetDigits;
 
 
-func Init;
-TYPE
-LongFixed = ARRAY 2*(maxMant+4) OF REAL;
-var
-t0, t1, t2, t3, t4: LongFixed;
+private func Init {
+typealias LongFixed = ARRAY 2*(maxMant+4) OF REAL;
+var t0, t1, t2, t3, t4: LongFixed;
  
 /* internal constants */
 xONE[0] = ONE; xONE[1] = ZERO; xONE[2] = ONE;  /* 1.0 */
@@ -2584,8 +2583,6 @@ zero = New(curMant+4); Zero(zero.real^);
 
 /* Random number generator */
 Seed = Long(4);
-
-
 
 /* set the current output precision */
 sigDigs = maxDigits
