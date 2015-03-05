@@ -145,7 +145,7 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 	var significantDigits: Int {
 		return sigDigs
 	}
-	static let eps, ln2, pi, ln10, one, zero: Real
+//	static let eps, ln2, pi, ln10, one, zero: Real
 	
 	/* Speed up very large factorials */
 	private static let fact100000 = Real(fromString: "2.82422940796034787429342157802453551847749492609122485057891808654297795090106301787" +
