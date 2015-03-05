@@ -1492,136 +1492,136 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		curMantissa = nws; Round(&b)
 	} //Ln;
 
-//func SinCos (var sin, cos: RealArray; a: RealArray);
-///*
-//This routine computes the cosine and sine of the ext}ed
-//precision number `a' and returns the results in `cos' and
-//`sin', respectively.  The units of `a' are in radians.
-//
-//The calculations are performed using the conventional Taylor's
-//series for Sin(s):
-//
-//Sin(s) = s - s^3/3! + s^5/5! - s^7/7! ....
-//
-//where s = t - a * pi/2 - b*pi/16 and the integers a and b are
-//chosen to minimize the absolute value of s.  We can { compute
-//
-//Sin (t) = Sin (s + a*pi/2 + b*pi/16)
-//Cos (t) = Cos (s + a*pi/2 + b*pi/16)
-//
-//by applying elementary trig identities for sums.  The sine and
-//cosine of b*pi/16 are of the form 1/2*Sqrt(2 +- Sqrt(2 +- Sqrt(2))).
-//Reducing t in this manner ensures that -Pi/32 < s < Pi/32 which
-//accelerates convergence in the above series.
-//*/
-//var
-//t1, t2: Double;
-//nws: Int;
-//f: Real8;
-//ia, na, ka, kb, n1, kc, l1: Int;
-//k0, k1, k2, k3, k4, k5, k6: FixedReal;
-// 
-//if err != 0 { Zero(sin); Zero(cos); return };
-//
-//ia = Sign(1, a[0]); na = Min(Int(abs(a[0])), curMantissa);
-//
-///* check for trivial case when a = 0 */
-//if na=0 { copy(x1, cos); Zero(sin); return };
-//
-///* check if pi has been precomputed */
-//if pi=NIL { println("*** SinCos: pi must be precomputed!");
-//Out.Ln; err = 28; return
-//};
-//
-///* increase resolution */
-//nws = curMantissa; INC(curMantissa);
-//
-///* reduce input to between -pi and pi */
-//Muld(k0, pi.real^, 2.0D0, 0);
-//Div(k1, a, k0);
-//RoundInt(k2, k1);       /* k2 = a DIV 2pi */
-//Sub(k3, k1, k2);        /* k3 = a MOD 2pi */
-//
-///* determine the nearest multiple of pi/2, and within a
-//quadrant, the nearest multiple of pi/16.  Through most
-//of the rest of this procedure, ka and kb are the integers
-//a and b of the above algorithm. */
-//RealToNumbExp(k3, t1, n1);
-//if n1>=-NBT { 
-//t1 = t1*ipower(2, SHORT(n1)); t2 = 4*t1;
-//if t2<0 { ka = -Int(HALF-t2) } else { ka = Int(t2+HALF) };  /* ka = rm.round(t2) */
-//t1 = 8*(t2-ka);
-//if t1<0 { kb = -Int(HALF-t1) } else { kb = Int(t1+HALF) };  /* kb = rm.round(8*(t2-ka)) */
-///* ka = Int(t2); kb = rm.round(8*(t2-ka)) */
-//} else { ka = 0; kb = 0
-//};
-//t1 = (8*ka+kb)/32;
-//NumbExpToReal(t1, 0, k1);
-//Sub(k2, k3, k1);
-//Mul(k1, k0, k2);
-//
-///* compute cosine and sine of the reduced arguments using
-//Taylor's series */
-//if k1[0]=0 { Zero(k0)
-//} else {
-//copy(k1, k0); Mul(k2, k0, k0); l1 = 0;
-//for ;; {
-//INC(l1);
-//if l1=10000 { 
-//println("*** SinCos: Iteration limit exceeded!"); Out.Ln;
-//err = 29; curMantissa = nws; return
-//};
-//t2 = -(2.0D0*l1)*(2.0D0*l1+1);
-//Mul(k3, k2, k1);
-//Divd(k1, k3, t2, 0);
-//Add(k3, k1, k0);
-//copy(k3, k0);
-//
-///* check for convergence of the series */
-//if (k1[0]=0) || (k1[1]<k0[1]-curMantissa) { break }
-//}
-//};
-//
-///* compute Cos(s) = Sqrt(1-Sin(s)^2) */
-//copy(k0, k1);
-//Mul(k2, k0, k0); Sub(k3, x1, k2); Sqrt(k0, k3);
-//
-///* compute cosine and sine of b*Pi/16 */
-//kc = abs(kb); f[0] = 1; f[1] = 0; f[2] = 2.0;
-//if kc=0 { copy(x1, k2); Zero(k3)
-//} else {
-//CASE kc OF
-//| 1: Sqrt(k4, f); Add(k5, f, k4); Sqrt(k4, k5)
-//| 2: Sqrt(k4, f)
-//| 3: Sqrt(k4, f); Sub(k5, f, k4); Sqrt(k4, k5)
-//| 4: Zero(k4)
-//| } else { /* { nothing */
-//};
-//Add(k5, f, k4); Sqrt(k3, k5); Muld(k2, k3, HALF, 0);
-//Sub(k5, f, k4); Sqrt(k4, k5); Muld(k3, k4, HALF, 0)
-//};
-//
-///* apply the trigonometric summation identities to compute
-//cosine and sine of s + b*Pi/16 */
-//if kb<0 { k3[0] = -k3[0] };
-//Mul(k4, k0, k2); Mul(k5, k1, k3); Sub(k6, k4, k5);
-//Mul(k4, k1, k2); Mul(k5, k0, k3); Add(k1, k4, k5);
-//copy(k6, k0);
-//
-///* this code applies the trig summation identities for
-//(s + b*pi/16 + a*pi/2 */
-//CASE ka OF
-//|     0: copy(k0, cos); copy(k1, sin)
-//|     1: copy(k1, cos); cos[0] = -cos[0]; copy(k0, sin)
-//|    -1: copy(k1, cos); copy(k0, sin); sin[0] = -sin[0]
-//| 2, -2: copy(k0, cos); cos[0] = -cos[0]; copy(k1, sin); sin[0] = -sin[0]
-//| } else { /* { nothing */
-//};
-//
-///* restore the orginal precision level */
-//curMantissa = nws; Round(cos); Round(sin)
-//} //SinCos;
-//
+	private mutating func SinCos (inout sin: RealArray, inout cos: RealArray, a: RealArray) {
+		/*
+		This routine computes the cosine and sine of the extended
+		precision number `a' and returns the results in `cos' and
+		`sin', respectively.  The units of `a' are in radians.
+		
+		The calculations are performed using the conventional Taylor's
+		series for Sin(s):
+		
+		Sin(s) = s - s^3/3! + s^5/5! - s^7/7! ....
+		
+		where s = t - a * pi/2 - b*pi/16 and the integers a and b are
+		chosen to minimize the absolute value of s.  We can then compute
+		
+		Sin (t) = Sin (s + a*pi/2 + b*pi/16)
+		Cos (t) = Cos (s + a*pi/2 + b*pi/16)
+		
+		by applying elementary trig identities for sums.  The sine and
+		cosine of b*pi/16 are of the form 1/2*Sqrt(2 +- Sqrt(2 +- Sqrt(2))).
+		Reducing t in this manner ensures that -Pi/32 < s < Pi/32 which
+		accelerates convergence in the above series.
+		*/
+		var
+		t1, t2: Double;
+		nws: Int;
+		f: Real8;
+		ia, na, ka, kb, n1, kc, l1: Int;
+		k0, k1, k2, k3, k4, k5, k6: FixedReal;
+		
+		if err != 0 { Zero(sin); Zero(cos); return };
+		
+		ia = Sign(1, a[0]); na = Min(Int(abs(a[0])), curMantissa);
+		
+		/* check for trivial case when a = 0 */
+		if na=0 { copy(x1, cos); Zero(sin); return };
+		
+		/* check if pi has been precomputed */
+		if pi=NIL { println("*** SinCos: pi must be precomputed!");
+			Out.Ln; err = 28; return
+		};
+		
+		/* increase resolution */
+		nws = curMantissa; INC(curMantissa);
+		
+		/* reduce input to between -pi and pi */
+		Muld(k0, pi.real^, 2.0D0, 0);
+		Div(k1, a, k0);
+		RoundInt(k2, k1);       /* k2 = a DIV 2pi */
+		Sub(k3, k1, k2);        /* k3 = a MOD 2pi */
+		
+		/* determine the nearest multiple of pi/2, and within a
+		quadrant, the nearest multiple of pi/16.  Through most
+		of the rest of this procedure, ka and kb are the integers
+		a and b of the above algorithm. */
+		RealToNumbExp(k3, t1, n1);
+		if n1>=-NBT {
+			t1 = t1*ipower(2, SHORT(n1)); t2 = 4*t1;
+			if t2<0 { ka = -Int(HALF-t2) } else { ka = Int(t2+HALF) };  /* ka = rm.round(t2) */
+			t1 = 8*(t2-ka);
+			if t1<0 { kb = -Int(HALF-t1) } else { kb = Int(t1+HALF) };  /* kb = rm.round(8*(t2-ka)) */
+			/* ka = Int(t2); kb = rm.round(8*(t2-ka)) */
+		} else { ka = 0; kb = 0
+		};
+		t1 = (8*ka+kb)/32;
+		NumbExpToReal(t1, 0, k1);
+		Sub(k2, k3, k1);
+		Mul(k1, k0, k2);
+		
+		/* compute cosine and sine of the reduced arguments using
+		Taylor's series */
+		if k1[0]=0 { Zero(k0)
+		} else {
+			copy(k1, k0); Mul(k2, k0, k0); l1 = 0;
+			for ;; {
+				INC(l1);
+				if l1=10000 {
+					println("*** SinCos: Iteration limit exceeded!"); Out.Ln;
+					err = 29; curMantissa = nws; return
+				};
+				t2 = -(2.0D0*l1)*(2.0D0*l1+1);
+				Mul(k3, k2, k1);
+				Divd(k1, k3, t2, 0);
+				Add(k3, k1, k0);
+				copy(k3, k0);
+				
+				/* check for convergence of the series */
+				if (k1[0]=0) || (k1[1]<k0[1]-curMantissa) { break }
+			}
+		};
+		
+		/* compute Cos(s) = Sqrt(1-Sin(s)^2) */
+		copy(k0, k1);
+		Mul(k2, k0, k0); Sub(k3, x1, k2); Sqrt(k0, k3);
+		
+		/* compute cosine and sine of b*Pi/16 */
+		kc = abs(kb); f[0] = 1; f[1] = 0; f[2] = 2.0;
+		if kc=0 { copy(x1, k2); Zero(k3)
+		} else {
+			CASE kc OF
+				| 1: Sqrt(k4, f); Add(k5, f, k4); Sqrt(k4, k5)
+			| 2: Sqrt(k4, f)
+			| 3: Sqrt(k4, f); Sub(k5, f, k4); Sqrt(k4, k5)
+			| 4: Zero(k4)
+			| } else { /* { nothing */
+		};
+		Add(k5, f, k4); Sqrt(k3, k5); Muld(k2, k3, HALF, 0);
+		Sub(k5, f, k4); Sqrt(k4, k5); Muld(k3, k4, HALF, 0)
+	};
+	
+	/* apply the trigonometric summation identities to compute
+	cosine and sine of s + b*Pi/16 */
+	if kb<0 { k3[0] = -k3[0] };
+	Mul(k4, k0, k2); Mul(k5, k1, k3); Sub(k6, k4, k5);
+	Mul(k4, k1, k2); Mul(k5, k0, k3); Add(k1, k4, k5);
+	copy(k6, k0);
+	
+	/* this code applies the trig summation identities for
+	(s + b*pi/16 + a*pi/2 */
+	CASE ka OF
+	|     0: copy(k0, cos); copy(k1, sin)
+	|     1: copy(k1, cos); cos[0] = -cos[0]; copy(k0, sin)
+	|    -1: copy(k1, cos); copy(k0, sin); sin[0] = -sin[0]
+	| 2, -2: copy(k0, cos); cos[0] = -cos[0]; copy(k1, sin); sin[0] = -sin[0]
+	| } else { /* { nothing */
+	};
+
+/* restore the orginal precision level */
+curMantissa = nws; Round(cos); Round(sin)
+} //SinCos;
+
 //func SinhCosh (var sinh, cosh: RealArray; a: RealArray);
 ///*
 //This routine computes the hyperbolic cosine and sine of the
