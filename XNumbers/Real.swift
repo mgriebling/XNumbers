@@ -191,22 +191,22 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 	
 	init (size: Int) {
 		self.real = RealArray(count: size, repeatedValue:0)
-//		self.curMantissa = Real.maxMant+1
+		self.curMantissa = Real.maxMant+1
 		self.numBits = 22
 		self.sigDigs = Real.maxDigits
 	}
 	
 	init (fromString: String) {
 		// TBD
-		init
+		self.init(size:0)
 	}
 	
 	init (fromInteger: Int) {
-
+		self.init(size:0)
 	}
 	
 	init (fromDouble: Double) {
-		
+		self.init(size:0)
 	}
 
 	/*---------------------------------------------------------*/
@@ -499,7 +499,7 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		var i, ia, ib, na, nb, nsh: Int
 		var ixa, ixb, ixd, ish, m1, m2, m3, m4, m5, nd: Int
 		var db: Double
-		var d: FixedLReal
+		var d = FixedLReal()
 		
 		if Real.err != 0 { Zero(&c); return }
 		if Real.debug >= 9 {
@@ -579,7 +579,7 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		*/
 		var ia, ib, na, nb, nc, i, j, i1, i2, n2, j3: Int
 		var d2, t1, t2: Double
-		var d: FixedLReal
+		var d = FixedLReal()
 		
 		if Real.err != 0 { Zero(&c); return }
 		if Real.debug >= 8 {
@@ -652,10 +652,10 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		by the number `b'*2**`n' to produce the multiple precision
 		result in `c'.
 		*/
-		var bb: Double;
-		var d: FixedLReal;
-		var ia, ib, n1, n2, i, na: Int;
-		var f: RealArray;
+		var bb: Double
+		var d = FixedLReal()
+		var ia, ib, n1, n2, i, na: Int
+		var f = RealArray(count:3, repeatedValue: 0)
 		
 		if Real.err != 0 { Zero(&c); return }
 		if Real.debug >= 9 {
@@ -700,7 +700,7 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		var ia, ib, na, nb, nc, i3, i2, i, j, j3, md, is1, ij: Int
 		var rb, ss, t0, t1, t2: Double
 		var useOldj: Bool
-		var d: FixedLReal
+		var d = FixedLReal()
 		
 		/* handle errors */
 		if Real.err != 0 { Zero(&c); return }
@@ -817,10 +817,10 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		result in `c'.
 		*/
 		var t1, bb, br, dd: Double
-		var d: FixedLReal
+		var d = FixedLReal()
 		var ia, ib, n1, n2, nc, na, j: Int
 		var ok: Bool
-		var f: RealArray
+		var f = RealArray(count:3, repeatedValue: 0)
 		
 		if Real.err != 0 { Zero(&c); return }
 		ia = Sign(1, y:a[0]); ib = Sign(1, y:b)
@@ -882,7 +882,8 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		of Computer Programming", Vol 2.
 		*/
 		var na, nws, nn: Int
-		var r, t: FixedLReal
+		var r = FixedLReal()
+		var t = FixedLReal()
 		
 		if Real.err != 0 { Zero(&b); return }
 		na = Min(Int(abs(a[0])), y:curMantissa)
@@ -980,7 +981,9 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		with only half of the final level of precision.
 		*/
 		var t1, t2: Double
-		var k0, k1, k2: RealArray
+		var k0 = FixedLReal()
+		var k1 = FixedLReal()
+		var k2 = FixedLReal()
 		var iq: Bool
 		var ia, na, nws, n2, n, k, nw1, nw2, mq: Int
 		
@@ -998,9 +1001,10 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		nws = curMantissa
 		
 		/* determine the least integer mq such that 2^mq >= curMantissa */
-		t1 = curMantissa; mq = Int(Real.invLn2*log(t1)+1-Real.mprxx)
+		t1 = Double(curMantissa); mq = Int(Real.invLn2*log(t1)+1-Real.mprxx)
 		
 		/* initial approximation of 1 / Sqrt(a) */
+		n = 0; t1 = 0
 		RealToNumbExp(a, b: &t1, n: &n)
 		n2 = -(n / 2); t2 = sqrt(t1*ipower(2.0, base: n+2*n2))
 		t1 = 1/t2
@@ -1014,14 +1018,14 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 			nw1 = curMantissa; curMantissa = Min(2*curMantissa-2, y:nws)+1
 			nw2 = curMantissa
 			for ;; {
-				Mul(&k0, a: b, b: b)           /* k0 = X(k)^2 */
-				Mul(&k1, a: a, b: k0)         /* k1 = a * X(k)^2 */
-				Sub(&k0, a:Real.one.real, b:k1)       /* k0 = 1 - a * X(k)^2 */
+				Mul(&k0.r, a: b, b: b)           /* k0 = X(k)^2 */
+				Mul(&k1.r, a: a, b: k0.r)         /* k1 = a * X(k)^2 */
+				Sub(&k0.r, a:Real.one.real, b:k1.r)       /* k0 = 1 - a * X(k)^2 */
 				curMantissa = nw1
-				Mul(&k1, a:b, b:k0)          /* k1 = X(k)*(1 - a * X(k)^2) */
-				Muld(&k0, a: k1, b: Real.HALF, n: 0)   /* k0 = 0.5 * (X(k)*(1 - a * X(k)^2)) */
+				Mul(&k1.r, a:b, b:k0.r)          /* k1 = X(k)*(1 - a * X(k)^2) */
+				Muld(&k0.r, a: k1.r, b: Real.HALF, n: 0)   /* k0 = 0.5 * (X(k)*(1 - a * X(k)^2)) */
 				curMantissa = nw2
-				Add(&b, a:b, b:k0)           /* X(k+1) = X(k) + 0.5 * (X(k)*(1 - a * X(k)^2)) */
+				Add(&b, a:b, b:k0.r)           /* X(k+1) = X(k) + 0.5 * (X(k)*(1 - a * X(k)^2)) */
 				if ~iq && (k == mq-Real.NIT) {
 					iq = true
 				} else {
@@ -1031,18 +1035,18 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		}
 		
 		/* last iteration using Karp's trick */
-		Mul(&k0, a:a, b:b);              /* k0 = a * X(n) */
+		Mul(&k0.r, a:a, b:b);              /* k0 = a * X(n) */
 		nw1 = curMantissa
 		curMantissa = Min(2*curMantissa-2, y:nws)+1
 		nw2 = curMantissa
-		Mul(&k1, a:k0, b:k0)            /* k1 = (a * X(n))^2 */
-		Sub(&k2, a:a, b:k1)             /* k2 = a - (a * X(n))^2 */
+		Mul(&k1.r, a:k0.r, b:k0.r)            /* k1 = (a * X(n))^2 */
+		Sub(&k2.r, a:a, b:k1.r)             /* k2 = a - (a * X(n))^2 */
 		curMantissa = nw1
-		Mul(&k1, a:k2, b:b)              /* k1 = X(n) * (a - (a * X(n))^2) */
-		Muld(&k2, a:k1, b:Real.HALF, n:0)       /* k2 = 0.5 * (X(n) * (a - (a * X(n))^2)) */
+		Mul(&k1.r, a:k2.r, b:b)              /* k1 = X(n) * (a - (a * X(n))^2) */
+		Muld(&k2.r, a:k1.r, b:Real.HALF, n:0)       /* k2 = 0.5 * (X(n) * (a - (a * X(n))^2)) */
 		curMantissa = nw2
-		Add(&k1, a:k0, b:k2)             /* Sqrt(a) = a * X(n) + 0.5 * (X(n) * (a - (a * X(n))^2)) */
-		copy(k1, b:&b)
+		Add(&k1.r, a:k0.r, b:k2.r)             /* Sqrt(a) = a * X(n) + 0.5 * (X(n) * (a - (a * X(n))^2)) */
+		copy(k1.r, b:&b)
 		
 		/* restore original resolution */
 		curMantissa = nws; Round(&b)
@@ -1070,8 +1074,11 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		*/
 		let maxN = 0x40000000   /* 2^30 */
 		var t1, t2, tn: Double
-		var k0, k1, k2, k3: RealArray
-		var f2: RealArray
+		var k0 = FixedLReal()
+		var k1 = FixedLReal()
+		var k2 = FixedLReal()
+		var k3 = FixedLReal()
+		var f2 = RealArray(count:3, repeatedValue: 0)
 		var iq: Bool
 		var nws: Int
 		var ia, na, n2, k, mq, n1, n3: Int
@@ -1110,9 +1117,10 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		t1 = Double(curMantissa); mq = Int(Real.invLn2*log(t1)+1-Real.mprxx)
 		
 		/* check how close `a' is to 1 */
-		Sub(&k0, a:a, b:Real.one.real)
-		if k0[0] == 0 { copy(Real.one.real, b:&b); return }
-		RealToNumbExp(k0, b: &t1, n: &n1)
+		Sub(&k0.r, a:a, b:Real.one.real)
+		if k0.r[0] == 0 { copy(Real.one.real, b:&b); return }
+		n1 = 0; t1 = 0
+		RealToNumbExp(k0.r, b: &t1, n: &n1)
 		n2 = Int(Real.invLn2*log(abs(t1)))
 		t1 = t1*ipower(Real.HALF, base: n2)
 		n1 += n2
@@ -1123,21 +1131,21 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 				/* `a' is so close to 1 that it is cheaper to use the
 				binomial series */
 				curMantissa++
-				Divd(&k1, a: k0, b: t2, n: 0); Add(&k2, a:Real.one.real, b:k1)
+				Divd(&k1.r, a: k0.r, b: t2, n: 0); Add(&k2.r, a:Real.one.real, b:k1.r)
 				k = 0
 				for ;; {
 					k++; t1 = 1-Double(k*n); t2 = Double((k+1)*n)
-					Muld(&k2, a: k1, b: t1, n: 0)
-					Muld(&k1, a: k3, b: t2, n: 0)
-					Mul(&k3, a:k0, b:k1)
-					copy(k3, b:&k1)
-					Add(&k3, a:k1, b:k2)
-					copy(k3, b:&k2)
-					if (k1[0] == 0) || (k1[1] < Double(-curMantissa)) {
+					Muld(&k2.r, a: k1.r, b: t1, n: 0)
+					Muld(&k1.r, a: k3.r, b: t2, n: 0)
+					Mul(&k3.r, a:k0.r, b:k1.r)
+					copy(k3.r, b:&k1.r)
+					Add(&k3.r, a:k1.r, b:k2.r)
+					copy(k3.r, b:&k2.r)
+					if (k1.r[0] == 0) || (k1.r[1] < Double(-curMantissa)) {
 						break
 					}
 				}
-				copy(k2, b:&b); Div(&k0, a:Real.one.real, b:k2)
+				copy(k2.r, b:&b); Div(&k0.r, a:Real.one.real, b:k2.r)
 				curMantissa = nws; Round(&b)
 				b[0] = Double(Sign(Int(b[0]), y: Double(ia)))
 				return
@@ -1158,13 +1166,13 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		for k = 2; k <= mq; k++ {
 			curMantissa = Min(2*curMantissa-2, y: nws)+1
 			for ;; {
-				IntPower(&k0, a:b, n:n)
-				Mul(&k1, a:a, b:k0)
-				Sub(&k0, a:Real.one.real, b:k1)
-				Mul(&k1, a:b, b:k0)
-				Divd(&k0, a: k1, b: tn, n: 0)
-				Add(&k1, a:b, b:k0)
-				copy(k1, b:&b)
+				IntPower(&k0.r, a:b, n:n)
+				Mul(&k1.r, a:a, b:k0.r)
+				Sub(&k0.r, a:Real.one.real, b:k1.r)
+				Mul(&k1.r, a:b, b:k0.r)
+				Divd(&k0.r, a: k1.r, b: tn, n: 0)
+				Add(&k1.r, a:b, b:k0.r)
+				copy(k1.r, b:&b)
 				if ~iq && (k == mq-Real.NIT) {
 					iq = true
 				} else {
@@ -1174,7 +1182,7 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		}
 		
 		/* take reciprocal to give final result */
-		Div(&k1, Real.one.real, b); copy(k1, b: &b)
+		Div(&k1.r, a: Real.one.real, b: b); copy(k1.r, b: &b)
 		
 		/* restore original resolution */
 		curMantissa = nws; Round(&b)
@@ -1201,8 +1209,12 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		number of correct digits, providing all iterations are done
 		with the maximum precision.
 		*/
-		var f: RealArray
-		var An, Bn, Dn, t, r: RealArray
+		var f = RealArray(count:3, repeatedValue: 0)
+		var An = FixedLReal()
+		var t = FixedLReal()
+		var Bn = FixedLReal()
+		var Dn = FixedLReal()
+		var r = FixedLReal()
 		var nws, mq: Int
 		var k: Int
 		var t1: Double
@@ -1219,30 +1231,30 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		mq = Int(Real.invLn2*(log(t1)-1)+1)
 		
 		/* initialize working variables */
-		copy(Real.one.real, b:&An)						  /* A(0) = 1 */
-		f[0] = 1; f[1] = 0; f[2] = 2.0
-		Sqrt(&t, a:f)                           /* t = Sqrt(2) */
-		Muld(&Bn, a: t, b: Real.HALF, n: 0);               /* B(0) = 1 / Sqrt(2) */
+		copy(Real.one.real, b:&An.r)						  /* A(0) = 1 */
+		f[0] = 1; f[1] = 0; f[2] = 2
+		Sqrt(&t.r, a:f)                           /* t = Sqrt(2) */
+		Muld(&Bn.r, a: t.r, b: Real.HALF, n: 0);               /* B(0) = 1 / Sqrt(2) */
 		f[1] = -1; f[2] = Real.HALF*Real.radix
-		Sub(&Dn, a:t, b:f)                        /* D(0) = Sqrt(2) - 1/2 */
+		Sub(&Dn.r, a:t.r, b:f)                        /* D(0) = Sqrt(2) - 1/2 */
 		
 		/* perform iterations as above */
 		for k = 1; k<=mq; k++ {
-			Mul(&t, a:An, b:Bn)                     /* t = A(k-1) * B(k-1) */
-			Add(&r, a:An, b:Bn)                     /* r = A(k-1) + B(k-1) */
-			Sqrt(&Bn, a: t)                        /* B(k) = Sqrt(A(k-1) * B(k-1)) */
-			Muld(&An, a: r, b: Real.HALF, n: 0)               /* A(k) = 0.5 * (A(k-1) + B(k-1)) */
-			Sub(&t, a:An, b:Bn)                     /* t = A(k) - B(k) */
-			Mul(&t, a:t, b:t)                       /* t = (A(k) - B(k))^2 */
+			Mul(&t.r, a:An.r, b:Bn.r)                     /* t = A(k-1) * B(k-1) */
+			Add(&r.r, a:An.r, b:Bn.r)                     /* r = A(k-1) + B(k-1) */
+			Sqrt(&Bn.r, a: t.r)                        /* B(k) = Sqrt(A(k-1) * B(k-1)) */
+			Muld(&An.r, a: r.r, b: Real.HALF, n: 0)               /* A(k) = 0.5 * (A(k-1) + B(k-1)) */
+			Sub(&t.r, a:An.r, b:Bn.r)                     /* t = A(k) - B(k) */
+			Mul(&t.r, a:t.r, b:t.r)                       /* t = (A(k) - B(k))^2 */
 			t1 = ipower(2.0, base: k)              /* t1 = 2^k */
-			Muld(&t, a: t, b: t1, n: 0)                  /* t = 2^k * (A(k) - B(k))^2 */
-			Sub(&Dn, a:Dn, b:t)                     /* D(k) = D(k-1) -  2^k * (A(k) - B(k))^2 */
+			Muld(&t.r, a: t.r, b: t1, n: 0)                  /* t = 2^k * (A(k) - B(k))^2 */
+			Sub(&Dn.r, a:Dn.r, b:t.r)                     /* D(k) = D(k-1) -  2^k * (A(k) - B(k))^2 */
 		}
 		
 		/* complete the computation */
-		Add(&t, a:An, b:Bn)                       /* t = A(k) + B(k) */
-		Mul(&t, a:t, b:t)                         /* t = (A(k) + B(k))^2 */
-		Div(&pi, a:t, b:Dn)                       /* k2 = (A(k) + B(k))^2 / D(k) */
+		Add(&t.r, a:An.r, b:Bn.r)                       /* t = A(k) + B(k) */
+		Mul(&t.r, a:t.r, b:t.r)                         /* t = (A(k) + B(k))^2 */
+		Div(&pi, a:t.r, b:Dn.r)                       /* k2 = (A(k) + B(k))^2 / D(k) */
 		
 		/* back to original precision */
 		curMantissa = nws; Round(&pi)
@@ -1291,8 +1303,8 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		number `a'.
 		*/
 		var ia, na, ma, ic, nc, mc, nb, i: Int
-		var f: RealArray
-		var k0: RealArray
+		var f = RealArray(count:3, repeatedValue: 0)
+		var k0 = FixedLReal()
 		
 		if Real.err != 0 { Zero(&b); return }
 		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:curMantissa)
@@ -1309,8 +1321,8 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		
 		/* add or subtract 1/2 from the input, dep}ing on its sign */
 		f[0] = 1; f[1] = -1; f[2] = Real.HALF*Real.radix
-		if ia == 1 { Add(&k0, a:a, b:f) } else { Sub(&k0, a:a, b:f) }
-		ic = Sign(1, y:k0[0]); nc = Int(abs(k0[0])); mc = Int(k0[1])
+		if ia == 1 { Add(&k0.r, a:a, b:f) } else { Sub(&k0.r, a:a, b:f) }
+		ic = Sign(1, y:k0.r[0]); nc = Int(abs(k0.r[0])); mc = Int(k0.r[1])
 		
 		/* place integer part of k0 in b */
 		nb = Min(Max(mc+1, y:0), y:nc)
@@ -1319,7 +1331,7 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		} else {
 			b[0] = Double(Sign(nb, y:Double(ic))); b[1] = Double(mc)
 			b[nb+2] = 0; b[nb+3] = 0
-			for i = 2; i<=nb+1; i++ { b[i] = k0[i] }
+			for i = 2; i<=nb+1; i++ { b[i] = k0.r[i] }
 		}
 	} //RoundInt;
 
@@ -1342,13 +1354,17 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		let NQ = 8
 		var t1, t2, tl: Double
 		var ia, na, nws, n1, nz, l1, i: Int
-		var k0, k1, k2, k3: RealArray
+		var k0 = FixedLReal()
+		var k1 = FixedLReal()
+		var k2 = FixedLReal()
+		var k3 = FixedLReal()
 		
 		if Real.err != 0 { Zero(&b); return };
 		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:curMantissa)
+		t1 = 0; n1 = 0
 		RealToNumbExp(a, b: &t1, n: &n1)
 		t1 = t1*ipower(2, base: n1)
-		Zero(&k1)
+		Zero(&k1.r)
 		
 		/* unless the argument is near Ln(2), ln2 must be precomputed.
 		This exception is necessary because Ln calls Exp to
@@ -1376,26 +1392,26 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		Save nz = Int(a/Ln(2)) for correcting the exponent of the
 		final result. */
 		if abs(t1-Real.Ln2) > Real.invRadix {
-			Div(&k0, a:a, b:Real.ln2.real)
-			RoundInt(&k1, a: k0)
-			RealToNumbExp(k1, b: &t1, n: &n1)
+			Div(&k0.r, a:a, b:Real.ln2.real)
+			RoundInt(&k1.r, a: k0.r)
+			RealToNumbExp(k1.r, b: &t1, n: &n1)
 			nz = Int(t1*Double(ipower(2, base: n1)) + Double(Sign(Int(Real.mprxx), y: t1)))
-			Mul(&k2, a:Real.ln2.real, b:k1)
-			Sub(&k0, a:a, b:k2)
+			Mul(&k2.r, a:Real.ln2.real, b:k1.r)
+			Sub(&k0.r, a:a, b:k2.r)
 		} else {
-			copy(a, b:&k0); nz = 0
+			copy(a, b:&k0.r); nz = 0
 		}
-		tl = k0[1] - Double(curMantissa)
+		tl = k0.r[1] - Double(curMantissa)
 		
 		/* check if the reduced argument is zero */
-		if k0[0] == 0 {
-			copy(Real.one.real, b:&k0)
+		if k0.r[0] == 0 {
+			copy(Real.one.real, b:&k0.r)
 		} else {
 			/* divide the reduced argument by 2^nq */
-			Divd(&k1, a: k0, b: 1, n: NQ)
+			Divd(&k1.r, a: k0.r, b: 1, n: NQ)
 			
 			/* compute Exp using the usual Taylor series */
-			copy(Real.one.real, b:&k2); copy(Real.one.real, b:&k3); l1 = 0
+			copy(Real.one.real, b:&k2.r); copy(Real.one.real, b:&k3.r); l1 = 0
 			for ;; {
 				l1++
 				if l1 == 10000 {
@@ -1403,22 +1419,22 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 					Real.err = 36; curMantissa = nws; return
 				}
 				t2 = Double(l1)
-				Mul(&k0, a:k2, b:k1)
-				Divd(&k2, a: k0, b: t2, n: 0)
-				Add(&k0, a:k3, b:k2)
-				copy(k0, b:&k3)
+				Mul(&k0.r, a:k2.r, b:k1.r)
+				Divd(&k2.r, a: k0.r, b: t2, n: 0)
+				Add(&k0.r, a:k3.r, b:k2.r)
+				copy(k0.r, b:&k3.r)
 				
 				/* check for convergence of the series */
-				if (k2[0] == 0) || (k2[1] < tl) { break }
+				if (k2.r[0] == 0) || (k2.r[1] < tl) { break }
 			}
 			
 			/* raise to the (2^nq)-th power */
-			for i = 1; i<=NQ; i++ { Mul(&k0, a:k0, b:k0) }
+			for i = 1; i<=NQ; i++ { Mul(&k0.r, a:k0.r, b:k0.r) }
 		}
 		
 		/* multiply by 2^nz */
-		Muld(&k1, a:k0, b:1, n:nz)
-		copy(k1, b:&b)
+		Muld(&k1.r, a:k0.r, b:1, n:nz)
+		copy(k1.r, b:&b)
 		
 		/* restore original precision level */
 		curMantissa = nws; Round(&b)
@@ -1445,7 +1461,9 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		*/
 		var ia, na, n1, nws, mq, k: Int
 		var t1, t2: Double
-		var k0, k1, k2: RealArray
+		var k0 = FixedLReal()
+		var k1 = FixedLReal()
+		var k2 = FixedLReal()
 		var iq: Bool
 		
 		if Real.err != 0 { Zero(&b); return }
@@ -1458,6 +1476,7 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		}
 		
 		/* unless the input is close to 2, ln2 must be known */
+		t1 = 0; n1 = 0
 		RealToNumbExp(a, b: &t1, n: &n1)
 		if ((abs(t1-2.0) > 1.0e-3) || (n1 != 0)) && (Real.ln2.real.count == 0) {
 			println("*** Ln: Ln(2) must be precomputed!"); Real.err = 51; return
@@ -1475,11 +1494,11 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		for k = 2; k<=mq; k++ {
 			curMantissa = Min(2*curMantissa-2, y:nws)+1
 			for ;; {
-				Exp(&k0, a:b)		   /* k0 = Exp(X(k)) */
-				Sub(&k1, a:a, b:k0)    /* k1 = a - Exp(X(k)) */
-				Div(&k2, a:k1, b:k0)   /* k2 = (a - Exp(X(k))) / Exp(X(k)) */
-				Add(&k1, a:b, b:k2)    /* k1 = X(k) + (a - Exp(X(k))) / Exp(X(k)) */
-				copy(k1, b:&b)
+				Exp(&k0.r, a:b)		   /* k0 = Exp(X(k)) */
+				Sub(&k1.r, a:a, b:k0.r)    /* k1 = a - Exp(X(k)) */
+				Div(&k2.r, a:k1.r, b:k0.r)   /* k2 = (a - Exp(X(k))) / Exp(X(k)) */
+				Add(&k1.r, a:b, b:k2.r)    /* k1 = X(k) + (a - Exp(X(k))) / Exp(X(k)) */
+				copy(k1.r, b:&b)
 				if (k == mq-Real.NIT) && ~iq {
 					iq = true
 				} else {
@@ -1514,113 +1533,123 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		Reducing t in this manner ensures that -Pi/32 < s < Pi/32 which
 		accelerates convergence in the above series.
 		*/
-		var
-		t1, t2: Double;
-		nws: Int;
-		f: Real8;
-		ia, na, ka, kb, n1, kc, l1: Int;
-		k0, k1, k2, k3, k4, k5, k6: FixedReal;
+		var t1, t2: Double
+		var nws: Int
+		var f = RealArray(count:3, repeatedValue: 0)
+		var ia, na, ka, kb, n1, kc, l1: Int
+		var k0 = FixedLReal()
+		var k1 = FixedLReal()
+		var k2 = FixedLReal()
+		var k3 = FixedLReal()
+		var k4 = FixedLReal()
+		var k5 = FixedLReal()
+		var k6 = FixedLReal()
 		
-		if err != 0 { Zero(sin); Zero(cos); return };
+		if Real.err != 0 { Zero(&sin); Zero(&cos); return }
 		
-		ia = Sign(1, a[0]); na = Min(Int(abs(a[0])), curMantissa);
+		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:curMantissa)
 		
 		/* check for trivial case when a = 0 */
-		if na=0 { copy(x1, cos); Zero(sin); return };
+		if na == 0 { copy(Real.one.real, b:&cos); Zero(&sin); return }
 		
 		/* check if pi has been precomputed */
-		if pi=NIL { println("*** SinCos: pi must be precomputed!");
-			Out.Ln; err = 28; return
-		};
+		if Real.pi.real.count == 0 {
+			println("*** SinCos: pi must be precomputed!")
+			Real.err = 28; return
+		}
 		
 		/* increase resolution */
-		nws = curMantissa; INC(curMantissa);
+		nws = curMantissa; curMantissa++
 		
 		/* reduce input to between -pi and pi */
-		Muld(k0, pi.real^, 2.0D0, 0);
-		Div(k1, a, k0);
-		RoundInt(k2, k1);       /* k2 = a DIV 2pi */
-		Sub(k3, k1, k2);        /* k3 = a MOD 2pi */
+		Muld(&k0.r, a: Real.pi.real, b: 2.0, n: 0)
+		Div(&k1.r, a:a, b:k0.r)
+		RoundInt(&k2.r, a:k1.r)       /* k2 = a DIV 2pi */
+		Sub(&k3.r, a:k1.r, b:k2.r)        /* k3 = a MOD 2pi */
 		
 		/* determine the nearest multiple of pi/2, and within a
 		quadrant, the nearest multiple of pi/16.  Through most
 		of the rest of this procedure, ka and kb are the integers
 		a and b of the above algorithm. */
-		RealToNumbExp(k3, t1, n1);
-		if n1>=-NBT {
-			t1 = t1*ipower(2, SHORT(n1)); t2 = 4*t1;
-			if t2<0 { ka = -Int(HALF-t2) } else { ka = Int(t2+HALF) };  /* ka = rm.round(t2) */
-			t1 = 8*(t2-ka);
-			if t1<0 { kb = -Int(HALF-t1) } else { kb = Int(t1+HALF) };  /* kb = rm.round(8*(t2-ka)) */
+		t1 = 0; n1 = 0
+		RealToNumbExp(k3.r, b:&t1, n:&n1)
+		if n1 >= -Real.NBT {
+			t1 = t1*ipower(2, base: n1); t2 = 4*t1
+			if t2 < 0 { ka = -Int(Real.HALF-t2) } else { ka = Int(t2+Real.HALF) }  /* ka = rm.round(t2) */
+			t1 = 8 * (t2 - Double(ka))
+			if t1 < 0 { kb = -Int(Real.HALF-t1) } else { kb = Int(t1+Real.HALF) }  /* kb = rm.round(8*(t2-ka)) */
 			/* ka = Int(t2); kb = rm.round(8*(t2-ka)) */
-		} else { ka = 0; kb = 0
-		};
-		t1 = (8*ka+kb)/32;
-		NumbExpToReal(t1, 0, k1);
-		Sub(k2, k3, k1);
-		Mul(k1, k0, k2);
+		} else {
+			ka = 0; kb = 0
+		}
+		t1 = Double((8*ka+kb)/32)
+		NumbExpToReal(t1, n: 0, b: &k1.r)
+		Sub(&k2.r, a:k3.r, b:k1.r)
+		Mul(&k1.r, a:k0.r, b:k2.r)
 		
 		/* compute cosine and sine of the reduced arguments using
 		Taylor's series */
-		if k1[0]=0 { Zero(k0)
+		if k1.r[0] == 0 {
+			Zero(&k0.r)
 		} else {
-			copy(k1, k0); Mul(k2, k0, k0); l1 = 0;
+			copy(k1.r, b:&k0.r); Mul(&k2.r, a:k0.r, b:k0.r); l1 = 0
 			for ;; {
-				INC(l1);
-				if l1=10000 {
-					println("*** SinCos: Iteration limit exceeded!"); Out.Ln;
-					err = 29; curMantissa = nws; return
-				};
-				t2 = -(2.0D0*l1)*(2.0D0*l1+1);
-				Mul(k3, k2, k1);
-				Divd(k1, k3, t2, 0);
-				Add(k3, k1, k0);
-				copy(k3, k0);
+				l1++
+				if l1 == 10000 {
+					println("*** SinCos: Iteration limit exceeded!")
+					Real.err = 29; curMantissa = nws; return
+				}
+				t2 = Double(-(2*l1)*(2*l1+1))
+				Mul(&k3.r, a:k2.r, b:k1.r)
+				Divd(&k1.r, a: k3.r, b: t2, n: 0)
+				Add(&k3.r, a:k1.r, b:k0.r)
+				copy(k3.r, b:&k0.r)
 				
 				/* check for convergence of the series */
-				if (k1[0]=0) || (k1[1]<k0[1]-curMantissa) { break }
+				if (k1.r[0] == 0) || (k1.r[1] < (k0.r[1]-Double(curMantissa))) { break }
 			}
-		};
+		}
 		
 		/* compute Cos(s) = Sqrt(1-Sin(s)^2) */
-		copy(k0, k1);
-		Mul(k2, k0, k0); Sub(k3, x1, k2); Sqrt(k0, k3);
+		copy(k0.r, b:&k1.r)
+		Mul(&k2.r, a:k0.r, b:k0.r); Sub(&k3.r, a:Real.one.real, b:k2.r); Sqrt(&k0.r, a:k3.r)
 		
 		/* compute cosine and sine of b*Pi/16 */
 		kc = abs(kb); f[0] = 1; f[1] = 0; f[2] = 2.0;
-		if kc=0 { copy(x1, k2); Zero(k3)
+		if kc == 0 {
+			copy(Real.one.real, b:&k2.r); Zero(&k3.r)
 		} else {
-			CASE kc OF
-				| 1: Sqrt(k4, f); Add(k5, f, k4); Sqrt(k4, k5)
-			| 2: Sqrt(k4, f)
-			| 3: Sqrt(k4, f); Sub(k5, f, k4); Sqrt(k4, k5)
-			| 4: Zero(k4)
-			| } else { /* { nothing */
-		};
-		Add(k5, f, k4); Sqrt(k3, k5); Muld(k2, k3, HALF, 0);
-		Sub(k5, f, k4); Sqrt(k4, k5); Muld(k3, k4, HALF, 0)
-	};
-	
-	/* apply the trigonometric summation identities to compute
-	cosine and sine of s + b*Pi/16 */
-	if kb<0 { k3[0] = -k3[0] };
-	Mul(k4, k0, k2); Mul(k5, k1, k3); Sub(k6, k4, k5);
-	Mul(k4, k1, k2); Mul(k5, k0, k3); Add(k1, k4, k5);
-	copy(k6, k0);
-	
-	/* this code applies the trig summation identities for
-	(s + b*pi/16 + a*pi/2 */
-	CASE ka OF
-	|     0: copy(k0, cos); copy(k1, sin)
-	|     1: copy(k1, cos); cos[0] = -cos[0]; copy(k0, sin)
-	|    -1: copy(k1, cos); copy(k0, sin); sin[0] = -sin[0]
-	| 2, -2: copy(k0, cos); cos[0] = -cos[0]; copy(k1, sin); sin[0] = -sin[0]
-	| } else { /* { nothing */
-	};
-
-/* restore the orginal precision level */
-curMantissa = nws; Round(cos); Round(sin)
-} //SinCos;
+			switch kc {
+			case 1: Sqrt(&k4.r, a:f); Add(&k5.r, a:f, b:k4.r); Sqrt(&k4.r, a:k5.r)
+			case 2: Sqrt(&k4.r, a:f)
+			case 3: Sqrt(&k4.r, a:f); Sub(&k5.r, a:f, b:k4.r); Sqrt(&k4.r, a:k5.r)
+			case 4: Zero(&k4.r)
+			default: break /* do nothing */
+			}
+			Add(&k5.r, a:f, b:k4.r); Sqrt(&k3.r, a:k5.r); Muld(&k2.r, a: k3.r, b: Real.HALF, n: 0)
+			Sub(&k5.r, a:f, b:k4.r); Sqrt(&k4.r, a:k5.r); Muld(&k3.r, a: k4.r, b: Real.HALF, n: 0)
+		}
+		
+		/* apply the trigonometric summation identities to compute
+		cosine and sine of s + b*Pi/16 */
+		if kb < 0 { k3.r[0] = -k3.r[0] }
+		Mul(&k4.r, a:k0.r, b:k2.r); Mul(&k5.r, a:k1.r, b:k3.r); Sub(&k6.r, a:k4.r, b:k5.r)
+		Mul(&k4.r, a:k1.r, b:k2.r); Mul(&k5.r, a:k0.r, b:k3.r); Add(&k1.r, a:k4.r, b:k5.r)
+		copy(k6.r, b:&k0.r)
+		
+		/* this code applies the trig summation identities for (s + b*pi/16 + a*pi/2 */
+		switch ka {
+		case 0: copy(k0.r, b:&cos); copy(k1.r, b:&sin)
+		case 1: copy(k1.r, b:&cos); cos[0] = -cos[0]; copy(k0.r, b:&sin)
+		case -1: copy(k1.r, b:&cos); copy(k0.r, b:&sin); sin[0] = -sin[0]
+		case 2: fallthrough
+		case -2: copy(k0.r, b:&cos); cos[0] = -cos[0]; copy(k1.r, b:&sin); sin[0] = -sin[0]
+		default: break /* do nothing */
+		}
+		
+		/* restore the orginal precision level */
+		curMantissa = nws; Round(&cos); Round(&sin)
+	} //SinCos;
 
 //func SinhCosh (var sinh, cosh: RealArray; a: RealArray);
 ///*
