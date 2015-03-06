@@ -1651,129 +1651,139 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		curMantissa = nws; Round(&cos); Round(&sin)
 	} //SinCos;
 
-//func SinhCosh (var sinh, cosh: RealArray; a: RealArray);
-///*
-//This routine computes the hyperbolic cosine and sine of the
-//number `a' and returns the two results in `cosh' and `sinh',
-//respectively.  The last word of the result is not reliable.
-//*/
-//var
-//k0, k1, k2: FixedReal;
-//nws: Int;
-// 
-//nws = curMantissa; INC(curMantissa);
-//Exp(k0, a); Div(k1, x1, k0);         /* k1 = exp(-a); k0 = exp(a) */
-//Add(k2, k0, k1);                       /* k2 = exp(a) + exp(-a) */
-//Muld(k2, k2, HALF, 0); copy(k2, cosh); /* cosh = (exp(a) + exp(-a))/2 */
-//Sub(k2, k0, k1);                       /* k2 = exp(a) - exp(-a) */
-//Muld(k2, k2, HALF, 0); copy(k2, sinh); /* sinh = (exp(a) - exp(-a))/2 */
-//
-///* restore orginal precision */
-//curMantissa = nws; Round(cosh); Round(sinh)
-//} //SinhCosh;
-//
-//func ATan2 (var a: RealArray; x, y: RealArray);
-///*
-//This routine computes the angle `a' subt}ed by the
-//pair (`x', `y') considered as a point in the x-y plane.
-//This routine places the resultant angle correctly in the
-//full circle where -pi < `a' <= pi.  The last word of the
-//result is not reliable.
-//
-//The Taylor series for Arcsin converges much more slowly than
-//that of Sin.  Thus this routine does not employ a Taylor
-//series, but instead computes Arccos or Arcsin by solving
-//Cos(a) = x or Sin(a) = y using one of the following Newton
-//iterations, both of which converge to `a':
-//
-//z(k+1) = z(k) - (x - Cos(z(k))) / Sin(z(k))
-//z(k+1) = z(k) - (y - Sin(z(k))) / Cos(z(k))
-//
-//The first is selected if abs(x) <= abs(y); otherwise the
-//second is used.  These iterations are performed with a
-//maximum precision level curMantissa that is dynamically changed,
-//approximately doubling with each iteration.
-//*/
-//let 
-//NIT=3;
-//var
-//t1, t2, t3: Double;
-//iq: Bool;
-//nws: Int;
-//ix, iy, nx, ny, mq, n1, n2, kk, k: Int;
-//k0, k1, k2, k3, k4: FixedReal;
-// 
-//if err != 0 { Zero(a); return };
-//ix = Sign(1, x[0]); nx = Min(Int(abs(x[0])), curMantissa);
-//iy = Sign(1, y[0]); ny = Min(Int(abs(y[0])), curMantissa);
-//
-///* check if both x and y are zero */
-//if (nx=0) & (ny=0) { 
-//println("*** ATan2: Both arguments are zero!"); Out.Ln;
-//err = 7; return
-//};
-//
-///* check if pi has been precomputed */
-//if pi=NIL { 
-//println("*** ATan2: Pi must be precomputed!"); Out.Ln;
-//err = 8; return
-//};
-//
-///* check if one of x or y is zero */
-//if nx=0 { 
-//if iy>0 { Muld(a, pi.real^, HALF, 0)
-//} else { Muld(a, pi.real^, -HALF, 0)
-//};
-//return
-//} else if ny=0 { 
-//if ix>0 { Zero(a) } else { copy(pi.real^, a) };
-//return
-//};
-//
-///* increase the resolution */
-//nws = curMantissa; INC(curMantissa);
-//
-///* determine the least integer mq such that 2^mq >= curMantissa */
-//mq = Int(invLn2*rm.ln(nws)+1-mprxx);
-//
-///* normalize x and y so that x^2 + y^2 = 1 */
-//Mul(k0, x, x); Mul(k1, y, y); Add(k2, k0, k1); Sqrt(k3, k2);
-//Div(k1, x, k3); Div(k2, y, k3);
-//
-///* compute initial approximation of the angle */
-//RealToNumbExp(k1, t1, n1); RealToNumbExp(k2, t2, n2);
-//n1 = Max(n1, -66); n2 = Max(n2, -66);
-//t1 = t1*ipower(2, SHORT(n1)); t2 = t2*ipower(2, SHORT(n2));
-//t3 = rm.arctan2(t2, t1);
-//NumbExpToReal(t3, 0, a);
-//
-///* the smaller of x or y will be used from now on to measure convergence.
-//This selects the Newton iteration (of the two listed above) that has
-//the largest denominator */
-//if abs(t1)<=abs(t2) { kk = 1; copy(k1, k0)
-//} else { kk = 2; copy(k2, k0)
-//};
-//
-///* perform the Newton-Raphson iteration described above with a dynamically
-//changing precision level curMantissa (one greater than powers of two). */
-//curMantissa = 3; iq = false
-//for k = 2 TO mq {
-//curMantissa = SHORT(Min(2*curMantissa-2, nws)+1);
-//for ;; {
-//SinCos(k2, k1, a);
-//if kk=1 { Sub(k3, k0, k1); Div(k4, k3, k2); Sub(k1, a, k4)
-//} else { Sub(k3, k0, k2); Div(k4, k3, k1); Add(k1, a, k4)
-//};
-//copy(k1, a);
-//if ~iq & (k=mq-NIT) { iq = true } else { break }
-//}
-//};
-//
-///* restore the original precision */
-//curMantissa = nws; Round(a)
-//} //ATan2;
-//
-//
+	private mutating func SinhCosh (inout sinh: RealArray, inout cosh: RealArray, a: RealArray) {
+		/*
+		This routine computes the hyperbolic cosine and sine of the
+		number `a' and returns the two results in `cosh' and `sinh',
+		respectively.  The last word of the result is not reliable.
+		*/
+		var k0 = FixedLReal()
+		var k1 = FixedLReal()
+		var k2 = FixedLReal()
+		var nws: Int
+		
+		nws = curMantissa; curMantissa++
+		Exp(&k0.r, a: a); Div(&k1.r, a:Real.one.real, b:k0.r)			/* k1 = exp(-a); k0 = exp(a) */
+		Add(&k2.r, a:k0.r, b:k1.r)										/* k2 = exp(a) + exp(-a) */
+		Muld(&k2.r, a: k2.r, b: Real.HALF, n: 0); copy(k2.r, b: &cosh)	/* cosh = (exp(a) + exp(-a))/2 */
+		Sub(&k2.r, a:k0.r, b:k1.r)										/* k2 = exp(a) - exp(-a) */
+		Muld(&k2.r, a: k2.r, b: Real.HALF, n: 0); copy(k2.r, b: &sinh)	/* sinh = (exp(a) - exp(-a))/2 */
+		
+		/* restore orginal precision */
+		curMantissa = nws; Round(&cosh); Round(&sinh)
+	} //SinhCosh;
+
+	private mutating func ATan2 (inout a: RealArray, x:RealArray, y: RealArray) {
+		/*
+		This routine computes the angle `a' subt}ed by the
+		pair (`x', `y') considered as a point in the x-y plane.
+		This routine places the resultant angle correctly in the
+		full circle where -pi < `a' <= pi.  The last word of the
+		result is not reliable.
+		
+		The Taylor series for Arcsin converges much more slowly than
+		that of Sin.  Thus this routine does not employ a Taylor
+		series, but instead computes Arccos or Arcsin by solving
+		Cos(a) = x or Sin(a) = y using one of the following Newton
+		iterations, both of which converge to `a':
+		
+		z(k+1) = z(k) - (x - Cos(z(k))) / Sin(z(k))
+		z(k+1) = z(k) - (y - Sin(z(k))) / Cos(z(k))
+		
+		The first is selected if abs(x) <= abs(y); otherwise the
+		second is used.  These iterations are performed with a
+		maximum precision level curMantissa that is dynamically changed,
+		approximately doubling with each iteration.
+		*/
+		let NIT=3
+		var t1, t2, t3: Double
+		var iq: Bool
+		var nws: Int
+		var ix, iy, nx, ny, mq, n1, n2, kk, k: Int
+		var k0 = FixedLReal()
+		var k1 = FixedLReal()
+		var k2 = FixedLReal()
+		var k3 = FixedLReal()
+		var k4 = FixedLReal()
+		
+		if Real.err != 0 { Zero(&a); return }
+		ix = Sign(1, y:x[0]); nx = Min(Int(abs(x[0])), y:curMantissa)
+		iy = Sign(1, y:y[0]); ny = Min(Int(abs(y[0])), y:curMantissa)
+		
+		/* check if both x and y are zero */
+		if (nx == 0) && (ny == 0) {
+			println("*** ATan2: Both arguments are zero!")
+			Real.err = 7; return
+		}
+		
+		/* check if pi has been precomputed */
+		if Real.pi.real.count == 0 {
+			println("*** ATan2: Pi must be precomputed!")
+			Real.err = 8; return
+		}
+		
+		/* check if one of x or y is zero */
+		if nx == 0 {
+			if iy > 0 {
+				Muld(&a, a: Real.pi.real, b: Real.HALF, n: 0)
+			} else {
+				Muld(&a, a: Real.pi.real, b: -Real.HALF, n: 0)
+			}
+			return
+		} else if ny == 0 {
+			if ix > 0 { Zero(&a) } else { copy(Real.pi.real, b:&a) }
+			return
+		}
+		
+		/* increase the resolution */
+		nws = curMantissa; curMantissa++
+		
+		/* determine the least integer mq such that 2^mq >= curMantissa */
+		mq = Int(Real.invLn2*log(Double(nws))+1-Real.mprxx)
+		
+		/* normalize x and y so that x^2 + y^2 = 1 */
+		Mul(&k0.r, a:x, b:x); Mul(&k1.r, a:y, b:y); Add(&k2.r, a:k0.r, b:k1.r); Sqrt(&k3.r, a:k2.r)
+		Div(&k1.r, a:x, b:k3.r); Div(&k2.r, a:y, b:k3.r);
+		
+		/* compute initial approximation of the angle */
+		n1 = 0; t1 = 0; n2 = 0; t2 = 0
+		RealToNumbExp(k1.r, b: &t1, n: &n1); RealToNumbExp(k2.r, b: &t2, n: &n2)
+		n1 = Max(n1, y:-66); n2 = Max(n2, y:-66)
+		t1 = t1*ipower(2, base: n1); t2 = t2*ipower(2, base: n2)
+		t3 = atan2(t2, t1)
+		NumbExpToReal(t3, n: 0, b: &a)
+		
+		/* the smaller of x or y will be used from now on to measure convergence.
+		This selects the Newton iteration (of the two listed above) that has
+		the largest denominator */
+		if abs(t1) <= abs(t2) {
+			kk = 1; copy(k1.r, b:&k0.r)
+		} else {
+			kk = 2; copy(k2.r, b:&k0.r)
+		}
+		
+		/* perform the Newton-Raphson iteration described above with a dynamically
+		changing precision level curMantissa (one greater than powers of two). */
+		curMantissa = 3; iq = false
+		for k = 2; k<=mq; k++ {
+			curMantissa = Min(2*curMantissa-2, y:nws)+1
+			for ;; {
+				SinCos(&k2.r, cos: &k1.r, a: a)
+				if kk == 1 {
+					Sub(&k3.r, a:k0.r, b:k1.r); Div(&k4.r, a:k3.r, b:k2.r); Sub(&k1.r, a:a, b:k4.r)
+				} else {
+					Sub(&k3.r, a:k0.r, b:k2.r); Div(&k4.r, a:k3.r, b:k1.r); Add(&k1.r, a:a, b:k4.r)
+				}
+				copy(k1.r, b:&a)
+				if ~iq && (k == mq-NIT) { iq = true } else { break }
+			}
+		}
+		
+		/* restore the original precision */
+		curMantissa = nws; Round(&a)
+	} //ATan2;
+
+
 //
 //func Long * (x: Double) -> Real;
 //var
