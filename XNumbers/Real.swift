@@ -70,17 +70,44 @@ There may be a couple of bugs in several routines which affect the accuracy
 in the last few places of the result.  This shouldn't make much difference to
 casual users as long as the precision is set to be 10-20 digits more than you
 need.
-
-Modified to use the new OO2C Boxed data type to facilitate I/O.
 */
 
-// IMPORT rm = LRealMath, rx = LRealMathExt, Object, Object:Boxed, IO, ADT:Storable, Out;
+//func == (lhs: Real, rhs: Real) -> Bool {
+//	var i: Int
+//	if lhs.digit.count != rhs.digit.count {
+//		return false
+//	} else {
+//		for i = 0; i<lhs.digit.count; i++ {
+//			if lhs.digit[i] != rhs.digit[i] {
+//				return false
+//			}
+//		}
+//		return true
+//	}
+//}
+//
+//func > (lhs: Real, rhs: Real) -> Bool {
+//	return lhs.Cmp(rhs) == 1
+//}
+//
+//func < (lhs: Real, rhs: Real) -> Bool {
+//	return lhs.Cmp(rhs) == -1
+//}
 
-struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
+prefix func - (a: Real) -> Real {
+	var b = Real(size: a.real.count)
+	copy(a.real, b.real)	/* b = x */
+	b.real[0] = -b.real[0]
+	return b
+}
+
+prefix func + (a: Real) -> Real {
+	return a
+}
+
+ struct Real /*  : Equatable, Comparable, Printable, Hashable */ {
 	
 	private static let DEBUG = false
-//	private static let 0 = 0.0
-//	private static let 1  = 1
 	private static let HALF = 0.5
 	private static let invLn2 = 1.4426950408889633
 	private static let Ln2 = 0.693147180559945309
@@ -138,9 +165,9 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 	static var err : Int = 0
 	static var debug : Int = 0
 	
-	private var curMantissa : Int
-	private var numBits : Int
-	private var sigDigs : Int
+	private var curMantissa : Int = Real.maxMant+1
+	private var numBits : Int = 22
+	private var sigDigs : Int = Real.maxDigits
 	
 	// read-only parameters
 	private static var eps: Real {
@@ -185,28 +212,38 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 	private static var Seed = Real(fromInteger:4)
 	static var status = Status.Okay
 	
+//	var description: String {
+//		var s : String = self.ToString(0, ExpWidth: 0, EngFormat: false)
+//		return s
+//	}
+	
 	/*---------------------------------------------------------*/
 	/* Constructors                                            */
 	/*---------------------------------------------------------*/
 	
 	init (size: Int) {
 		self.real = RealArray(count: size, repeatedValue:0)
-		self.curMantissa = Real.maxMant+1
-		self.numBits = 22
-		self.sigDigs = Real.maxDigits
 	}
 	
-	init (fromString: String) {
-		// TBD
-		self.init(size:0)
+	init (fromString string: String) {
+		self.init(size: 0)
+		self.fromString(string)
 	}
 	
-	init (fromInteger: Int) {
-		self.init(size:0)
+	init (fromInteger integer: Int) {
+		self.init(fromDouble:Double(integer))
 	}
 	
-	init (fromDouble: Double) {
-		self.init(size:0)
+	init (fromDouble double: Double) {
+		/* create a new number */
+		self.init(size:8)
+		NumbExpToReal(double, n: 0, b: &self.real)
+	}
+
+	init (fromReal real: Real) {
+		/** return a copy of \e real. */
+		self.init(size:real.real.count)
+		copy(real.real, b:&self.real)  /* b = a */
 	}
 
 	/*---------------------------------------------------------*/
@@ -463,7 +500,7 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		var aa: Double
 		var n1, n2, i: Int
 		
-		assert(b.count>=8, "Assertion NumbExptoReal")
+		assert(b.count >= 8, "Assertion NumbExptoReal")
 		
 		/* check for zero */
 		if a == 0 { Zero(&b); return }
@@ -1783,452 +1820,387 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 		curMantissa = nws; Round(&a)
 	} //ATan2;
 
-
-//
-//func Long * (x: Double) -> Real;
-//var
-//r: Real;
-// 
-///* create a new number */
-//r = New(curMantissa+4);
-//NumbExpToReal(x, 0, r.real^);
-//return r
-//} //Long;
-//
-//func (a: Real) Copy * () -> Real;
-///**
-//return a copy of `a'.
-//*/
-//var
-//b: Real;
-// 
-//b = New(curMantissa+4);
-//copy(a.real^, b.real^);  /* b = a */
-//return b
-//} //Copy;
-//
-//func ToReal (str: String) -> Real {
-//	/**
-//	Converts the number in `str' to an ext}ed Real and
-//	returns the result.  The number representation is
-//	given by:
-//	
-//	number = ["+"|"-"] @{digit@} ["." @{digit@}] [scale]
-//	
-//	where  scale = "E"|"D" ["+"|"-"] digit @{digit@}
-//	and    digit = "0".."9" | " "
-//	
-//	Thus the following is a valid input number:
-//	
-//	"1.23456 12938 23456 E + 200"
-//	
-//	Note: This real number definition is backwardly
-//	compatible with the Oberon-2 real string but has
-//	been ext}ed to allow splitting of very large
-//	numbers into more readable segments by inserting
-//	spaces.
-//	*/
-//	var b: Real
-//	var s: FixedReal;
-//	var nexp, es, is, cc, dig, nws, dp: Int;
-//	var isZero: Bool;
-//	var f: Real8;
-//	
-//	func SkipBlanks() {
-//		while str[cc] == " " { cc++ }
-//	} //SkipBlanks;
-//	
-//	func GetDigit () -> Int {
-//		/* skips blanks to get a digit; returns
-//		-1 on an invalid digit */
-//		var ch: CHAR;
-//		
-//		SkipBlanks; ch = str[cc];
-//		if (ch>="0") & (ch<="9") {
-//			INC(cc);
-//			if ch>"0" { isZero = FALSE };
-//			return ORD(ch)-ORD("0")
-//		} else { r
-//			eturn -1
-//		}
-//	} //GetDigit;
-//	
-//	func GetSign () -> Int {
-//		
-//		SkipBlanks() /* skip leading blanks */
-//		
-//		/* check for leading sign */
-//		if str[cc]="+" { INC(cc); return 1
-//			} else if str[cc]="-" { INC(cc); return -1
-//			} else { return 1
-//			}
-//		} //GetSign;
-//		
-//		
-//		cc = 0; nws = curMantissa; INC(curMantissa);
-//		
-//		/* check for initial sign */
-//		is = GetSign();
-//		
-//		/* clear result */
-//		Zero(s); f[0] = 1; f[1] = 0;
-//		
-//		/* scan for digits, stop on a non-digit */
-//		isZero = true;
-//		for ;; {
-//			dig = GetDigit();
-//			if dig<0 { break };
-//			if ~isZero { Muld(s, s, 10.0, 0) };
-//			if dig != 0 { f[2] = dig; Add(s, f, s) }
-//		};
-//		
-//		/* check for decimal point */
-//		dp = 0;
-//		if str[cc] == "." {
-//			INC(cc);
-//			for ;; {
-//				dig = GetDigit();
-//				if dig<0 { break };
-//				Muld(s, s, 10.0, 0);
-//				if dig != 0 { f[0] = 1; f[2] = dig
-//				} else { f[0] = 0
-//				};
-//				INC(dp); Add(s, f, s)
-//			}
-//		};
-//		
-//		/* check for exponent */
-//		nexp = 0;
-//		if (str[cc] == "E") || (str[cc] == "D") {
-//			INC(cc);
-//			es = GetSign();
-//			for ;; {
-//				dig = GetDigit();
-//				if dig<0 { break };
-//				nexp = nexp*10+dig
-//			};
-//			nexp = es*nexp  /* add the sign */
-//		};
-//		
-//		/* scale the resultant number */
-//		s[0] = s[0]*is; DEC(nexp, dp);
-//		f[0] = 1; f[2] = 10.0; b = New(curMantissa+4);
-//		IntPower(b.real^, f, nexp); Mul(s, b.real^, s); copy(s, b.real^);
-//		
-//		/* back to original resolution */
-//		curMantissa = SHORT(nws); Round(b.real^);
-//		return b
-//	} //ToReal;
+	private mutating func fromString (string: String) {
+		/**
+		Converts the number in `str' to an ext}ed Real and
+		returns the result.  The number representation is
+		given by:
+	
+		number = ["+"|"-"] @{digit@} ["." @{digit@}] [scale]
+		
+		where  scale = "E"|"D" ["+"|"-"] digit @{digit@}
+		and    digit = "0".."9" | " "
+		
+		Thus the following is a valid input number:
+		
+		"1.23456 12938 23456 E + 200"
+		
+		Note: This real number definition is backwardly
+		compatible with the Oberon-2 real string but has
+		been ext}ed to allow splitting of very large
+		numbers into more readable segments by inserting
+		spaces.
+		*/
+		var s = FixedLReal()
+		var nexp, es, is1, cc, dig, nws, dp: Int
+		var isZero: Bool = false
+		var f = RealArray(count:8, repeatedValue: 0)
+		var str = string
+		var b = self
+		
+		func GetDigit () -> Int {
+			/* skips blanks to get a digit; returns -1 on an invalid digit */
+			var ch: String
+			
+			str = str.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+			ch = "" + [str[str.startIndex]]
+			if (ch >= "0") && (ch <= "9") {
+				str.removeAtIndex(str.startIndex)
+				if ch > "0" { isZero = false }
+				return Int(atoi(ch))
+			} else {
+				return -1
+			}
+		} //GetDigit;
+		
+		func GetSign () -> Int {
+			/* skip leading blanks */
+			str = str.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+			
+			/* check for leading sign */
+			if str[str.startIndex] == "+" {
+				str.removeAtIndex(str.startIndex); return 1
+			} else if str[str.startIndex] == "-" {
+				str.removeAtIndex(str.startIndex); return -1
+			} else {
+				return 1
+			}
+		} //GetSign;
+		
+		cc = 0; nws = curMantissa; curMantissa++
+		
+		/* check for initial sign */
+		is1 = GetSign()
+		
+		/* clear result */
+		Zero(&s.r); f[0] = 1; f[1] = 0
+		
+		/* scan for digits, stop on a non-digit */
+		isZero = true;
+		for ;; {
+			dig = GetDigit()
+			if dig<0 { break }
+			if ~isZero { Muld(&s.r, a: s.r, b: 10.0, n: 0) }
+			if dig != 0 { f[2] = Double(dig); Add(&s.r, a:f, b:s.r) }
+		}
+		
+		/* check for decimal point */
+		dp = 0;
+		if str[str.startIndex] == "." {
+			str.removeAtIndex(str.startIndex)
+			for ;; {
+				dig = GetDigit()
+				if dig < 0 { break }
+				Muld(&s.r, a: s.r, b: 10.0, n: 0)
+				if dig != 0 {
+					f[0] = 1; f[2] = Double(dig)
+				} else {
+					f[0] = 0
+				}
+				dp++; Add(&s.r, a:f, b:s.r)
+			}
+		}
+		
+		/* check for exponent */
+		nexp = 0;
+		let ch = str[str.startIndex]
+		if (ch == "E") || (ch == "D") {
+			str.removeAtIndex(str.startIndex)
+			es = GetSign();
+			for ;; {
+				dig = GetDigit()
+				if dig<0 { break }
+				nexp = nexp*10+dig
+			}
+			nexp = es*nexp  /* add the sign */
+		}
+		
+		/* scale the resultant number */
+		s.r[0] = s.r[0]*Double(is1); nexp -= dp
+		f[0] = 1; f[2] = 10
+		IntPower(&b.real, a: f, n: nexp); Mul(&s.r, a:b.real, b:s.r); copy(s.r, b:&b.real)
+		
+		/* back to original resolution */
+		curMantissa = nws; Round(&b.real)
+	} //ToReal;
 
 
-/*---------------------------------------------------------*/
-/* Conversion routines                                     */
+	/*---------------------------------------------------------*/
+	/* Conversion routines                                     */
+	
+	mutating func ToString (var Decimal : Int, var ExpWidth : Int, EngFormat: Bool) -> String {
+		/** return the ext}ed real number as a string with 'Decimal' decimal places and
+		an exponent with 'ExpWidth' places.  'ExpWidth' <> 0 produces a scientific
+		formatted number or, if 'EngFormat' is true, an engineering formatted
+		number. 'ExpWidth' = 0 produces a floating-point number string. A fixed-point
+		number is output when 'Decimal' > 0. */
+		let log2 = 0.301029995663981195
+		var pos, ManIndex, StrCnt, InCnt, Aexp, MaxExpWidth : Int
+		var nx : Int = 0
+		var nws, na, ia, nl, l: Int
+		var aa, t1: Double
+		var ExpStr : String
+		var FixPoint: Bool = false
+		var f = RealArray(count:8, repeatedValue: 0)
+		var k = FixedLReal()
+		var Str: String = ""
+		var a = self
+		
+		func ConcatChar (inout s: String, ch : Character) {
+			s.append(ch)
+		} //ConcatChar;
+		
+		func AddDigit (inout s: String, d: Int) {
+			s += d.description
+		} //AddDigit;
+		
+		func AddInt (inout s: String, var n: Int) {
+			while (n > 0) {
+				let digit = n % 10
+				s = digit.description + s
+				n = n / 10
+			}
+		} //AddInt;
+		
+		func GetDigit() {
+			var nn: Int
+			if k.r[0] == 0 { AddDigit(&Str, 0); return }
+			if k.r[1] == 0 {
+				nn = Int(k.r[2]); f[0] = 1; f[2] = Double(nn)
+			} else {
+				f[0] = 0; nn = 0
+			}
+			AddDigit(&Str, nn); Sub(&k.r, a:k.r, b:f)
+			Muld(&k.r, a: k.r, b: 10.0, n: 0)
+		} //GetDigit;
+		
+		func Round() {
+			var c: Int
+			var l = Str.endIndex
+			var res = ""
+			
+			/* BCD-based rounding algorithm */
+			c = 5
+			while l >= Str.startIndex {
+				if (Str[l] != ".") && (Str[l] != "-") {
+					let cs = "" + [Str[l]]
+					c += cs.toInt()!
+					let digit = c % 10
+					res = digit.description + res
+					c = c / 10
+				} else {
+					res = [Str[l]] + res
+				}
+				l--
+			}
+			
+			if c > 0 {
+				/* insert a character at pos 0 */
+				Str.insert("1", atIndex: Str.startIndex)
+				nx++
+			}
+		} //Round;
+		
+		func Trim() {
+			/* check if trailing zeros should be trimmed */
+			let zero : Character = "0"
+			if (last(Str) == zero) && ~FixPoint {
+				while (last(Str) == zero) { removeLast(&Str) }
+			}
+			
+			/* remove trailing `.' */
+			if last(Str) == "." { removeLast(&Str) }
+		} //Trim;
+		
+		
+		/* initialize a few parameters */
+		StrCnt = 3
+		ManIndex = 0
+		ExpStr = ""
+		ia = Sign(1, y:a.real[0]); na = Min(Int(abs(a.real[0])), y:curMantissa)
+		nws = curMantissa; curMantissa++; Zero(&k.r)
+		
+		/* round the number */
+		f[0] = 1; f[1] = 0; f[2] = 10; nl = 0;
+		
+		/* determine the exact power of ten for exponent */
+		if na != 0 {
+			aa = a.real[2];
+			if na >= 2 { aa = aa+Real.invRadix*a.real[3] }
+			if na >= 3 { aa = aa+Real.mprx2*a.real[4] }
+			if na >= 4 { aa = aa+Real.invRadix*Real.mprx2*a.real[5] }
+			t1 = log2*Double(Real.NBT)*a.real[1]+log10(aa)
+			if t1 >= 0 { nx = Int(t1) } else { nx = Int(t1-1) }
+			IntPower(&k.r, a: f, n: nx)  /* k = 10**nx */
+			Div(&k.r, a:a.real, b:k.r)  /* k = a*10**nx */
+			
+			/* adjust k if above is not quite right */
+			while k.r[1] < 0 { nx--; Muld(&k.r, a: k.r, b: 10.0, n: 0) }
+			while k.r[2] >= 10 { nx++; Divd(&k.r, a: k.r, b: 10.0, n: 0) }
+			k.r[0] = abs(k.r[0])
+		} else {
+			nx = 0; Zero(&k.r)
+		}
+		
+		/* force scientific notation for numbers too small or too large */
+		Aexp = abs(nx)
+		MaxExpWidth  =  ExpWidth
+		if ((ExpWidth == 0) && (Aexp > sigDigs)) || (ExpWidth > 0) {
+			/* force scientific notation */
+			if Aexp > 999999 { ExpWidth  =  7
+			} else if Aexp > 99999 { ExpWidth  =  6
+			} else if Aexp > 9999 { ExpWidth  =  5
+			} else if Aexp > 999 { ExpWidth  =  4
+			} else if Aexp > 99 { ExpWidth  =  3
+			} else if Aexp > 9 { ExpWidth  =  2
+			} else { ExpWidth  =  1
+			}
+		}
+		if MaxExpWidth < ExpWidth { MaxExpWidth  =  ExpWidth }
+		
+		/* add the negative sign to the number */
+		if ia < 0 { ConcatChar(&Str, "-") }
+		
+		/* ensure we don't exceed the maximum digits */
+		FixPoint = Decimal != 0
+		if (Decimal > sigDigs) || ~FixPoint {
+			Decimal = sigDigs-1
+		}
+		
+		/* convert the number into scientific notation */
+		if MaxExpWidth > 0 {
+			GetDigit()                         /* leading digit */
+			if EngFormat {
+				while (Aexp % 3) != 0 {
+					if nx < 0 {
+						Aexp++; nx++
+					} else {
+						Aexp--; nx--
+					}
+					Decimal--
+					GetDigit()                      /* next digits */
+				}
+			}
+			ConcatChar(&Str, ".")                    /* decimal point */
+			for InCnt = 1; InCnt<=Decimal; InCnt++ {
+				GetDigit()                        /* add following digits */
+			}
+			Round(); Trim()          /* remove extraneous digits */
+			
+			/* add the exponent */
+			ConcatChar(&Str, "E")
+			if nx >= 0 {
+				ConcatChar(&Str, "+")
+			} else {
+				ConcatChar(&Str, "-")
+			}
+			AddInt(&Str, abs(nx))
+		} else {
+			/* format a non-scientific number */
+			if nx < 0 {
+				ConcatChar(&Str, "0")                  /* leading digit */
+				ConcatChar(&Str, ".");                  /* decimal point */
+				for InCnt = 2; InCnt<=abs(nx); InCnt++ {      /* pad with leading zeros */
+					ConcatChar(&Str, "0"); nl++
+				}
+				Decimal += nx+1
+			}
+			InCnt = 0
+			do {
+				GetDigit()
+				if InCnt > nx {
+					Decimal--
+				} else if InCnt == nx {
+					ConcatChar(&Str, ".")
+				}
+				InCnt++
+			} while !((InCnt == sigDigs) || (Decimal == 0))
+			
+			/* remove any trailing zeros and unneeded digits */
+			Round()
+			Trim()
+		}
+		curMantissa = nws
+		return Str
+	} //Format;
 
-//func (a: Real) Format * (Decimal, ExpWidth : Int; EngFormat: Bool) -> STRING;
-///** return the ext}ed real number as a string with 'Decimal' decimal places and
-//an exponent with 'ExpWidth' places.  'ExpWidth' <> 0 produces a scientific
-//formatted number or, if 'EngFormat' is true, an engineering formatted
-//number. 'ExpWidth' = 0 produces a floating-point number string. A fixed-point
-//number is output when 'Decimal' > 0. */
-//let 
-//log2=0.301029995663981195D0;
-//var
-//pos, ManIndex, StrCnt, InCnt, Aexp, MaxExpWidth : Int;
-//nws, na, ia, nx, nl, l: Int;
-//aa, t1: Double;
-//ExpStr : ARRAY 41 OF CHAR;
-//FixPoint: Bool;
-//f: Real8;
-//k: FixedReal;
-//Str: POINTER TO ARRAY OF CHAR;
-//
-//func ConcatChar(ch : CHAR);
-// 
-//Str[pos] = ch; INC(pos);
-//} //ConcatChar;
-//
-//func AddDigit (d: Int);
-// 
-//ConcatChar(CHR(d+ORD("0")))
-//} //AddDigit;
-//
-//func AddInt (n: Int);
-// 
-//if n<10 { AddDigit(n)
-//} else { AddInt(n DIV 10); AddDigit(n MOD 10)
-//}
-//} //AddInt;
-//
-//func GetDigit();
-//var
-//nn: Int;
-// 
-//if k[0]=0 { AddDigit(0); return };
-//if k[1]=0 { nn = Int(k[2]); f[0] = 1; f[2] = nn
-//} else { f[0] = 0; nn = 0
-//};
-//AddDigit(nn); Sub(k, k, f); Muld(k, k, 10.0, 0)
-//} //GetDigit;
-//
-//func Round();
-//let 
-//ZC = ORD('0');
-//var
-//l, c, i: Int;
-// 
-///* BCD-based rounding algorithm */
-//l = pos-1; c = 5;
-//while l>=0 {
-//if (Str[l] != '.') & (Str[l] != '-') { 
-//c = ORD(Str[l])-ZC+c;
-//Str[l] = CHR(c MOD 10 + ZC);
-//c = c DIV 10
-//};
-//DEC(l)
-//};
-//if c>0 { 
-///* insert a character at pos 0 */
-//for i = l+1 TO 1 BY -1 {
-//Str[i] = Str[i-1]
-//};
-//Str[0] = '1';
-//INC(pos); INC(nx)
-//};
-//DEC(pos) /* ignore rounding digit */
-//} //Round;
-//
-//func Trim();
-// 
-///* check if trailing zeros should be trimmed */
-//l = pos-1;
-//if (Str[l]="0") & ~FixPoint { 
-//while (Str[l]="0") { DEC(l) }
-//};
-//
-///* remove trailing `.' */
-//if Str[l] = "." { DEC(l) };
-//pos = l+1
-//} //Trim;
-//
-// 
-///* initialize a few parameters */
-//pos  =  0;
-//StrCnt  =  3;
-//ManIndex  =  0;
-//ExpStr  =  '';
-//NEW(Str, sigDigs+Decimal+ExpWidth+32);
-//ia = Sign(1, a.real[0]); na = Min(Int(abs(a.real[0])), curMantissa);
-//nws = curMantissa; INC(curMantissa); Zero(k);
-//
-///* round the number */
-//f[0] = 1; f[1] = 0; f[2] = 10; nl = 0;
-//
-///* determine the exact power of ten for exponent */
-//if na != 0 { 
-//aa = a.real[2];
-//if na>=2 { aa = aa+invRadix*a.real[3] };
-//if na>=3 { aa = aa+mprx2*a.real[4] };
-//if na>=4 { aa = aa+invRadix*mprx2*a.real[5] };
-//t1 = log2*NBT*a.real[1]+rx.log(aa, 10);
-//if t1>=0 { nx = Int(t1) } else { nx = Int(t1-1) };
-//IntPower(k, f, nx);  /* k = 10**nx */
-//Div(k, a.real^, k);  /* k = a*10**nx */
-//
-///* adjust k if above is not quite right */
-//while k[1]<0 { DEC(nx); Muld(k, k, 10.0, 0) };
-//while k[2]>=10.0 { INC(nx); Divd(k, k, 10.0, 0) };
-//k[0] = abs(k[0])
-//} else { nx = 0; Zero(k)
-//};
-//
-///* force scientific notation for numbers too small or too large */
-//Aexp = abs(nx);
-//MaxExpWidth  =  ExpWidth;
-//if ((ExpWidth = 0) & (Aexp > sigDigs)) || (ExpWidth > 0) { 
-///* force scientific notation */
-//if Aexp > 999999 { ExpWidth  =  7
-//} else if Aexp > 99999 { ExpWidth  =  6
-//} else if Aexp > 9999 { ExpWidth  =  5
-//} else if Aexp > 999 { ExpWidth  =  4
-//} else if Aexp > 99 { ExpWidth  =  3
-//} else if Aexp > 9 { ExpWidth  =  2
-//} else { ExpWidth  =  1
-//};
-//};
-//if MaxExpWidth < ExpWidth { MaxExpWidth  =  ExpWidth };
-//
-///* add the negative sign to the number */
-//if ia<0 { ConcatChar('-') };
-//
-///* ensure we don't exceed the maximum digits */
-//FixPoint  =  Decimal  !=  0;
-//if (Decimal > sigDigs) || ~FixPoint { 
-//Decimal = sigDigs-1;
-//};
-//
-///* convert the number into scientific notation */
-//if MaxExpWidth > 0 { 
-//GetDigit();                         /* leading digit */
-//if EngFormat { 
-//while Aexp MOD 3  !=  0 {
-//if nx<0 { INC(Aexp); INC(nx)
-//} else { DEC(Aexp); DEC(nx)
-//};
-//DEC(Decimal);
-//GetDigit()                      /* next digits */
-//}
-//};
-//ConcatChar('.');                    /* decimal point */
-//for InCnt  =  1 TO Decimal {
-//GetDigit()                        /* add following digits */
-//};
-//Round(); DEC(pos); Trim();          /* remove extraneous digits */
-//
-///* add the exponent */
-//ConcatChar('E');
-//if nx >= 0 { ConcatChar('+')
-//} else { ConcatChar('-')
-//};
-//AddInt(abs(nx));
-//ConcatChar(0X);
-//} else {
-///* format a non-scientific number */
-//if nx < 0 { 
-//ConcatChar('0');                  /* leading digit */
-//ConcatChar('.');                  /* decimal point */
-//for InCnt  =  2 TO abs(nx) {      /* pad with leading zeros */
-//ConcatChar('0'); INC(nl)
-//};
-//INC(Decimal, nx+1);
-//};
-//InCnt  =  0;
-//REPEAT
-//GetDigit();
-//if InCnt > nx { 
-//DEC(Decimal)
-//} else if InCnt = nx { 
-//ConcatChar('.');
-//};
-//INC(InCnt);
-//UNTIL (InCnt = sigDigs) || (Decimal = 0);
-//
-///* remove any trailing zeros and unneeded digits */
-//Round();
-//Trim();
-//ConcatChar(0X);
-//
-///* remove trailing `.' */
-//if Str[InCnt] = "." { Str[InCnt]  =  0X }
-//};
-//curMantissa = SHORT(nws);
-//return Object.NewLatin1(Str^)
-//} //Format;
-//
-//
-//func (x: Real) Neg * (): Real;
-//var b: Real;
-// 
-//b = New(curMantissa+4);
-//copy(x.real^, b.real^);  /* b = x */
-//b.real[0] = -b.real[0];
-//return b
-//} //Neg;
-//
-//func (x: Real) Sign * (): Int;
-// 
-//if x.real[0] < 0.0 { return -1
-//} else if x.real[0] > 0.0 { return 1
-//} else { return 0
-//}
-//} //Sign;
-//
-//func (x: Real) ToString*(): STRING;
-// 
-//return x.Format(0, 0, FALSE)
-//} //ToString;
-//
-//func (q: Real) Short * () -> Double;
-///** returns the closest Double equivalent.  if q is too large
-//MAX(Double) is returned and if q is too small, zero
-//is returned. */
-//var
-//x: Double; exp: Int;
-// 
-//RealToNumbExp(q.real^, x, exp);
-//return x*ipower(2, SHORT(exp));
-//} //Short;
-//
-//func (q: Real) Entier * () -> Real;
-///**
-//return the largest integer not greater than `q'.
-//For example: Int(3.6) = 3 and Int(-1.6)=-2
-//*/
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//Int(r.real^, q.real^);
-//return r
-//} //Entier;
-//
-//func (q: Real) Fraction * () -> Real;
-///**
-//return the fractional part of 'q'.
-//*/
-//var
-//r: Real;
-// 
-//r = q.Int();
-//if q.real[0]<0 { Add(r.real^, q.real^, x1) };
-//Sub(r.real^, q.real^, r.real^);
-//return r
-//} //Fraction;
-//
-///*---------------------------------------------------------*/
-///* Basic math routines                                     */
-//
-//func (z1: Real) Add * (z2: Real): Real;
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//Add(r.real^, z1.real^, z2.real^);
-//return r
-//} //Add;
-//
-//func Add2 * (z1, z2: Real): Real;
-// 
-//return z1.Add(z2)
-//} //Add2;
-//
-//func (z1: Real) Sub * (z2: Real): Real;
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//Sub(r.real^, z1.real^, z2.real^);
-//return r
-//} //Sub;
-//
-//func Sub2 * (z1, z2: Real): Real;
-// 
-//return z1.Sub(z2)
-//} //Sub2;
-//
-//func (z1: Real) Mul * (z2: Real): Real;
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//Mul(r.real^, z1.real^, z2.real^);
-//return r
-//} //Mul;
-//
-//func Mul2 * (z1, z2: Real): Real;
-// 
-//return z1.Mul(z2)
-//} //Mul2;
-//
+	func Sign () -> Int {
+		var x = self
+		if x.real[0] < 0 {
+			return -1
+		} else if x.real[0] > 0 {
+			return 1
+		} else {
+			return 0
+		}
+	} //Sign;
+
+//	func ToString () -> String {
+//		return self.ToString(0, ExpWidth: 0, EngFormat: false)
+//	} //ToString;
+
+	func Short () -> Double {
+		/** returns the closest Double equivalent.  if q is too large
+		MAX(Double) is returned and if q is too small, zero
+		is returned. */
+		var x: Double
+		var exp: Int
+		
+		RealToNumbExp(self.real, b: &x, n: &exp)
+		return x * ipower(2, base: exp)
+	} //Short;
+
+	func Entier () -> Real {
+		/**
+		return the largest integer not greater than `q'.
+		For example: Int(3.6) = 3 and Int(-1.6)=-2
+		*/
+		var r = Real(size: curMantissa+4)
+		Entier(&r.real, a: self.real)
+		return r
+	} //Entier;
+	
+	func Fraction () -> Real {
+		/**
+		return the fractional part of 'q'.
+		*/
+		var r = self.Entier()
+		if self.real[0] < 0 { Add(&r.real, a:self.real, b:Real.one.real) }
+		Sub(&r.real, a:self.real, b:r.real)
+		return r
+	} //Fraction;
+
+	/*---------------------------------------------------------*/
+	/* Basic math routines                                     */
+	
+	func Add (z: Real) -> Real {
+		var r = Real(size: curMantissa+4)
+		Add(&r.real, a:self.real, b:z.real)
+		return r
+	} //Add;
+
+	func Sub (z: Real) -> Real {
+		var r = Real(size: curMantissa+4)
+		Sub(&r.real, a:self.real, b:z.real)
+		return r
+	} //Sub;
+
+	func Mul (z: Real) -> Real {
+		var r = Real(size: curMantissa+4)
+		Mul(&r.real, a:self.real, b:z.real)
+		return r
+	} //Mul;
+
 //func (z1: Real) Div * (z2: Real): Real;
 //var
 //r: Real;
@@ -2285,7 +2257,7 @@ struct Real /* : Equatable, Comparable, Printable, Hashable  */ {
 //} //Load;
 //
 ///*---------------------------------------------------------*/
-///* Power and transc}ental routines                       */
+///* Power and transcendental routines                       */
 //
 //func (x: Real) Power * (exp: Real): Real;
 ///** returns the value of the number x raised to the power exp */
