@@ -10,8 +10,7 @@ import Foundation
 
 println("Hello, World!")
 
-var n = Integer(str: "1234567890")
+var x = Real(fromInt: 0)
 
-println("n = \(n)")
-
+x.Test()
 

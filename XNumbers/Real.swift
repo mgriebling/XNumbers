@@ -159,11 +159,11 @@ prefix func + (a: Real) -> Real {
 	private static var sigDigs : Int = Real.maxDigits
 	
 	// internal parameters
-	private static var eps: RealArray = zero
-	private static var pi: RealArray = zero
-	private static var ln10: RealArray = zero
-	private	static var ln2: RealArray = zero
-	private static let one = RealArray(arrayLiteral: 1, 0, 1)
+//	private static var eps = zero
+	private static var pi = zero
+//	private static var ln10 = zero
+	private	static var ln2 = zero
+	private static let one = RealArray(arrayLiteral: 1, 0, 1, 0, 0, 0, 0, 0)
 	private static let zero = RealArray(arrayLiteral: 0, 0)
 	
 	/* Speed up very large factorials */
@@ -424,7 +424,7 @@ prefix func + (a: Real) -> Real {
 			if d[1] < 0 {
 				/* negate all words and re-normalize */
 				ia = -ia; d[2] = d[2]+Real.radix*d[1]; d[1] = 0;
-				for i = 1; i < n4; i++ { d[i] = -d[i] }
+				for i = 1; i <= n4-1; i++ { d[i] = -d[i] }
 			} else if d[1] > 0 {
 				/* nonzero number spilled into d[1].  Shift the entire number
 				right one cell.  The exponent and length of the result are
@@ -529,10 +529,10 @@ prefix func + (a: Real) -> Real {
 		/* check for zero inputs */
 		if na == 0 { /* a is zero -- the result is b */
 			c[0] = Double(Sign(nb, y:Double(ib)))
-			for i = 1; i<nb; i++ { c[i] = b[i] }
+			for i = 1; i<=nb+1; i++ { c[i] = b[i] }
 		} else if nb == 0 { /* b is zero -- the result is a */
 			c[0] = Double(Sign(na, y:Double(ia)))
-			for i = 1; i<na; i++ { c[i] = a[i] }
+			for i = 1; i<=na+1; i++ { c[i] = a[i] }
 		} else {
 			if ia == ib { db = 1.0 } else { db = -1.0 }
 			ixa = Int(a[1]); ixb = Int(b[1]); ish = ixa-ixb
@@ -613,12 +613,12 @@ prefix func + (a: Real) -> Real {
 		if (na == 1) && (a[2] == 1) {
 			/* a is 1 or -1 -- result is b or -b */
 			c[0] = Double(Sign(nb, y:Double(ia*ib))); c[1] = a[1]+b[1]
-			for i = 2; i < nb; i++ { c[i] = b[i] }
+			for i = 2; i <= nb+1; i++ { c[i] = b[i] }
 			return
 		} else if (nb == 1) && (b[2] == 1) {
 			/* b is 1 or -1 -- result is a or -a */
 			c[0] = Double(Sign(na, y:Double(ia*ib))); c[1] = a[1]+b[1]
-			for i = 2; i < na; i++ { c[i] = a[i] }
+			for i = 2; i <= na+1; i++ { c[i] = a[i] }
 			return
 		}
 		
@@ -632,7 +632,7 @@ prefix func + (a: Real) -> Real {
 		for j = 3; j<=na+2; j++ {
 			t1 = a[j-1]; j3 = j-3;
 			n2 = Min(nb+2, y:Real.curMantissa+4-j3)
-			for i = 2; i<n2; i++ {
+			for i = 2; i<=n2-1; i++ {
 				d.r[i+j3] = d.r[i+j3]+t1*b[i]
 			}
 			
@@ -695,7 +695,7 @@ prefix func + (a: Real) -> Real {
 			Mul(&c, a: f, b: a)
 		} else {
 			/* perform short multiply */
-			for i = 2; i<na; i++ { d.r[i] = bb*a[i] }
+			for i = 2; i<=na+1; i++ { d.r[i] = bb*a[i] }
 			
 			/* set exponent and fix up the result */
 			d.r[0] = Double(Sign(na, y: Double(ia*ib))); d.r[1] = a[1]+Double(n1)
@@ -1386,8 +1386,9 @@ prefix func + (a: Real) -> Real {
 		This exception is necessary because Ln calls Exp to
 		initialize ln2 */
 		if (abs(t1-Real.Ln2) > Real.invRadix) && (Real.ln2.count == 0) {
-			println("*** Exp: ln2 must be precomputed!")
-			Real.err = 34; return
+			Initialize()
+//			println("*** Exp: ln2 must be precomputed!")
+//			Real.err = 34; return
 		}
 		
 		/* check for overflows and underflows */
@@ -1495,7 +1496,8 @@ prefix func + (a: Real) -> Real {
 		t1 = 0; n1 = 0
 		RealToNumbExp(a, b: &t1, n: &n1)
 		if ((abs(t1-2.0) > 1.0e-3) || (n1 != 0)) && (Real.ln2.count == 0) {
-			println("*** Ln: Ln(2) must be precomputed!"); Real.err = 51; return
+			Initialize()
+//			println("*** Ln: Ln(2) must be precomputed!"); Real.err = 51; return
 		}
 		
 		/* check if input is exactly one */
@@ -1570,8 +1572,9 @@ prefix func + (a: Real) -> Real {
 		
 		/* check if pi has been precomputed */
 		if Real.pi.count == 0 {
-			println("*** SinCos: pi must be precomputed!")
-			Real.err = 28; return
+			Initialize()
+//			println("*** SinCos: pi must be precomputed!")
+//			Real.err = 28; return
 		}
 		
 		/* increase resolution */
@@ -1734,8 +1737,9 @@ prefix func + (a: Real) -> Real {
 		
 		/* check if pi has been precomputed */
 		if Real.pi.count == 0 {
-			println("*** ATan2: Pi must be precomputed!")
-			Real.err = 8; return
+			Initialize()
+//			println("*** ATan2: Pi must be precomputed!")
+//			Real.err = 8; return
 		}
 		
 		/* check if one of x or y is zero */
@@ -2419,112 +2423,111 @@ prefix func + (a: Real) -> Real {
 		return r
 	} //Tanh;
 
-//func Random () -> Real {
-///** return a random number between 0 and 1 */
-//var res, t: Real;
-// 
-//res = Seed.Add(pi);
-//t = res.Ln(); t = t.Mul(Long(5));
-//t = t.Exp(); res = t; t = t.Int();
-//Seed = res.Sub(t);
-//return Seed
-//} //Random;
-//
-//func OutReal (n: Real);
-// 
-//Out.Object(n.ToString())
-//} //OutReal;
-//
-//private func Test {
-//var s, n, m: Real;
-// 
-//println("zero="); OutReal(zero); Out.Ln;
-//println("one="); OutReal(one); Out.Ln;
-//println("pi="); OutReal(pi); Out.Ln;
-//println("ln2="); OutReal(ln2); Out.Ln;
-//println("ln10="); OutReal(ln10); Out.Ln;
-//println("eps="); OutReal(eps); Out.Ln;
-//println("log10(eps)="); OutReal(eps.Log(Long(10))); Out.Ln;
-//n = ToReal("123456789012345678901234567890123456789");
-//m = ToReal("0.123456789012345678901234567890123456790");
-//CASE n.Cmp(m) OF
-//| 0: println("n=m")
-//| 1: println("n>m")
-//| } else { println("n<m")
-//};
-//Out.Ln;
-//println("n="); OutReal(n); Out.Ln;
-//println("m="); OutReal(m); Out.Ln;
-//s = n.Mul(m);
-//println("n*m="); OutReal(s); Out.Ln;
-//s = n.Add(m);
-//println("n+m="); OutReal(s); Out.Ln;
-//s = n.Sub(m);
-//println("n-m="); OutReal(s); Out.Ln;
-//s = n.Div(m);
-//println("n/m="); OutReal(s); Out.Ln;
-//n = Long(1);
-//s = n.Div(Long(3));
-//println("1/3="); OutReal(s); Out.Ln;
-//println("1/3+1/3="); OutReal(s.Add(s)); Out.Ln;
-//println("1/3*1/3="); OutReal(s.Mul(s)); Out.Ln;
-//println("1/3*3="); OutReal(s.Mul(Long(3))); Out.Ln;
-//n = Long(2.0);
-//s = n.Power(Long(64));
-//println("2^64="); OutReal(s); Out.Ln;
-//n = ToReal("1.010E-10");
-//println("1.010E-10="); OutReal(n); Out.Ln;
-//n = ToReal("-12.0E+10");
-//println("-12.0E+10="); OutReal(n); Out.Ln;
-//n = ToReal("0.00045E-10");
-//println("0.00045E-10="); OutReal(n); Out.Ln;
-//n = ToReal("-12 345 678");
-//println("-12 345 678="); OutReal(n); Out.Ln;
-//n = ToReal("1E10000");
-//println("1E10000="); OutReal(n); Out.Ln;
-//pi.SinCos(m, n);
-//println("Sin(pi)="); OutReal(m); Out.Ln;
-//println("Cos(pi)="); OutReal(n); Out.Ln;
-//m = pi.Div(Long(8));
-//m.SinCos(m, n);
-//println("Sin(pi/8)="); OutReal(m); Out.Ln;
-//println("Cos(pi/8)="); OutReal(n); Out.Ln;
-//m = Long(1);
-//m.SinCos(m, n);
-//println("Sin(1)="); OutReal(m); Out.Ln;
-//println("Cos(1)="); OutReal(n); Out.Ln;
-//m = Long(-8);
-//println("-8^(-1/3)="); OutReal(m.IRoot(3)); Out.Ln;
-//m = Long(2); m = m.Power(Long(64));
-//println("(2^64)^(-1/64)="); OutReal(m.IRoot(64)); Out.Ln;
-//m = Long(4);
-//println("4*arctan(1)="); OutReal(m.Mul(one.Arctan())); Out.Ln;
-//m = one.Sin();
-//println("arcsin(sin(1))="); OutReal(m.Arcsin()); Out.Ln;
-//m = one.Cos();
-//println("arccos(cos(1))="); OutReal(m.Arccos()); Out.Ln;
-//m = Long(3.6);
-//println("Int(3.6)="); OutReal(m.Int()); Out.Ln;
-//m = Long(-3.6);
-//println("Int(-3.6)="); OutReal(m.Int()); Out.Ln;
-//} //Test;
-//
-//func SetDigits (digits: Int) {
-///** Sets the number of active words in all Real computations.
-//One word contains about 7.22 digits. */
-//var
-//words: Double;
-// 
-//words = digits/digsPerWord;
-//if words<8 { words = 8 };
-//if words<=maxMant-2 { 
-//Real.curMantissa = Int(words)+2;
-//sigDigs = digits
-//}
-//} //SetDigits;
+	func Random () -> Real {
+		/** return a random number between 0 and 1 */
+		var res = Real(size: Real.curMantissa+4)
+		var t: Real
+		if Real.pi.count == 0 { Initialize() }
+		Add(&res.real, a:Real.Seed.real, b:Real.pi)
+		t = res.Ln(); t = t.Mul(Real(fromInt: 5))
+		t = t.Exp(); res = t; t = t.Entier()
+		Real.Seed = res.Sub(t)
+		return Real.Seed
+	} //Random;
+
+	func Test() {
+		
+		func MakeReal (x: RealArray) -> Real {
+			var xr = Real(size: x.count)
+			copy(x, b: &xr.real)
+			return xr
+		}
+		
+		var s, n, m: Real
+		
+		Initialize()
+		println("zero=\(MakeReal(Real.zero))")
+		println("one=\(MakeReal(Real.one))")
+		println("pi=\(MakeReal(Real.pi))")
+		println("ln2=\(MakeReal(Real.ln2))")
+		n = Real(fromString: "123456789012345678901234567890123456789")
+		m = Real(fromString: "0.123456789012345678901234567890123456790")
+		switch n.Cmp(m) {
+		case 0: println("n=m")
+		case 1: println("n>m")
+		default: println("n<m")
+		}
+		println("n=\(n)")
+		println("m=\(m)")
+		s = n.Mul(m)
+		println("n*m=\(s)")
+		s = n.Add(m)
+		println("n+m=\(s)")
+		s = n.Sub(m)
+		println("n-m=\(s)")
+		s = n.Div(m)
+		println("n/m=\(s)")
+		n = Real(fromInt:1)
+		s = n.Div(Real(fromInt:3));
+		println("1/3=\(s)")
+		println("1/3+1/3=\(s.Add(s))")
+		println("1/3*1/3=\(s.Mul(s))")
+		println("1/3*3=\(s.Mul(Real(fromInt:3)))")
+		n = Real(fromInt:2)
+		s = n.Power(Real(fromInt:64))
+		println("2^64=\(s)")
+		n = Real(fromString:"1.010E-10")
+		println("1.010E-10=\(n)")
+		n = Real(fromString:"-12.0E+10")
+		println("-12.0E+10=\(n)")
+		n = Real(fromString:"0.00045E-10")
+		println("0.00045E-10=\(n)")
+		n = Real(fromString:"-12 345 678")
+		println("-12 345 678=\(n)")
+		n = Real(fromString:"1E10000")
+		println("1E10000=\(n)")
+		MakeReal(Real.pi).SinCos(&m, cos: &n)
+		println("Sin(pi)=\(m)")
+		println("Cos(pi)=\(n)")
+		m = MakeReal(Real.pi).Div(Real(fromInt:8))
+		m.SinCos(&m, cos: &n)
+		println("Sin(pi/8)=\(m)")
+		println("Cos(pi/8)=\(n)")
+		m = Real(fromInt:1)
+		m.SinCos(&m, cos: &n)
+		println("Sin(1)=\(m)")
+		println("Cos(1)=\(n)")
+		m = Real(fromInt:-8)
+		println("-8^(-1/3)=\(m.IRoot(3))")
+		m = Real(fromInt:2); m = m.Power(Real(fromInt:64));
+		println("(2^64)^(-1/64)=\(m.IRoot(64))")
+		m = Real(fromInt:4)
+		println("4*arctan(1)=\(m.Mul(MakeReal(Real.one).Arctan()))")
+		m = MakeReal(Real.one).Sin()
+		println("arcsin(sin(1))=\(m.Arcsin())")
+		m = MakeReal(Real.one).Cos()
+		println("arccos(cos(1))=\(m.Arccos())")
+		m = Real(fromDouble:3.6)
+		println("Entier(3.6)=\(m.Entier())")
+		m = Real(fromDouble:-3.6)
+		println("Entier(-3.6)=\(m.Entier())")
+	} //Test;
+
+	func SetDigits (digits: Int) {
+		/** Sets the number of active words in all Real computations.
+		One word contains about 7.22 digits. */
+		var words: Double
+		
+		words = Double(digits) / Real.digsPerWord
+		if words < 8 { words = 8 }
+		if words <= Double(Real.maxMant-2) {
+			Real.curMantissa = Int(words)+2;
+			Real.sigDigs = digits
+		}
+	} //SetDigits;
 
 
-	private func Init () {
+	private func Initialize () {
 		var t0 = RealArray(count:2*(Real.maxMant+4), repeatedValue:0)
 		var t1 = RealArray(count:2*(Real.maxMant+4), repeatedValue:0)
 		var t2 = RealArray(count:2*(Real.maxMant+4), repeatedValue:0)
@@ -2549,8 +2552,8 @@ prefix func + (a: Real) -> Real {
 		Real.curMantissa = Real.maxMant
 		Real.pi = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t1, b:&Real.pi)
 		Real.ln2 = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t2, b:&Real.ln2)
-		Real.ln10 = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t3, b:&Real.ln10)
-		Real.eps = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t4, b:&Real.eps)
+//		Real.ln10 = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t3, b:&Real.ln10)
+//		Real.eps = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t4, b:&Real.eps)
 		
 		/* set the current output precision */
 		Real.sigDigs = Real.maxDigits
