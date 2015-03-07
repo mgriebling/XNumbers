@@ -72,31 +72,20 @@ casual users as long as the precision is set to be 10-20 digits more than you
 need.
 */
 
-//func == (lhs: Real, rhs: Real) -> Bool {
-//	var i: Int
-//	if lhs.digit.count != rhs.digit.count {
-//		return false
-//	} else {
-//		for i = 0; i<lhs.digit.count; i++ {
-//			if lhs.digit[i] != rhs.digit[i] {
-//				return false
-//			}
-//		}
-//		return true
-//	}
-//}
-//
-//func > (lhs: Real, rhs: Real) -> Bool {
-//	return lhs.Cmp(rhs) == 1
-//}
-//
-//func < (lhs: Real, rhs: Real) -> Bool {
-//	return lhs.Cmp(rhs) == -1
-//}
+func == (lhs: Real, rhs: Real) -> Bool {
+	return lhs.Cmp(rhs) == 0
+}
+
+func > (lhs: Real, rhs: Real) -> Bool {
+	return lhs.Cmp(rhs) == 1
+}
+
+func < (lhs: Real, rhs: Real) -> Bool {
+	return lhs.Cmp(rhs) == -1
+}
 
 prefix func - (a: Real) -> Real {
-	var b = Real(size: a.real.count)
-	copy(a.real, b.real)	/* b = x */
+	var b = Real(fromReal: a)
 	b.real[0] = -b.real[0]
 	return b
 }
@@ -105,7 +94,7 @@ prefix func + (a: Real) -> Real {
 	return a
 }
 
- struct Real /*  : Equatable, Comparable, Printable, Hashable */ {
+ struct Real : Printable, Equatable, Comparable /*  :  , Hashable */ {
 	
 	private static let DEBUG = false
 	private static let HALF = 0.5
@@ -165,57 +154,47 @@ prefix func + (a: Real) -> Real {
 	static var err : Int = 0
 	static var debug : Int = 0
 	
-	private var curMantissa : Int = Real.maxMant+1
-	private var numBits : Int = 22
-	private var sigDigs : Int = Real.maxDigits
+	private static var curMantissa : Int = Real.maxMant+1
+	private static var numBits : Int = 22
+	private static var sigDigs : Int = Real.maxDigits
 	
-	// read-only parameters
-	private static var eps: Real {
-		return self.zero
-	}
-	private static var ln2: Real {
-		return self.zero
-	}
-	static var pi: Real {
-		return self.zero
-	}
-	private static var ln10: Real {
-		return self.zero
-	}
-	static var one: Real {
-		return self.zero
-	}
-	static var zero: Real {
-		return self.zero
-	}
+	// internal parameters
+	private static var eps: RealArray = zero
+	private static var pi: RealArray = zero
+	private static var ln10: RealArray = zero
+	private	static var ln2: RealArray = zero
+	private static let one = RealArray(arrayLiteral: 1, 0, 1)
+	private static let zero = RealArray(arrayLiteral: 0, 0)
 	
 	/* Speed up very large factorials */
-	private static let fact100000 = Real(fromString: "2.82422940796034787429342157802453551847749492609122485057891808654297795090106301787" +
+	private static let fact100000 = Real(fromString:
+		"2.82422940796034787429342157802453551847749492609122485057891808654297795090106301787" +
 		"2551771413831163610713611737361962951474996183123918022726073409093832422005556968866" +
 		"7840380377379444961268380147875111966906386044926144538111370090160766866405407170565" +
 		"9522612980419583567789090475415128711408369242515352930962606722710387442460886354543" +
 		"6398293174776177553262185112647485586491818038151987716121968151412990230446382406889" +
 		"65083575002296499396423642566352716149352078013312029433930594819960435395E+456573")
-	private static let fact200000 = Real(fromString: "1.42022534547031440496694633368230597608996535674640162269622474462922677851609968565" +
+	private static let fact200000 = Real(fromString:
+		"1.42022534547031440496694633368230597608996535674640162269622474462922677851609968565" +
 		"0082553407879081329793135215376044079156034995456792440298907698327157087066286303182" +
 		"5017623219084061256114573810476379717993512721296946450311966946288603601628556916324" +
 		"4648770389480378251602819955788158117868794159097393435551925337859488859955701890215" +
 		"4897701489299055308898497995637308558323762472340297297985768615383843817767617482336" +
 		"58088832083067784773860727948019819421544453708479108922842308732119367523E+973350")
-	private static let fact300000 = Real(fromString: "1.47739153173803909429290747493561414549932051952374408795791384376505240135170347653" +
+	private static let fact300000 = Real(fromString:
+		"1.47739153173803909429290747493561414549932051952374408795791384376505240135170347653" +
 		"2418899010198829649964892384917975071774129347530818714855332590431274389350896312260" +
 		"9806517049255450392732030550644905383028447932954677114843634677423190476154873121734" +
 		"1025709069449617692835058182617595979172730842885422104493186754451133578337885783639" +
 		"5817086347597543562761254468984063083893218681681196080370667835191599919282226318984" +
 		"62208531038106191099127491142755685344624042273747482199422127053615182013E+1512851")
 	
-	private static var Seed = Real(fromInteger:4)
+	private static var Seed = Real(fromInt:4)
 	static var status = Status.Okay
 	
-//	var description: String {
-//		var s : String = self.ToString(0, ExpWidth: 0, EngFormat: false)
-//		return s
-//	}
+	var description: String {
+		return self.ToString()
+	}
 	
 	/*---------------------------------------------------------*/
 	/* Constructors                                            */
@@ -230,7 +209,7 @@ prefix func + (a: Real) -> Real {
 		self.fromString(string)
 	}
 	
-	init (fromInteger integer: Int) {
+	init (fromInt integer: Int) {
 		self.init(fromDouble:Double(integer))
 	}
 	
@@ -265,7 +244,7 @@ prefix func + (a: Real) -> Real {
 		}
 	} //Sign;
 	
-	private func Zero (inout x: [Double]) {
+	private func Zero (inout x: RealArray) {
 		/* x to zero */
 		x[0] = 0; x[1] = 0
 	} //Zero;
@@ -323,8 +302,8 @@ prefix func + (a: Real) -> Real {
 	private func copy (a: RealArray, inout b: RealArray) {
 		/* b = a */
 		var ia, na, i: Int
-		ia = Sign(1, y: a[0]); na = Min(Int(abs(a[0])), y: self.curMantissa)
-		if na==0 { Zero(&b); return }
+		ia = Sign(1, y: a[0]); na = Min(Int(abs(a[0])), y: Real.curMantissa)
+		if na == 0 { Zero(&b); return }
 		b[0] = Double(Sign(na, y:Double(ia)))
 		for i = 1; i<=na+2; i++ { b[i] = a[i] }
 		ia++
@@ -343,7 +322,7 @@ prefix func + (a: Real) -> Real {
 		/*
 		This performs rounding and truncation of the a number.
 		The maxExp value is the absolute value of the largest exp1nt
-		word allowed for ext}ed numbers.
+		word allowed for extended numbers.
 		*/
 		var a2: Double
 		var allZeros: Bool
@@ -354,7 +333,7 @@ prefix func + (a: Real) -> Real {
 		
 		/* check for initial zeros */
 		a2 = a[1]; a[1] = 0; ia = Sign(1, y: a[0])
-		na = Min(Int(abs(a[0])), y: curMantissa)
+		na = Min(Int(abs(a[0])), y: Real.curMantissa)
 		n4 = na+4; k = 0
 		if a[2]==0 {
 			/* find the nonzero word and shift the entire number left.
@@ -371,7 +350,7 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* perform rounding dep}ing on MPIRD */
-		if (na==curMantissa) && (Real.MPIRD>=1) {
+		if (na==Real.curMantissa) && (Real.MPIRD>=1) {
 			if ((Real.MPIRD==1) && (a[na+2]>=Real.HALF*Real.radix)) || ((Real.MPIRD==2) && (a[na+2]>=1.0)) {
 				a[na+1] = a[na+1]+1.0
 			}
@@ -431,7 +410,7 @@ prefix func + (a: Real) -> Real {
 		var ia, na, n4, i: Int
 		
 		if Real.err != 0 { Zero(&a); return }
-		ia = Sign(1, y:d[0]); na = Min(Int(abs(d[0])), y:curMantissa)
+		ia = Sign(1, y:d[0]); na = Min(Int(abs(d[0])), y:Real.curMantissa)
 		if na == 0 { Zero(&a); return }
 		n4 = na+4; a2 = d[1]; d[1] = 0.0
 		for ;; {
@@ -451,7 +430,7 @@ prefix func + (a: Real) -> Real {
 				right one cell.  The exponent and length of the result are
 				increased by one. */
 				for i = n4-1; i >= 2; i-- { a[i] = d[i-1] }
-				na = Min(na+1, y:curMantissa); a2 = a2+1.0
+				na = Min(na+1, y:Real.curMantissa); a2 = a2+1.0
 				break
 			} else {
 				for i = 2; i<=n4-1; i++ { a[i] = d[i] }
@@ -544,8 +523,8 @@ prefix func + (a: Real) -> Real {
 			println("Add 2"); Write(b)
 		}
 		ia = Sign(1, y: a[0]); ib = Sign(1, y: b[0])
-		na = Min(Int(abs(a[0])), y: curMantissa)
-		nb = Min(Int(abs(b[0])), y: curMantissa)
+		na = Min(Int(abs(a[0])), y: Real.curMantissa)
+		nb = Min(Int(abs(b[0])), y: Real.curMantissa)
 		
 		/* check for zero inputs */
 		if na == 0 { /* a is zero -- the result is b */
@@ -562,8 +541,8 @@ prefix func + (a: Real) -> Real {
 			if ish >= 0 {
 				/* `b' must be shifted to the right */
 				m1 = Min(na, y: ish); m2 = Min(na, y: nb+ish); m3 = na
-				m4 = Min(Max(na, y: ish), y: curMantissa+1)
-				m5 = Min(Max(na, y: nb+ish), y: curMantissa+1)
+				m4 = Min(Max(na, y: ish), y: Real.curMantissa+1)
+				m5 = Min(Max(na, y: nb+ish), y: Real.curMantissa+1)
 				d.r[0] = 0; d.r[1] = 0
 				for i = 1; i <= m1; i++ { d.r[i+1] = a[i+1] }
 				for i = m1+1; i <= m2; i++ { d.r[i+1] = a[i+1]+db*b[i+1-ish] }
@@ -575,8 +554,8 @@ prefix func + (a: Real) -> Real {
 				/* `b' has greater exponent than `a', so `a' is shifted
 				to the right. */
 				nsh = -ish; m1 = Min(nb, y:nsh); m2 = Min(nb, y:na+nsh); m3 = nb
-				m4 = Min(Max(nb, y:nsh), y:curMantissa+1)
-				m5 = Min(Max(nb, y:na+nsh), y:curMantissa+1)
+				m4 = Min(Max(nb, y:nsh), y:Real.curMantissa+1)
+				m5 = Min(Max(nb, y:na+nsh), y:Real.curMantissa+1)
 				d.r[0] = 0; d.r[1] = 0
 				for i = 1; i <= m1; i++ { d.r[i+1] = db*b[i+1] }
 				for i = m1+1; i <= m2; i++ { d.r[i+1] = a[i+1-nsh]+db*b[i+1] }
@@ -624,8 +603,8 @@ prefix func + (a: Real) -> Real {
 			println("Mul 2"); Write(b)
 		}
 		ia = Sign(1, y: a[0]); ib = Sign(1, y: b[0])
-		na = Min(Int(abs(a[0])), y:curMantissa)
-		nb = Min(Int(abs(b[0])), y:curMantissa)
+		na = Min(Int(abs(a[0])), y:Real.curMantissa)
+		nb = Min(Int(abs(b[0])), y:Real.curMantissa)
 		
 		/* if one of the inputs is zero--result is zero */
 		if (na == 0) || (nb == 0) { Zero(&c); return }
@@ -643,7 +622,7 @@ prefix func + (a: Real) -> Real {
 			return
 		}
 		
-		nc = Min(na+nb, y: curMantissa);
+		nc = Min(na+nb, y: Real.curMantissa);
 		d2 = a[1]+b[1];
 		for i = 0; i <= nc+3; i++ { d.r[i] = 0 }
 		
@@ -652,7 +631,7 @@ prefix func + (a: Real) -> Real {
 		product. */
 		for j = 3; j<=na+2; j++ {
 			t1 = a[j-1]; j3 = j-3;
-			n2 = Min(nb+2, y:curMantissa+4-j3)
+			n2 = Min(nb+2, y:Real.curMantissa+4-j3)
 			for i = 2; i<n2; i++ {
 				d.r[i+j3] = d.r[i+j3]+t1*b[i]
 			}
@@ -702,7 +681,7 @@ prefix func + (a: Real) -> Real {
 		
 		/* check for zero inputs */
 		ia = Sign(1, y:a[0]); ib = Sign(1, y:b)
-		na = Min(Int(abs(a[0])), y:curMantissa)
+		na = Min(Int(abs(a[0])), y:Real.curMantissa)
 		if (na == 0) || (b == 0) { Zero(&c); return }
 		n1 = Int(n/Real.NBT); n2 = n-Real.NBT*n1; bb = abs(b)*ipower(2.0, base: n2)
 		
@@ -748,8 +727,8 @@ prefix func + (a: Real) -> Real {
 		
 		/* extract lengths and number signs */
 		ia = Sign(1, y:a[0]); ib = Sign(1, y:b[0])
-		na = Min(Int(abs(a[0])), y:curMantissa)
-		nb = Min(Int(abs(b[0])), y:curMantissa)
+		na = Min(Int(abs(a[0])), y:Real.curMantissa)
+		nb = Min(Int(abs(b[0])), y:Real.curMantissa)
 		
 		/* check if divid} //is zero */
 		if na == 0 { Zero(&c); return };
@@ -773,7 +752,7 @@ prefix func + (a: Real) -> Real {
 		if nb>=2 { t0 = t0+b[3] }
 		if nb>=3 { t0 = t0+Real.invRadix*b[4] }
 		if nb>=4 { t0 = t0+Real.mprx2*b[5] }
-		rb = 1.0/t0; md = Min(na+nb, y: curMantissa)
+		rb = 1.0/t0; md = Min(na+nb, y: Real.curMantissa)
 		d.r[0] = 0
 		for i = 1; i<=na; i++ { d.r[i] = a[i+1] }
 		for i = na+1; i<=md+3; i++ { d.r[i] = 0 }
@@ -783,7 +762,7 @@ prefix func + (a: Real) -> Real {
 		for j = 2; j<=na+1; j++ {
 			t1 = Real.mpbx2*d.r[j-2]+Real.radix*d.r[j-1]+d.r[j]+Real.invRadix*d.r[j+1]
 			t0 = Double(Int(rb*t1)); j3 = j-3
-			i2 = Min(nb, y:curMantissa+2-j3)+2
+			i2 = Min(nb, y:Real.curMantissa+2-j3)+2
 			ij = i2+j3
 			for i = 3; i<=i2; i++ {
 				i3 = i+j3-1; d.r[i3] = d.r[i3]-t0*b[i-1]
@@ -806,11 +785,11 @@ prefix func + (a: Real) -> Real {
 		the remainder is nonzero. */
 		j = na+2; useOldj = false
 		for ;; {
-			if j>curMantissa+3 { break }
+			if j>Real.curMantissa+3 { break }
 			t1 = Real.mpbx2*d.r[j-2] + Real.radix*d.r[j-1] + d.r[j]
-			if j <= curMantissa+2 { t1 = t1+Real.invRadix*d.r[j+1] }
+			if j <= Real.curMantissa+2 { t1 = t1+Real.invRadix*d.r[j+1] }
 			t0 = Double(Int(rb*t1)); j3 = j-3
-			i2 = Min(nb, y:curMantissa+2-j3)+2
+			i2 = Min(nb, y:Real.curMantissa+2-j3)+2
 			ij = i2+j3; ss = 0
 			
 			for i = 3; i<=i2; i++ {
@@ -827,15 +806,15 @@ prefix func + (a: Real) -> Real {
 			d.r[j-1] = d.r[j-1]+Real.radix*d.r[j-2]
 			d.r[j-2] = t0
 			if ss == 0 { useOldj = true; break }
-			if ij <= curMantissa { d.r[ij+2] = 0 }
+			if ij <= Real.curMantissa { d.r[ij+2] = 0 }
 			j++
 		}
 		
 		/* set sign and exponent, and fix up result */
-		if !useOldj { j = curMantissa+3 }
+		if !useOldj { j = Real.curMantissa+3 }
 		d.r[j-1] = 0
 		if d.r[0] == 0 { is1 = 1 } else { is1 = 2 }
-		nc = Min(j-1, y:curMantissa);
+		nc = Min(j-1, y:Real.curMantissa);
 		d.r[nc+2] = 0; d.r[nc+3] = 0
 		for i = j; i>=2; i-- { d.r[i] = d.r[i-is1] }
 		d.r[0] = Double(Sign(nc, y:Double(ia*ib)))
@@ -861,7 +840,7 @@ prefix func + (a: Real) -> Real {
 		
 		if Real.err != 0 { Zero(&c); return }
 		ia = Sign(1, y:a[0]); ib = Sign(1, y:b)
-		na = Min(Int(abs(a[0])), y: curMantissa)
+		na = Min(Int(abs(a[0])), y: Real.curMantissa)
 		
 		/* check if divid} //is zero */
 		if na == 0 { Zero(&c); return }
@@ -886,7 +865,7 @@ prefix func + (a: Real) -> Real {
 			/* perform short division */
 			br = 1.0/bb; dd = a[2]
 			j = 2; ok = true
-			while ok & (j<=curMantissa+3) {
+			while ok & (j<=Real.curMantissa+3) {
 				t1 = Double(Int(br*dd)); d.r[j] = t1
 				dd = Real.radix*(dd-t1*bb)
 				if j <= na {
@@ -898,10 +877,10 @@ prefix func + (a: Real) -> Real {
 			}
 			
 			/* set exponent and fix up the result */
-			j--; nc = Min(j-1, y:curMantissa);
+			j--; nc = Min(j-1, y:Real.curMantissa);
 			d.r[0] = Double(Sign(nc, y:Double(ia*ib))); d.r[1] = a[1]-Double(n1)
-			if j<=curMantissa+2 { d.r[j+1] = 0 }
-			if j<=curMantissa+1 { d.r[j+2] = 0 }
+			if j<=Real.curMantissa+2 { d.r[j+1] = 0 }
+			if j<=Real.curMantissa+1 { d.r[j+2] = 0 }
 			Normalize(d.r, a: &c)
 		}
 	} //Divd;
@@ -910,10 +889,10 @@ prefix func + (a: Real) -> Real {
 		copy(x, b: &z); z[0] = abs(x[0])
 	} //Abs;
 
-	private mutating func IntPower (inout b: RealArray, a: RealArray, n: Int) {
+	private func IntPower (inout b: RealArray, a: RealArray, n: Int) {
 		/*
-		This routine computes the `n'-th power of the ext}ed
-		number `a' and returns the ext}ed result in `b'.
+		This routine computes the `n'-th power of the extended
+		number `a' and returns the extended result in `b'.
 		When `n' is negative, the reciprocal of `a'**|`n'| is
 		returned.  The Knuth's method is used p442, "The Art
 		of Computer Programming", Vol 2.
@@ -923,7 +902,7 @@ prefix func + (a: Real) -> Real {
 		var t = FixedLReal()
 		
 		if Real.err != 0 { Zero(&b); return }
-		na = Min(Int(abs(a[0])), y:curMantissa)
+		na = Min(Int(abs(a[0])), y:Real.curMantissa)
 		
 		/* check for errors */
 		if na == 0 {
@@ -938,17 +917,17 @@ prefix func + (a: Real) -> Real {
 		
 		/* check for trival cases */
 		Zero(&t.r)
-		nws = curMantissa
-		self.curMantissa++
+		nws = Real.curMantissa
+		Real.curMantissa++
 		nn = abs(n)
 		if nn == 0 {
-			copy(Real.one.real, b:&b)									/* x^0 = 1 */
-			curMantissa = nws; return
+			copy(Real.one, b:&b)									/* x^0 = 1 */
+			Real.curMantissa = nws; return
 		} else if nn == 1 { copy(a, b: &b)					/* x^1 = x */
 		} else if nn == 2 { Mul(&t.r, a:a, b:a); copy(t.r, b: &b)    /* x^2 = x*x */
 		} else {
 			/* apply Knuth's algorithm */
-			copy(Real.one.real, b:&b);	/* b = 1 */
+			copy(Real.one, b:&b);	/* b = 1 */
 			copy(a, b:&r.r);	/* r = a */
 			for ;; {
 				if ODD(nn) { Mul(&t.r, a:b, b:r.r); copy(t.r, b:&b) }
@@ -958,15 +937,15 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* take reciprocal if n<0 */
-		if n<0 { Div(&t.r, a:Real.one.real, b:b); copy(t.r, b:&b) }
+		if n<0 { Div(&t.r, a:Real.one, b:b); copy(t.r, b:&b) }
 		
 		/* restore original precision */
-		curMantissa = nws; Round(&b)
+		Real.curMantissa = nws; Round(&b)
 	} //IntPower;
 
 	private func Cmp (a: RealArray, b: RealArray) -> Int {
 		/*
-		This routine compares the ext}ed numbers `a' and `b' and
+		This routine compares the extended numbers `a' and `b' and
 		returns the value -1, 0, or 1 dep}ing on whether `a'<`b',
 		`a'=`b', or `a'>`b'.  It is faster than merely subtracting
 		`a' and `b' and looking at the sign of the result.
@@ -984,7 +963,7 @@ prefix func + (a: Real) -> Real {
 		if ma != mb { return ia * Sign(1, y:Double(ma-mb)) }
 		
 		/* signs & exponents are the same, compare mantissas */
-		na = Min(Int(abs(a[0])), y:curMantissa); nb = Min(Int(abs(b[0])), y:curMantissa);
+		na = Min(Int(abs(a[0])), y:Real.curMantissa); nb = Min(Int(abs(b[0])), y:Real.curMantissa);
 		for i = 2; i<=Min(na, y:nb)+1; i++ {
 			if a[i] != b[i] { return ia*Sign(1, y:a[i]-b[i]) }
 		};
@@ -996,7 +975,7 @@ prefix func + (a: Real) -> Real {
 		return 0
 	} //Cmp;
 
-	private mutating func Sqrt (inout b: RealArray, a: RealArray) {
+	private func Sqrt (inout b: RealArray, a: RealArray) {
 		/*
 		Computes the square root of `a' and returns the result
 		in `b'.
@@ -1025,7 +1004,7 @@ prefix func + (a: Real) -> Real {
 		var ia, na, nws, n2, n, k, nw1, nw2, mq: Int
 		
 		if Real.err != 0 { Zero(&b); return }
-		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:curMantissa)
+		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:Real.curMantissa)
 		
 		/* trivial values */
 		if na == 0 { Zero(&b); return }
@@ -1035,10 +1014,10 @@ prefix func + (a: Real) -> Real {
 			println("*** Sqrt: Argument is negative!")
 			Real.err = 70; return
 		}
-		nws = curMantissa
+		nws = Real.curMantissa
 		
 		/* determine the least integer mq such that 2^mq >= curMantissa */
-		t1 = Double(curMantissa); mq = Int(Real.invLn2*log(t1)+1-Real.mprxx)
+		t1 = Double(Real.curMantissa); mq = Int(Real.invLn2*log(t1)+1-Real.mprxx)
 		
 		/* initial approximation of 1 / Sqrt(a) */
 		n = 0; t1 = 0
@@ -1046,22 +1025,22 @@ prefix func + (a: Real) -> Real {
 		n2 = -(n / 2); t2 = sqrt(t1*ipower(2.0, base: n+2*n2))
 		t1 = 1/t2
 		NumbExpToReal(t1, n:n2, b:&b)
-		curMantissa = 3; iq = false
+		Real.curMantissa = 3; iq = false
 		
 		/* perform the Newton_Raphson iteration described above with
 		a dynamically changing precision level curMantissa (one greater
 		than the powers of two). */
 		for k = 2; k<=mq-1; k++ {
-			nw1 = curMantissa; curMantissa = Min(2*curMantissa-2, y:nws)+1
-			nw2 = curMantissa
+			nw1 = Real.curMantissa; Real.curMantissa = Min(2*Real.curMantissa-2, y:nws)+1
+			nw2 = Real.curMantissa
 			for ;; {
 				Mul(&k0.r, a: b, b: b)           /* k0 = X(k)^2 */
 				Mul(&k1.r, a: a, b: k0.r)         /* k1 = a * X(k)^2 */
-				Sub(&k0.r, a:Real.one.real, b:k1.r)       /* k0 = 1 - a * X(k)^2 */
-				curMantissa = nw1
+				Sub(&k0.r, a:Real.one, b:k1.r)       /* k0 = 1 - a * X(k)^2 */
+				Real.curMantissa = nw1
 				Mul(&k1.r, a:b, b:k0.r)          /* k1 = X(k)*(1 - a * X(k)^2) */
 				Muld(&k0.r, a: k1.r, b: Real.HALF, n: 0)   /* k0 = 0.5 * (X(k)*(1 - a * X(k)^2)) */
-				curMantissa = nw2
+				Real.curMantissa = nw2
 				Add(&b, a:b, b:k0.r)           /* X(k+1) = X(k) + 0.5 * (X(k)*(1 - a * X(k)^2)) */
 				if ~iq && (k == mq-Real.NIT) {
 					iq = true
@@ -1073,23 +1052,23 @@ prefix func + (a: Real) -> Real {
 		
 		/* last iteration using Karp's trick */
 		Mul(&k0.r, a:a, b:b);              /* k0 = a * X(n) */
-		nw1 = curMantissa
-		curMantissa = Min(2*curMantissa-2, y:nws)+1
-		nw2 = curMantissa
+		nw1 = Real.curMantissa
+		Real.curMantissa = Min(2*Real.curMantissa-2, y:nws)+1
+		nw2 = Real.curMantissa
 		Mul(&k1.r, a:k0.r, b:k0.r)            /* k1 = (a * X(n))^2 */
 		Sub(&k2.r, a:a, b:k1.r)             /* k2 = a - (a * X(n))^2 */
-		curMantissa = nw1
+		Real.curMantissa = nw1
 		Mul(&k1.r, a:k2.r, b:b)              /* k1 = X(n) * (a - (a * X(n))^2) */
 		Muld(&k2.r, a:k1.r, b:Real.HALF, n:0)       /* k2 = 0.5 * (X(n) * (a - (a * X(n))^2)) */
-		curMantissa = nw2
+		Real.curMantissa = nw2
 		Add(&k1.r, a:k0.r, b:k2.r)             /* Sqrt(a) = a * X(n) + 0.5 * (X(n) * (a - (a * X(n))^2)) */
 		copy(k1.r, b:&b)
 		
 		/* restore original resolution */
-		curMantissa = nws; Round(&b)
+		Real.curMantissa = nws; Round(&b)
 	} //Sqrt;
 
-	private mutating func Root (inout b: RealArray, var a: RealArray, n: Int) {
+	private func Root (inout b: RealArray, var a: RealArray, n: Int) {
 		/*
 		Computes the `n'th root of `a' and returns the result in `b'.
 		`n' must be at least one and must not exceed 2^30.
@@ -1121,7 +1100,7 @@ prefix func + (a: Real) -> Real {
 		var ia, na, n2, k, mq, n1, n3: Int
 		
 		if Real.err != 0 { Zero(&b); return };
-		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:curMantissa)
+		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:Real.curMantissa)
 		
 		/* trivial values */
 		if na == 0 { Zero(&b); return }
@@ -1139,7 +1118,7 @@ prefix func + (a: Real) -> Real {
 			println("*** Root: Improper value of n!")
 			Real.err = 60; return
 		}
-		nws = curMantissa;
+		nws = Real.curMantissa;
 		
 		/* if n = 1 or 2 use faster local routines */
 		if n == 1 {
@@ -1151,11 +1130,11 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* determine the least integer mq such that 2^mq >= curMantissa */
-		t1 = Double(curMantissa); mq = Int(Real.invLn2*log(t1)+1-Real.mprxx)
+		t1 = Double(Real.curMantissa); mq = Int(Real.invLn2*log(t1)+1-Real.mprxx)
 		
 		/* check how close `a' is to 1 */
-		Sub(&k0.r, a:a, b:Real.one.real)
-		if k0.r[0] == 0 { copy(Real.one.real, b:&b); return }
+		Sub(&k0.r, a:a, b:Real.one)
+		if k0.r[0] == 0 { copy(Real.one, b:&b); return }
 		n1 = 0; t1 = 0
 		RealToNumbExp(k0.r, b: &t1, n: &n1)
 		n2 = Int(Real.invLn2*log(abs(t1)))
@@ -1163,12 +1142,12 @@ prefix func + (a: Real) -> Real {
 		n1 += n2
 		if n1 <= -30 {
 			t2 = Double(n); n2 = Int(Real.invLn2*log(t2)+1+Real.mprxx);
-			n3 = -Real.NBT*curMantissa / n1
+			n3 = -Real.NBT*Real.curMantissa / n1
 			if n3 < Int(1.25*Double(n2)) {
 				/* `a' is so close to 1 that it is cheaper to use the
 				binomial series */
-				curMantissa++
-				Divd(&k1.r, a: k0.r, b: t2, n: 0); Add(&k2.r, a:Real.one.real, b:k1.r)
+				Real.curMantissa++
+				Divd(&k1.r, a: k0.r, b: t2, n: 0); Add(&k2.r, a:Real.one, b:k1.r)
 				k = 0
 				for ;; {
 					k++; t1 = 1-Double(k*n); t2 = Double((k+1)*n)
@@ -1178,12 +1157,12 @@ prefix func + (a: Real) -> Real {
 					copy(k3.r, b:&k1.r)
 					Add(&k3.r, a:k1.r, b:k2.r)
 					copy(k3.r, b:&k2.r)
-					if (k1.r[0] == 0) || (k1.r[1] < Double(-curMantissa)) {
+					if (k1.r[0] == 0) || (k1.r[1] < Double(-Real.curMantissa)) {
 						break
 					}
 				}
-				copy(k2.r, b:&b); Div(&k0.r, a:Real.one.real, b:k2.r)
-				curMantissa = nws; Round(&b)
+				copy(k2.r, b:&b); Div(&k0.r, a:Real.one, b:k2.r)
+				Real.curMantissa = nws; Round(&b)
 				b[0] = Double(Sign(Int(b[0]), y: Double(ia)))
 				return
 			}
@@ -1195,17 +1174,17 @@ prefix func + (a: Real) -> Real {
 		t2 = exp(-1/tn * (log(Double(t1)) + Double(n1 + Int(tn) * n2) * Real.Ln2))
 		NumbExpToReal(t2, n: n2, b: &b)
 		NumbExpToReal(tn, n: 0, b: &f2)
-		curMantissa = 3; iq = false
+		Real.curMantissa = 3; iq = false
 		
 		/* perform the Newton_Raphson iteration described above
 		with a dynamically changing precision level curMantissa
 		which is one greater than the powers of two. */
 		for k = 2; k <= mq; k++ {
-			curMantissa = Min(2*curMantissa-2, y: nws)+1
+			Real.curMantissa = Min(2*Real.curMantissa-2, y: nws)+1
 			for ;; {
 				IntPower(&k0.r, a:b, n:n)
 				Mul(&k1.r, a:a, b:k0.r)
-				Sub(&k0.r, a:Real.one.real, b:k1.r)
+				Sub(&k0.r, a:Real.one, b:k1.r)
 				Mul(&k1.r, a:b, b:k0.r)
 				Divd(&k0.r, a: k1.r, b: tn, n: 0)
 				Add(&k1.r, a:b, b:k0.r)
@@ -1219,14 +1198,14 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* take reciprocal to give final result */
-		Div(&k1.r, a: Real.one.real, b: b); copy(k1.r, b: &b)
+		Div(&k1.r, a: Real.one, b: b); copy(k1.r, b: &b)
 		
 		/* restore original resolution */
-		curMantissa = nws; Round(&b)
+		Real.curMantissa = nws; Round(&b)
 		b[0] = Double(Sign(Int(b[0]), y: Double(ia)))
 	} //Root;
 
-	private mutating func Pi (var pi: RealArray) {
+	private func Pi (inout pi: RealArray) {
 		/*
 		Computes Pi to available precision (curMantissa words).
 		
@@ -1259,7 +1238,7 @@ prefix func + (a: Real) -> Real {
 		if Real.err != 0 { Zero(&pi); return }
 		
 		/* increase working resolution */
-		nws = curMantissa; curMantissa++
+		nws = Real.curMantissa; Real.curMantissa++
 		
 		/* determine the number of iterations required for the given
 		precision level.  This formula is good only for this Pi
@@ -1268,7 +1247,7 @@ prefix func + (a: Real) -> Real {
 		mq = Int(Real.invLn2*(log(t1)-1)+1)
 		
 		/* initialize working variables */
-		copy(Real.one.real, b:&An.r)						  /* A(0) = 1 */
+		copy(Real.one, b:&An.r)						  /* A(0) = 1 */
 		f[0] = 1; f[1] = 0; f[2] = 2
 		Sqrt(&t.r, a:f)                           /* t = Sqrt(2) */
 		Muld(&Bn.r, a: t.r, b: Real.HALF, n: 0);               /* B(0) = 1 / Sqrt(2) */
@@ -1294,7 +1273,7 @@ prefix func + (a: Real) -> Real {
 		Div(&pi, a:t.r, b:Dn.r)                       /* k2 = (A(k) + B(k))^2 / D(k) */
 		
 		/* back to original precision */
-		curMantissa = nws; Round(&pi)
+		Real.curMantissa = nws; Round(&pi)
 	} //Pi;
 
 	private func Entier (inout b: RealArray, a: RealArray) {
@@ -1305,14 +1284,14 @@ prefix func + (a: Real) -> Real {
 		var ia, na, ma, nb, i: Int
 		
 		if Real.err != 0 { Zero(&b); return }
-		ia = Sign(1, y: a[0]); na = Min(Int(abs(a[0])), y: curMantissa)
+		ia = Sign(1, y: a[0]); na = Min(Int(abs(a[0])), y: Real.curMantissa)
 		ma = Int(a[1])
 		
 		/* check for zero -> result is zero */
 		if na == 0 { Zero(&b); return }
 		
 		/* check if `a' can be represented exactly as an integer */
-		if ma >= curMantissa {
+		if ma >= Real.curMantissa {
 			println("*** Entier: Argument is too large!")
 		}
 		
@@ -1329,7 +1308,7 @@ prefix func + (a: Real) -> Real {
 		/* if (a < 0) & (Frac(a) != 0) { b = b - 1 */
 		if ia == -1 {
 			for i = nb+2; i<=na+1; i++ {
-				if a[i] != 0 { Sub(&b, a:b, b:Real.one.real); return }
+				if a[i] != 0 { Sub(&b, a:b, b:Real.one); return }
 			}
 		}
 	} //Entier;
@@ -1344,14 +1323,14 @@ prefix func + (a: Real) -> Real {
 		var k0 = FixedLReal()
 		
 		if Real.err != 0 { Zero(&b); return }
-		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:curMantissa)
+		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:Real.curMantissa)
 		ma = Int(a[1])
 		
 		/* check for zero -> result is zero */
 		if na == 0 { Zero(&b); return }
 		
 		/* check if `a' can be represented exactly as an integer */
-		if ma >= curMantissa {
+		if ma >= Real.curMantissa {
 			println("*** RoundInt: Argument is too large!")
 			Real.err = 56; return
 		}
@@ -1372,9 +1351,9 @@ prefix func + (a: Real) -> Real {
 		}
 	} //RoundInt;
 
-	private mutating func Exp (inout b: RealArray, a: RealArray) {
+	private func Exp (inout b: RealArray, a: RealArray) {
 		/*
-		This computes the exponential function of the ext}ed
+		This computes the exponential function of the extended
 		precision number `a' and returns the result in `b'.  The
 		value of `ln2' is also required.
 		
@@ -1397,7 +1376,7 @@ prefix func + (a: Real) -> Real {
 		var k3 = FixedLReal()
 		
 		if Real.err != 0 { Zero(&b); return };
-		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:curMantissa)
+		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:Real.curMantissa)
 		t1 = 0; n1 = 0
 		RealToNumbExp(a, b: &t1, n: &n1)
 		t1 = t1*ipower(2, base: n1)
@@ -1406,7 +1385,7 @@ prefix func + (a: Real) -> Real {
 		/* unless the argument is near Ln(2), ln2 must be precomputed.
 		This exception is necessary because Ln calls Exp to
 		initialize ln2 */
-		if (abs(t1-Real.Ln2) > Real.invRadix) && (Real.ln2.real.count == 0) {
+		if (abs(t1-Real.Ln2) > Real.invRadix) && (Real.ln2.count == 0) {
 			println("*** Exp: ln2 must be precomputed!")
 			Real.err = 34; return
 		}
@@ -1423,37 +1402,37 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* increase resolution */
-		nws = curMantissa; curMantissa++
+		nws = Real.curMantissa; Real.curMantissa++
 		
 		/* compute the reduced argument a' = a - Ln(2) * Int(a/Ln(2)).
 		Save nz = Int(a/Ln(2)) for correcting the exponent of the
 		final result. */
 		if abs(t1-Real.Ln2) > Real.invRadix {
-			Div(&k0.r, a:a, b:Real.ln2.real)
+			Div(&k0.r, a:a, b:Real.ln2)
 			RoundInt(&k1.r, a: k0.r)
 			RealToNumbExp(k1.r, b: &t1, n: &n1)
 			nz = Int(t1*Double(ipower(2, base: n1)) + Double(Sign(Int(Real.mprxx), y: t1)))
-			Mul(&k2.r, a:Real.ln2.real, b:k1.r)
+			Mul(&k2.r, a:Real.ln2, b:k1.r)
 			Sub(&k0.r, a:a, b:k2.r)
 		} else {
 			copy(a, b:&k0.r); nz = 0
 		}
-		tl = k0.r[1] - Double(curMantissa)
+		tl = k0.r[1] - Double(Real.curMantissa)
 		
 		/* check if the reduced argument is zero */
 		if k0.r[0] == 0 {
-			copy(Real.one.real, b:&k0.r)
+			copy(Real.one, b:&k0.r)
 		} else {
 			/* divide the reduced argument by 2^nq */
 			Divd(&k1.r, a: k0.r, b: 1, n: NQ)
 			
 			/* compute Exp using the usual Taylor series */
-			copy(Real.one.real, b:&k2.r); copy(Real.one.real, b:&k3.r); l1 = 0
+			copy(Real.one, b:&k2.r); copy(Real.one, b:&k3.r); l1 = 0
 			for ;; {
 				l1++
 				if l1 == 10000 {
 					println("*** Exp: Iteration limit exceeded!")
-					Real.err = 36; curMantissa = nws; return
+					Real.err = 36; Real.curMantissa = nws; return
 				}
 				t2 = Double(l1)
 				Mul(&k0.r, a:k2.r, b:k1.r)
@@ -1474,10 +1453,10 @@ prefix func + (a: Real) -> Real {
 		copy(k1.r, b:&b)
 		
 		/* restore original precision level */
-		curMantissa = nws; Round(&b)
+		Real.curMantissa = nws; Round(&b)
 	} //Exp;
 
-	private mutating func Ln (inout b: RealArray, a: RealArray) {
+	private func Ln (inout b: RealArray, a: RealArray) {
 		/*
 		This routine computes the natural logarithm of the extended
 		precision number `a' and returns the extended precision
@@ -1493,7 +1472,7 @@ prefix func + (a: Real) -> Real {
 		X(k+1) = X(k) + (a - Exp(X(k)) / Exp(X(k))
 		
 		These iterations are performed with a maximum precision level
-		curMantissa that is dynamically changed, approximately doubling
+		Real.curMantissa that is dynamically changed, approximately doubling
 		with each iteration.
 		*/
 		var ia, na, n1, nws, mq, k: Int
@@ -1506,7 +1485,7 @@ prefix func + (a: Real) -> Real {
 		if Real.err != 0 { Zero(&b); return }
 		
 		/* check for error inputs */
-		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:curMantissa)
+		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:Real.curMantissa)
 		if (ia < 0) || (na == 0) {
 			println("*** Ln: Argument is less than or equal to zero!")
 			Real.err = 50; return
@@ -1515,7 +1494,7 @@ prefix func + (a: Real) -> Real {
 		/* unless the input is close to 2, ln2 must be known */
 		t1 = 0; n1 = 0
 		RealToNumbExp(a, b: &t1, n: &n1)
-		if ((abs(t1-2.0) > 1.0e-3) || (n1 != 0)) && (Real.ln2.real.count == 0) {
+		if ((abs(t1-2.0) > 1.0e-3) || (n1 != 0)) && (Real.ln2.count == 0) {
 			println("*** Ln: Ln(2) must be precomputed!"); Real.err = 51; return
 		}
 		
@@ -1523,13 +1502,13 @@ prefix func + (a: Real) -> Real {
 		if (a[0] == 1) && (a[1] == 0) && (a[2] == 1) { Zero(&b); return }
 		
 		/* determine the least integer mq such that 2^mq >= curMantissa */
-		nws = curMantissa; t2 = Double(nws); mq = Int(Real.invLn2*log(t2)+1-Real.mprxx)
+		nws = Real.curMantissa; t2 = Double(nws); mq = Int(Real.invLn2*log(t2)+1-Real.mprxx)
 		
 		/* compute initial approximation of Ln(a) */
 		t1 = log(t1)+Double(n1)*Real.Ln2; NumbExpToReal(t1, n: 0, b: &b)
-		curMantissa = 3; iq = false
+		Real.curMantissa = 3; iq = false
 		for k = 2; k<=mq; k++ {
-			curMantissa = Min(2*curMantissa-2, y:nws)+1
+			Real.curMantissa = Min(2*Real.curMantissa-2, y:nws)+1
 			for ;; {
 				Exp(&k0.r, a:b)		   /* k0 = Exp(X(k)) */
 				Sub(&k1.r, a:a, b:k0.r)    /* k1 = a - Exp(X(k)) */
@@ -1545,10 +1524,10 @@ prefix func + (a: Real) -> Real {
 		};
 		
 		/* restore original precision */
-		curMantissa = nws; Round(&b)
+		Real.curMantissa = nws; Round(&b)
 	} //Ln;
 
-	private mutating func SinCos (inout sin: RealArray, inout cos: RealArray, a: RealArray) {
+	private func SinCos (inout sin: RealArray, inout cos: RealArray, a: RealArray) {
 		/*
 		This routine computes the cosine and sine of the extended
 		precision number `a' and returns the results in `cos' and
@@ -1584,22 +1563,22 @@ prefix func + (a: Real) -> Real {
 		
 		if Real.err != 0 { Zero(&sin); Zero(&cos); return }
 		
-		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:curMantissa)
+		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:Real.curMantissa)
 		
 		/* check for trivial case when a = 0 */
-		if na == 0 { copy(Real.one.real, b:&cos); Zero(&sin); return }
+		if na == 0 { copy(Real.one, b:&cos); Zero(&sin); return }
 		
 		/* check if pi has been precomputed */
-		if Real.pi.real.count == 0 {
+		if Real.pi.count == 0 {
 			println("*** SinCos: pi must be precomputed!")
 			Real.err = 28; return
 		}
 		
 		/* increase resolution */
-		nws = curMantissa; curMantissa++
+		nws = Real.curMantissa; Real.curMantissa++
 		
 		/* reduce input to between -pi and pi */
-		Muld(&k0.r, a: Real.pi.real, b: 2.0, n: 0)
+		Muld(&k0.r, a: Real.pi, b: 2.0, n: 0)
 		Div(&k1.r, a:a, b:k0.r)
 		RoundInt(&k2.r, a:k1.r)       /* k2 = a DIV 2pi */
 		Sub(&k3.r, a:k1.r, b:k2.r)        /* k3 = a MOD 2pi */
@@ -1634,7 +1613,7 @@ prefix func + (a: Real) -> Real {
 				l1++
 				if l1 == 10000 {
 					println("*** SinCos: Iteration limit exceeded!")
-					Real.err = 29; curMantissa = nws; return
+					Real.err = 29; Real.curMantissa = nws; return
 				}
 				t2 = Double(-(2*l1)*(2*l1+1))
 				Mul(&k3.r, a:k2.r, b:k1.r)
@@ -1643,18 +1622,18 @@ prefix func + (a: Real) -> Real {
 				copy(k3.r, b:&k0.r)
 				
 				/* check for convergence of the series */
-				if (k1.r[0] == 0) || (k1.r[1] < (k0.r[1]-Double(curMantissa))) { break }
+				if (k1.r[0] == 0) || (k1.r[1] < (k0.r[1]-Double(Real.curMantissa))) { break }
 			}
 		}
 		
 		/* compute Cos(s) = Sqrt(1-Sin(s)^2) */
 		copy(k0.r, b:&k1.r)
-		Mul(&k2.r, a:k0.r, b:k0.r); Sub(&k3.r, a:Real.one.real, b:k2.r); Sqrt(&k0.r, a:k3.r)
+		Mul(&k2.r, a:k0.r, b:k0.r); Sub(&k3.r, a:Real.one, b:k2.r); Sqrt(&k0.r, a:k3.r)
 		
 		/* compute cosine and sine of b*Pi/16 */
 		kc = abs(kb); f[0] = 1; f[1] = 0; f[2] = 2.0;
 		if kc == 0 {
-			copy(Real.one.real, b:&k2.r); Zero(&k3.r)
+			copy(Real.one, b:&k2.r); Zero(&k3.r)
 		} else {
 			switch kc {
 			case 1: Sqrt(&k4.r, a:f); Add(&k5.r, a:f, b:k4.r); Sqrt(&k4.r, a:k5.r)
@@ -1685,10 +1664,10 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* restore the orginal precision level */
-		curMantissa = nws; Round(&cos); Round(&sin)
+		Real.curMantissa = nws; Round(&cos); Round(&sin)
 	} //SinCos;
 
-	private mutating func SinhCosh (inout sinh: RealArray, inout cosh: RealArray, a: RealArray) {
+	private func SinhCosh (inout sinh: RealArray, inout cosh: RealArray, a: RealArray) {
 		/*
 		This routine computes the hyperbolic cosine and sine of the
 		number `a' and returns the two results in `cosh' and `sinh',
@@ -1699,18 +1678,18 @@ prefix func + (a: Real) -> Real {
 		var k2 = FixedLReal()
 		var nws: Int
 		
-		nws = curMantissa; curMantissa++
-		Exp(&k0.r, a: a); Div(&k1.r, a:Real.one.real, b:k0.r)			/* k1 = exp(-a); k0 = exp(a) */
+		nws = Real.curMantissa; Real.curMantissa++
+		Exp(&k0.r, a: a); Div(&k1.r, a:Real.one, b:k0.r)			/* k1 = exp(-a); k0 = exp(a) */
 		Add(&k2.r, a:k0.r, b:k1.r)										/* k2 = exp(a) + exp(-a) */
 		Muld(&k2.r, a: k2.r, b: Real.HALF, n: 0); copy(k2.r, b: &cosh)	/* cosh = (exp(a) + exp(-a))/2 */
 		Sub(&k2.r, a:k0.r, b:k1.r)										/* k2 = exp(a) - exp(-a) */
 		Muld(&k2.r, a: k2.r, b: Real.HALF, n: 0); copy(k2.r, b: &sinh)	/* sinh = (exp(a) - exp(-a))/2 */
 		
 		/* restore orginal precision */
-		curMantissa = nws; Round(&cosh); Round(&sinh)
+		Real.curMantissa = nws; Round(&cosh); Round(&sinh)
 	} //SinhCosh;
 
-	private mutating func ATan2 (inout a: RealArray, x:RealArray, y: RealArray) {
+	private func ATan2 (inout a: RealArray, x:RealArray, y: RealArray) {
 		/*
 		This routine computes the angle `a' subt}ed by the
 		pair (`x', `y') considered as a point in the x-y plane.
@@ -1744,8 +1723,8 @@ prefix func + (a: Real) -> Real {
 		var k4 = FixedLReal()
 		
 		if Real.err != 0 { Zero(&a); return }
-		ix = Sign(1, y:x[0]); nx = Min(Int(abs(x[0])), y:curMantissa)
-		iy = Sign(1, y:y[0]); ny = Min(Int(abs(y[0])), y:curMantissa)
+		ix = Sign(1, y:x[0]); nx = Min(Int(abs(x[0])), y:Real.curMantissa)
+		iy = Sign(1, y:y[0]); ny = Min(Int(abs(y[0])), y:Real.curMantissa)
 		
 		/* check if both x and y are zero */
 		if (nx == 0) && (ny == 0) {
@@ -1754,7 +1733,7 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* check if pi has been precomputed */
-		if Real.pi.real.count == 0 {
+		if Real.pi.count == 0 {
 			println("*** ATan2: Pi must be precomputed!")
 			Real.err = 8; return
 		}
@@ -1762,18 +1741,18 @@ prefix func + (a: Real) -> Real {
 		/* check if one of x or y is zero */
 		if nx == 0 {
 			if iy > 0 {
-				Muld(&a, a: Real.pi.real, b: Real.HALF, n: 0)
+				Muld(&a, a: Real.pi, b: Real.HALF, n: 0)
 			} else {
-				Muld(&a, a: Real.pi.real, b: -Real.HALF, n: 0)
+				Muld(&a, a: Real.pi, b: -Real.HALF, n: 0)
 			}
 			return
 		} else if ny == 0 {
-			if ix > 0 { Zero(&a) } else { copy(Real.pi.real, b:&a) }
+			if ix > 0 { Zero(&a) } else { copy(Real.pi, b:&a) }
 			return
 		}
 		
 		/* increase the resolution */
-		nws = curMantissa; curMantissa++
+		nws = Real.curMantissa; Real.curMantissa++
 		
 		/* determine the least integer mq such that 2^mq >= curMantissa */
 		mq = Int(Real.invLn2*log(Double(nws))+1-Real.mprxx)
@@ -1801,9 +1780,9 @@ prefix func + (a: Real) -> Real {
 		
 		/* perform the Newton-Raphson iteration described above with a dynamically
 		changing precision level curMantissa (one greater than powers of two). */
-		curMantissa = 3; iq = false
+		Real.curMantissa = 3; iq = false
 		for k = 2; k<=mq; k++ {
-			curMantissa = Min(2*curMantissa-2, y:nws)+1
+			Real.curMantissa = Min(2*Real.curMantissa-2, y:nws)+1
 			for ;; {
 				SinCos(&k2.r, cos: &k1.r, a: a)
 				if kk == 1 {
@@ -1817,12 +1796,12 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* restore the original precision */
-		curMantissa = nws; Round(&a)
+		Real.curMantissa = nws; Round(&a)
 	} //ATan2;
 
-	private mutating func fromString (string: String) {
+	private func fromString (string: String) {
 		/**
-		Converts the number in `str' to an ext}ed Real and
+		Converts the number in `str' to an extended Real and
 		returns the result.  The number representation is
 		given by:
 	
@@ -1837,7 +1816,7 @@ prefix func + (a: Real) -> Real {
 		
 		Note: This real number definition is backwardly
 		compatible with the Oberon-2 real string but has
-		been ext}ed to allow splitting of very large
+		been extended to allow splitting of very large
 		numbers into more readable segments by inserting
 		spaces.
 		*/
@@ -1877,7 +1856,7 @@ prefix func + (a: Real) -> Real {
 			}
 		} //GetSign;
 		
-		cc = 0; nws = curMantissa; curMantissa++
+		cc = 0; nws = Real.curMantissa; Real.curMantissa++
 		
 		/* check for initial sign */
 		is1 = GetSign()
@@ -1931,15 +1910,15 @@ prefix func + (a: Real) -> Real {
 		IntPower(&b.real, a: f, n: nexp); Mul(&s.r, a:b.real, b:s.r); copy(s.r, b:&b.real)
 		
 		/* back to original resolution */
-		curMantissa = nws; Round(&b.real)
+		Real.curMantissa = nws; Round(&b.real)
 	} //ToReal;
 
 
 	/*---------------------------------------------------------*/
 	/* Conversion routines                                     */
 	
-	mutating func ToString (var Decimal : Int, var ExpWidth : Int, EngFormat: Bool) -> String {
-		/** return the ext}ed real number as a string with 'Decimal' decimal places and
+	func ToString (var Decimal : Int, var ExpWidth : Int, EngFormat: Bool) -> String {
+		/** return the extended real number as a string with 'Decimal' decimal places and
 		an exponent with 'ExpWidth' places.  'ExpWidth' <> 0 produces a scientific
 		formatted number or, if 'EngFormat' is true, an engineering formatted
 		number. 'ExpWidth' = 0 produces a floating-point number string. A fixed-point
@@ -2027,8 +2006,8 @@ prefix func + (a: Real) -> Real {
 		StrCnt = 3
 		ManIndex = 0
 		ExpStr = ""
-		ia = Sign(1, y:a.real[0]); na = Min(Int(abs(a.real[0])), y:curMantissa)
-		nws = curMantissa; curMantissa++; Zero(&k.r)
+		ia = Sign(1, y:a.real[0]); na = Min(Int(abs(a.real[0])), y:Real.curMantissa)
+		nws = Real.curMantissa; Real.curMantissa++; Zero(&k.r)
 		
 		/* round the number */
 		f[0] = 1; f[1] = 0; f[2] = 10; nl = 0;
@@ -2055,7 +2034,7 @@ prefix func + (a: Real) -> Real {
 		/* force scientific notation for numbers too small or too large */
 		Aexp = abs(nx)
 		MaxExpWidth  =  ExpWidth
-		if ((ExpWidth == 0) && (Aexp > sigDigs)) || (ExpWidth > 0) {
+		if ((ExpWidth == 0) && (Aexp > Real.sigDigs)) || (ExpWidth > 0) {
 			/* force scientific notation */
 			if Aexp > 999999 { ExpWidth  =  7
 			} else if Aexp > 99999 { ExpWidth  =  6
@@ -2073,8 +2052,8 @@ prefix func + (a: Real) -> Real {
 		
 		/* ensure we don't exceed the maximum digits */
 		FixPoint = Decimal != 0
-		if (Decimal > sigDigs) || ~FixPoint {
-			Decimal = sigDigs-1
+		if (Decimal > Real.sigDigs) || ~FixPoint {
+			Decimal = Real.sigDigs-1
 		}
 		
 		/* convert the number into scientific notation */
@@ -2124,13 +2103,13 @@ prefix func + (a: Real) -> Real {
 					ConcatChar(&Str, ".")
 				}
 				InCnt++
-			} while !((InCnt == sigDigs) || (Decimal == 0))
+			} while !((InCnt == Real.sigDigs) || (Decimal == 0))
 			
 			/* remove any trailing zeros and unneeded digits */
 			Round()
 			Trim()
 		}
-		curMantissa = nws
+		Real.curMantissa = nws
 		return Str
 	} //Format;
 
@@ -2145,9 +2124,9 @@ prefix func + (a: Real) -> Real {
 		}
 	} //Sign;
 
-//	func ToString () -> String {
-//		return self.ToString(0, ExpWidth: 0, EngFormat: false)
-//	} //ToString;
+	func ToString () -> String {
+		return self.ToString(0, ExpWidth: 0, EngFormat: false)
+	} //ToString;
 
 	func Short () -> Double {
 		/** returns the closest Double equivalent.  if q is too large
@@ -2155,7 +2134,7 @@ prefix func + (a: Real) -> Real {
 		is returned. */
 		var x: Double
 		var exp: Int
-		
+		x = 0; exp = 0
 		RealToNumbExp(self.real, b: &x, n: &exp)
 		return x * ipower(2, base: exp)
 	} //Short;
@@ -2165,7 +2144,7 @@ prefix func + (a: Real) -> Real {
 		return the largest integer not greater than `q'.
 		For example: Int(3.6) = 3 and Int(-1.6)=-2
 		*/
-		var r = Real(size: curMantissa+4)
+		var r = Real(size: Real.curMantissa+4)
 		Entier(&r.real, a: self.real)
 		return r
 	} //Entier;
@@ -2175,7 +2154,7 @@ prefix func + (a: Real) -> Real {
 		return the fractional part of 'q'.
 		*/
 		var r = self.Entier()
-		if self.real[0] < 0 { Add(&r.real, a:self.real, b:Real.one.real) }
+		if self.real[0] < 0 { Add(&r.real, a:self.real, b:Real.one) }
 		Sub(&r.real, a:self.real, b:r.real)
 		return r
 	} //Fraction;
@@ -2184,61 +2163,53 @@ prefix func + (a: Real) -> Real {
 	/* Basic math routines                                     */
 	
 	func Add (z: Real) -> Real {
-		var r = Real(size: curMantissa+4)
+		var r = Real(size: Real.curMantissa+4)
 		Add(&r.real, a:self.real, b:z.real)
 		return r
 	} //Add;
 
 	func Sub (z: Real) -> Real {
-		var r = Real(size: curMantissa+4)
+		var r = Real(size: Real.curMantissa+4)
 		Sub(&r.real, a:self.real, b:z.real)
 		return r
 	} //Sub;
 
 	func Mul (z: Real) -> Real {
-		var r = Real(size: curMantissa+4)
+		var r = Real(size: Real.curMantissa+4)
 		Mul(&r.real, a:self.real, b:z.real)
 		return r
 	} //Mul;
 
-//func (z1: Real) Div * (z2: Real): Real;
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//Div(r.real^, z1.real^, z2.real^);
-//return r
-//} //Div;
-//
-//func (z: Real) Abs * () -> Real;
-///** returns the absolute value of z */
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//abs(r.real^, z.real^);
-//return r
-//} //Abs;
-//
-//func (a: Real) Cmp * (b: Object.Object) -> Int {
-///**
-//This routine compares the ext}ed numbers `a' and `b' and
-//returns the value -1, 0, or 1 dep}ing on whether `a'<`b',
-//`a'=`b', or `a'>`b'.  It is faster than merely subtracting
-//`a' and `b' and looking at the sign of the result.
-//*/
-// 
-//WITH b: Real {
-//return Cmp(a.real^, b.real^)
-//}
-//} //Cmp;
-//
+	func Div (z: Real) -> Real {
+		var r = Real(size: Real.curMantissa+4)
+		Div(&r.real, a:self.real, b:z.real)
+		return r
+	} //Div;
+	
+	func Abs () -> Real {
+		/** returns the absolute value of z */
+		var r = Real(size: Real.curMantissa+4)
+		Abs(&r.real, x:self.real)
+		return r
+	} //Abs;
+
+	func Cmp (b: Real) -> Int {
+		/**
+		This routine compares the extended numbers `a' and `b' and
+		returns the value -1, 0, or 1 dep}ing on whether `a'<`b',
+		`a'=`b', or `a'>`b'.  It is faster than merely subtracting
+		`a' and `b' and looking at the sign of the result.
+		*/
+		return Cmp(self.real, b: b.real)
+	} //Cmp;
+
+
 //func (a: Real) Store*(w: Storable.Writer) RAISES IO.Error;
 ///** Write 'a' to the 'w' writer. */
 //var
 //i, len: Int;
 // 
-//len = LEN(a.real^);
+//len = LEN(a.real);
 //w.WriteNum(len);
 //for i  =  0 TO len-1 {
 //w.WriteReal(a.real[i]);
@@ -2255,235 +2226,200 @@ prefix func + (a: Real) -> Real {
 //r.ReadReal(a.real[i]);
 //}
 //} //Load;
-//
-///*---------------------------------------------------------*/
-///* Power and transcendental routines                       */
-//
-//func (x: Real) Power * (exp: Real): Real;
-///** returns the value of the number x raised to the power exp */
-//var
-//r: Real;
-//n: Int;
-// 
-//r = New(curMantissa+4);
-//
-///* check for integer powers */
-//Int(r.real^, exp.real^);
-//n = Int(r.Short());
-//if (r.Cmp(exp)=0) & (abs(n)<2000) { 
-//IntPower(r.real^, x.real^, n)
-//} else { /* x^exp = Exp(exp*Ln(x)) */
-//Ln(r.real^, x.real^); Mul(r.real^, exp.real^, r.real^); Exp(r.real^, r.real^)
-//};
-//return r
-//} //Power;
-//
-//func (z: Real) IRoot * (n: Int): Real;
-///** returns the `n'th root of `z' */
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//Root(r.real^, z.real^, n);
-//return r
-//} //IRoot;
-//
-//func (z: Real) Sqrt * () -> Real;
-///** Pre: z>=0. returns the square root of z */
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//Sqrt(r.real^, z.real^);
-//return r
-//} //Sqrt;
-//
-//func (z: Real) Exp * () -> Real;
-///** returns the exponential of z */
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//Exp(r.real^, z.real^);
-//return r
-//} //Exp;
-//
-//func (z: Real) Ln * () -> Real;
-///** returns the natural logarithm of z */
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//Ln(r.real^, z.real^);
-//return r
-//} //Ln;
-//
-//func (z: Real) Log * (base: Real): Real;
-///** returns the 'base' logarithm of z */
-//var
-//r: Real; t: FixedReal;
-// 
-//r = New(curMantissa+4);
-//Ln(r.real^, z.real^); Ln(t, base.real^); Div(r.real^, r.real^, t);
-//return r
-//} //Log;
-//
-//func Factorial * (n: Int) -> Real;
-///** returns the factorial of 'n'. */
-//let 
-//MAXFACT = 388006;  /* Limit of 1.50339063E+1999997 */
-//var
-//f: Real;
-//min: Int;
-// 
-//if (n<0) || (n>MAXFACT) { 
-//status = IllegalArgument; return zero  /* out of range */
-//};
-//f = New(curMantissa+4);
-//if n<2 { return one                /* 0! & 1! */
-//} else if n>=300000 { 
-//copy(fact300000.real^, f.real^); min = 300000
-//} else if n>=200000 { 
-//copy(fact200000.real^, f.real^); min = 200000
-//} else if n>=100000 { 
-//copy(fact100000.real^, f.real^); min = 100000
-//} else {
-//copy(one.real^, f.real^); min = 1;
-//};
-//while n>min {
-//Muld(f.real^, f.real^, n, 0);       /* f=f*x */
-//DEC(n)                              /* x=x-1 */
-//};
-//return f
-//} //Factorial;
-//
-//func (z: Real) Sin * () -> Real;
-///** returns the sine of z */
-//var
-//s: Real; c: FixedReal;
-// 
-//s = New(curMantissa+4); Zero(c);
-//SinCos(s.real^, c, z.real^);
-//return s
-//} //Sin;
-//
-//func (z: Real) Cos * (): Real;
-///** returns the cosine of z */
-//var
-//s: FixedReal; c: Real;
-// 
-//c = New(curMantissa+4); Zero(s);
-//SinCos(s, c.real^, z.real^);
-//return c
-//} //Cos;
-//
-//func (z: Real) SinCos * (var sin, cos: Real);
-///** returns the sine & cosine of z */
-// 
-//sin = New(curMantissa+4); cos = New(curMantissa+4);
-//SinCos(sin.real^, cos.real^, z.real^)
-//} //SinCos;
-//
-//func (z: Real) Tan * (): Real;
-///** returns the tangent of z */
-//var
-//s, c: FixedReal; r: Real;
-// 
-//r = New(curMantissa+4); Zero(s); Zero(c);
-//SinCos(s, c, z.real^); Div(r.real^, s, c);
-//return r
-//} //Tan;
-//
-//func (z: Real) Arcsin * (): Real;
-///** returns the arcsine of z */
-//var
-//t: FixedReal; r: Real;
-// 
-//r = New(curMantissa+4);
-//abs(t, z.real^);
-//if Cmp(t, x1)>0 { 
-//println("*** Illegal arcsin argument!"); Out.Ln; err = 20
-//} else {
-//Mul(t, t, t); Sub(t, x1, t); Sqrt(t, t);  /* t = Sqrt(1 - z^2) */
-//ATan2(r.real^, t, z.real^)                  /* r = ATan(z/Sqrt(1-z^2)) */
-//};
-//return r
-//} //Arcsin;
-//
-//func (z: Real) Arccos * (): Real;
-///** returns the arccosine of z */
-//var
-//t: FixedReal; r: Real;
-// 
-//r = New(curMantissa+4);
-//abs(t, z.real^);
-//if Cmp(t, x1)>0 { 
-//println("*** Illegal arccos argument!"); Out.Ln; err = 21
-//} else {
-//Mul(t, t, t); Sub(t, x1, t); Sqrt(t, t);  /* t = Sqrt(1 - z^2) */
-//ATan2(r.real^, z.real^, t)                  /* r = ATan(Sqrt(1-z^2)/z) */
-//};
-//return r
-//} //Arccos;
-//
-//func (z: Real) Arctan * (): Real;
-///** returns the arctangent of z */
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//ATan2(r.real^, x1, z.real^);
-//return r
-//} //Arctan;
-//
-//func (xn: Real) Arctan2 * (xd: Real): Real;
-///** returns the arctangent of xn/xd */
-//var
-//r: Real;
-// 
-//r = New(curMantissa+4);
-//ATan2(r.real^, xd.real^, xn.real^);
-//return r
-//} //Arctan2;
-//
-//func (z: Real) SinhCosh * (var sinh, cosh: Real);
-///** returns the hyberbolic sine & cosine of z */
-// 
-//sinh = New(curMantissa+4); cosh = New(curMantissa+4);
-//SinhCosh(sinh.real^, cosh.real^, z.real^)
-//} //SinhCosh;
-//
-//func (z: Real) Sinh * (): Real;
-///** returns the hyperbolic sine of z */
-//var
-//s: Real;
-//c: FixedReal;
-// 
-//s = New(curMantissa+4); SinhCosh(s.real^, c, z.real^);
-//return s
-//} //Sinh;
-//
-//func (z: Real) Cosh * (): Real;
-///** returns the hyperbolic cosine of z */
-//var
-//c: Real;
-//s: FixedReal;
-// 
-//c = New(curMantissa+4); SinhCosh(s, c.real^, z.real^);
-//return c
-//} //Cosh;
-//
-//func (z: Real) Tanh * (): Real;
-///** returns the hyperbolic tangent of z */
-//var
-//sinh, cosh: FixedReal; r: Real;
-// 
-//r = New(curMantissa+4);
-//SinhCosh(sinh, cosh, z.real^); Div(r.real^, sinh, cosh);
-//return r
-//} //Tanh;
-//
-//func Random * () -> Real;
+
+	/*---------------------------------------------------------*/
+	/* Power and transcendental routines                       */
+	
+	func Power (exp: Real) -> Real {
+		/** returns the value of the number x raised to the power exp */
+		var r = Real(size: Real.curMantissa+4)
+		var n: Int
+		
+		/* check for integer powers */
+		Entier(&r.real, a:exp.real)
+		n = Int(r.Short())
+		if (r.Cmp(exp) == 0) && (abs(n) < 2000) {
+			IntPower(&r.real, a: self.real, n: n)
+		} else { /* x^exp = Exp(exp*Ln(x)) */
+			Ln(&r.real, a:self.real); Mul(&r.real, a:exp.real, b:r.real); Exp(&r.real, a: r.real)
+		}
+		return r
+	} //Power;
+	
+	func IRoot (n: Int) -> Real {
+		/** returns the `n'th root of `z' */
+		var r = Real(size: Real.curMantissa+4)
+		Root(&r.real, a: self.real, n: n)
+		return r
+	} //IRoot;
+	
+	func Sqrt () -> Real {
+		/** Pre: z>=0. returns the square root of z */
+		var r = Real(size: Real.curMantissa+4)
+		Sqrt(&r.real, a: self.real)
+		return r
+	} //Sqrt;
+	
+	func Exp () -> Real {
+		/** returns the exponential of z */
+		var r = Real(size: Real.curMantissa+4)
+		Exp(&r.real, a: self.real)
+		return r
+	} //Exp;
+	
+	func Ln () -> Real {
+		/** returns the natural logarithm of z */
+		var r = Real(size: Real.curMantissa+4)
+		Ln(&r.real, a: self.real)
+		return r
+	} //Ln;
+	
+	func Log (base: Real) -> Real {
+		/** returns the 'base' logarithm of z */
+		var r = Real(size: Real.curMantissa+4)
+		var t = FixedLReal()
+		Ln(&r.real, a: self.real); Ln(&t.r, a:base.real); Div(&r.real, a:r.real, b:t.r)
+		return r
+	} //Log;
+	
+	func Factorial () -> Real {
+		/** returns the factorial of 'n'. */
+		let MAXFACT = 388006  /* Limit of 1.50339063E+1999997 */
+		var f = Real(size: Real.curMantissa+4)
+		var min: Int
+		var n: Int = Int(self.Entier().Short())
+		
+		if (n < 0) || (n > MAXFACT) {
+			Real.status = Status.IllegalArgument; return Real(fromInt: 0)  /* out of range */
+		}
+		if n < 2 {
+			return Real(fromInt: 0)         /* 0! & 1! */
+		} else if n >= 300000 {
+			copy(Real.fact300000.real, b:&f.real); min = 300000
+		} else if n >= 200000 {
+			copy(Real.fact200000.real, b:&f.real); min = 200000
+		} else if n >= 100000 {
+			copy(Real.fact100000.real, b:&f.real); min = 100000
+		} else {
+			copy(Real.one, b:&f.real); min = 1
+		}
+
+		while n > min {
+			Muld(&f.real, a:f.real, b:Double(n), n:0)   /* f=f*x */
+			n--											/* x=x-1 */
+		}
+		return f
+	} //Factorial;
+	
+	func Sin () -> Real {
+		/** returns the sine of z */
+		var s = Real(size: Real.curMantissa+4)
+		var c = FixedLReal()
+		Zero(&c.r)
+		SinCos(&s.real, cos: &c.r, a:self.real)
+		return s
+	} //Sin;
+	
+	func Cos () -> Real {
+		/** returns the cosine of z */
+		var s = FixedLReal()
+		var c = Real(size: Real.curMantissa+4)
+		Zero(&s.r)
+		SinCos(&s.r, cos:&c.real, a:self.real)
+		return c
+	} //Cos;
+	
+	func SinCos (inout sin: Real, inout cos: Real) {
+		/** returns the sine & cosine of z */
+		SinCos(&sin.real, cos:&cos.real, a:self.real)
+	} //SinCos;
+	
+	func Tan () -> Real {
+		/** returns the tangent of z */
+		var s = FixedLReal()
+		var c = FixedLReal()
+		var r = Real(size: Real.curMantissa+4)
+		
+		Zero(&s.r); Zero(&c.r)
+		SinCos(&s.r, cos:&c.r, a:self.real); Div(&r.real, a:s.r, b:c.r)
+		return r
+	} //Tan;
+	
+	func Arcsin () -> Real {
+		/** returns the arcsine of z */
+		var t = FixedLReal()
+		var r = Real(size: Real.curMantissa+4)
+	
+		Abs(&t.r, x:self.real)
+		if Cmp(t.r, b: Real.one) > 0 {
+			println("*** Illegal arcsin argument!"); Real.err = 20
+		} else {
+			Mul(&t.r, a:t.r, b:t.r); Sub(&t.r, a:Real.one, b:t.r); Sqrt(&t.r, a: t.r)	/* t = Sqrt(1 - z^2) */
+			ATan2(&r.real, x: t.r, y: self.real)										/* r = ATan(z/Sqrt(1-z^2)) */
+		}
+		return r
+	} //Arcsin;
+	
+	func Arccos () -> Real {
+		/** returns the arccosine of z */
+		var t = FixedLReal()
+		var r = Real(size: Real.curMantissa+4)
+
+		Abs(&t.r, x:self.real)
+		if Cmp(t.r, b: Real.one) > 0 {
+			println("*** Illegal arccos argument!"); Real.err = 21
+		} else {
+			Mul(&t.r, a:t.r, b:t.r); Sub(&t.r, a:Real.one, b:t.r); Sqrt(&t.r, a: t.r)	/* t = Sqrt(1 - z^2) */
+			ATan2(&r.real, x: self.real, y: t.r)										/* r = ATan(Sqrt(1-z^2)/z) */
+		}
+		return r
+	} //Arccos;
+	
+	func Arctan () -> Real {
+		/** returns the arctangent of z */
+		var r = Real(size: Real.curMantissa+4)
+		ATan2(&r.real, x: Real.one, y: self.real)
+		return r
+	} //Arctan;
+	
+	func Arctan2 (xd: Real) -> Real {
+		/** returns the arctangent of xn/xd */
+		var r = Real(size: Real.curMantissa+4)
+		ATan2(&r.real, x:xd.real, y:self.real)
+		return r
+	} //Arctan2;
+	
+	func SinhCosh (inout sinh: Real, inout cosh: Real) {
+		/** returns the hyberbolic sine & cosine of z */
+		SinhCosh(&sinh.real, cosh: &cosh.real, a: self.real)
+	} //SinhCosh;
+	
+	func Sinh () -> Real {
+		/** returns the hyperbolic sine of z */
+		var s = Real(size: Real.curMantissa+4)
+		var c = FixedLReal()
+		SinhCosh(&s.real, cosh: &c.r, a: self.real)
+		return s
+	} //Sinh;
+	
+	func Cosh () -> Real {
+		/** returns the hyperbolic cosine of z */
+		var c = Real(size: Real.curMantissa+4)
+		var s = FixedLReal()
+		SinhCosh(&s.r, cosh: &c.real, a: self.real)
+		return c
+	} //Cosh;
+	
+	func Tanh () -> Real {
+		/** returns the hyperbolic tangent of z */
+		var sinh = FixedLReal()
+		var cosh = FixedLReal()
+		var r = Real(size: Real.curMantissa+4)
+		SinhCosh(&sinh.r, cosh: &cosh.r, a: self.real); Div(&r.real, a:sinh.r, b:cosh.r)
+		return r
+	} //Tanh;
+
+//func Random () -> Real {
 ///** return a random number between 0 and 1 */
 //var res, t: Real;
 // 
@@ -2582,47 +2518,43 @@ prefix func + (a: Real) -> Real {
 //words = digits/digsPerWord;
 //if words<8 { words = 8 };
 //if words<=maxMant-2 { 
-//curMantissa = Int(words)+2;
+//Real.curMantissa = Int(words)+2;
 //sigDigs = digits
 //}
 //} //SetDigits;
-//
-//
-//private func Init {
-//typealias LongFixed = ARRAY 2*(maxMant+4) OF REAL;
-//var t0, t1, t2, t3, t4: LongFixed;
-// 
-///* internal constants */
-//x1[0] = 1; x1[1] = 0; x1[2] = 1;  /* 1.0 */
-//Zero(t2); Zero(t3); Zero(t4);
-//
-///* initialize internal constants */
-//err = 0; curMantissa = maxMant+1; debug = 0; numBits = 22;
-//
-///* compute required constants to correct precision */
-//Zero(t1); Pi(t1);            /* t1 = pi */
-//NumbExpToReal(2, 0, t0);     /* t0 = 2.0 */
-//ln2 = NIL; Ln(t2, t0);        /* t2 = Ln(2.0) */
-//ln2 = New(LEN(t0)); copy(t2, ln2.real^);
-//NumbExpToReal(10, 0, t0);    /* t0 = 10.0 */
-//Ln(t3, t0);                  /* t3 = Ln(10.0) */
-//IntPower(t4, t0, log10eps);  /* t4 = 10^(10-maxDigits) */
-//
-///* transfer to current variables */
-//curMantissa = maxMant;
-//pi = New(curMantissa+4); copy(t1, pi.real^);
-//ln2 = New(curMantissa+4); copy(t2, ln2.real^);
-//ln10 = New(curMantissa+4); copy(t3, ln10.real^);
-//eps = New(curMantissa+4); copy(t4, eps.real^);
-//one = New(curMantissa+4); copy(x1, one.real^);
-//zero = New(curMantissa+4); Zero(zero.real^);
-//
-///* Random number generator */
-//Seed = Long(4);
-//
-///* set the current output precision */
-//sigDigs = maxDigits
-//} //Init;
+
+
+	private func Init () {
+		var t0 = RealArray(count:2*(Real.maxMant+4), repeatedValue:0)
+		var t1 = RealArray(count:2*(Real.maxMant+4), repeatedValue:0)
+		var t2 = RealArray(count:2*(Real.maxMant+4), repeatedValue:0)
+		var t3 = RealArray(count:2*(Real.maxMant+4), repeatedValue:0)
+		var t4 = RealArray(count:2*(Real.maxMant+4), repeatedValue:0)
+		var x1 = RealArray(arrayLiteral: 1, 0, 1)
+		
+		/* initialize internal constants */
+		Real.err = 0; Real.curMantissa = Real.maxMant+1; Real.debug = 0; Real.numBits = 22;
+		
+		/* compute required constants to correct precision */
+		Zero(&t1); Pi(&t1)						/* t1 = pi */
+		NumbExpToReal(2, n: 0, b: &t0)			/* t0 = 2.0 */
+		Ln(&t2, a: t0)							/* t2 = Ln(2.0) */
+		Real.ln2 = RealArray(count: t2.count, repeatedValue:0)
+		copy(t2, b:&Real.ln2)
+		NumbExpToReal(10, n: 0, b: &t0)			/* t0 = 10.0 */
+		Ln(&t3, a: t0)							/* t3 = Ln(10.0) */
+		IntPower(&t4, a: t0, n: Real.log10eps)  /* t4 = 10^(10-maxDigits) */
+	
+		/* transfer to current variables */
+		Real.curMantissa = Real.maxMant
+		Real.pi = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t1, b:&Real.pi)
+		Real.ln2 = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t2, b:&Real.ln2)
+		Real.ln10 = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t3, b:&Real.ln10)
+		Real.eps = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t4, b:&Real.eps)
+		
+		/* set the current output precision */
+		Real.sigDigs = Real.maxDigits
+	} //Init;
 
 
 } //Reals.
