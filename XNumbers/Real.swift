@@ -198,7 +198,6 @@ prefix func + (a: Real) -> Real {
 	
 	/*---------------------------------------------------------*/
 	/* Constructors                                            */
-	/*---------------------------------------------------------*/
 	
 	init (size: Int) {
 		self.real = RealArray(count: size, repeatedValue:0)
@@ -206,7 +205,7 @@ prefix func + (a: Real) -> Real {
 	
 	init (fromString string: String) {
 		self.init(size: 0)
-		self.fromString(string)
+		self = self.fromString(string)
 	}
 	
 	init (fromInt integer: Int) {
@@ -215,13 +214,13 @@ prefix func + (a: Real) -> Real {
 	
 	init (fromDouble double: Double) {
 		/* create a new number */
-		self.init(size:8)
+		self.init(size:Real.curMantissa+4)
 		NumbExpToReal(double, n: 0, b: &self.real)
 	}
 
 	init (fromReal real: Real) {
 		/** return a copy of \e real. */
-		self.init(size:real.real.count)
+		self.init(size:Real.curMantissa+4)
 		copy(real.real, b:&self.real)  /* b = a */
 	}
 
@@ -330,54 +329,54 @@ prefix func + (a: Real) -> Real {
 		
 		/* error testing */
 		if Real.err != 0 { Zero(&a); return }
-		
+	
 		/* check for initial zeros */
 		a2 = a[1]; a[1] = 0; ia = Sign(1, y: a[0])
 		na = Min(Int(abs(a[0])), y: Real.curMantissa)
 		n4 = na+4; k = 0
-		if a[2]==0 {
+		if a[2] == 0 {
 			/* find the nonzero word and shift the entire number left.
 			The length of the result is reduced by the length of the
 			shift */
-			allZeros = true; i = 4;
-			while allZeros & (i<=n4) {
+			allZeros = true; i = 4
+			while allZeros && (i <= n4) {
 				if a[i-1] != 0 { allZeros = false; k = i-3 }
 				i++
 			}
-			if allZeros { Zero(&a); return };
+			if allZeros { Zero(&a); return }
 			for i = 2; i<=n4-k-1; i++ { a[i] = a[i+k] }
 			a2 = a2-Double(k); na = na-Max(k-2, y:0)
 		}
 		
-		/* perform rounding dep}ing on MPIRD */
-		if (na==Real.curMantissa) && (Real.MPIRD>=1) {
-			if ((Real.MPIRD==1) && (a[na+2]>=Real.HALF*Real.radix)) || ((Real.MPIRD==2) && (a[na+2]>=1.0)) {
-				a[na+1] = a[na+1]+1.0
+		/* perform rounding depending on MPIRD */
+		if (na == Real.curMantissa) && (Real.MPIRD >= 1) {
+			if ((Real.MPIRD == 1) && (a[na+2] >= (Real.HALF*Real.radix))) || ((Real.MPIRD == 2) && (a[na+2] >= 1)) {
+				a[na+1] = a[na+1] + 1
 			}
 			
 			/* release carries as far as necessary due to rounding */
 			i = na+1
 			for ;; {
-				if i<2 { a[2] = a[1]; na = 1; a2 = a2+1.0; break }
-				if a[i]<Real.radix { break }
-				a[i] = a[i]-Real.radix; a[i-1] = a[i-1]+1.0
+				if i < 2 { a[2] = a[1]; na = 1; a2 = a2 + 1; break }
+				if a[i] < Real.radix { break }
+				a[i] = a[i]-Real.radix; a[i-1] = a[i-1] + 1
 				i--
 			}
 		}
 		
 		/* At least the last mantissa word is zero.  Find the last
 		nonzero word and adjust the length of the result accordingly */
-		if a[na+1] == 0.0 {
+		if a[na+1] == 0 {
 			i = na+2
 			while i >= 3 {
-				if a[i-1] != 0.0 { na = i-2; i = 1 }
+				if a[i-1] != 0 { na = i-2; i = 1 }
 				i--
 			};
 			if i != 0 { Zero(&a); return }
 		}
 		
 		/* check for overflow and underflow */
-		if a2 <= Double(Real.maxExp) {
+		if a2 < -Double(Real.maxExp) {
 			println("*** Round: Exponent underflow!")
 			Real.err = 68
 		} else if a2 > Double(Real.maxExp) {
@@ -412,18 +411,18 @@ prefix func + (a: Real) -> Real {
 		if Real.err != 0 { Zero(&a); return }
 		ia = Sign(1, y:d[0]); na = Min(Int(abs(d[0])), y:Real.curMantissa)
 		if na == 0 { Zero(&a); return }
-		n4 = na+4; a2 = d[1]; d[1] = 0.0
+		n4 = na+4; a2 = d[1]; d[1] = 0
 		for ;; {
-			t1 = 0.0
+			t1 = 0
 			for i = n4-1; i >= 2; i-- {
 				t3 = t1+d[i]; t2 = Real.invRadix*t3; t1 = Double(Int(t2))
-				if (t2 < 0.0) && (t1 != t2) { t1 = t1-1.0 }
+				if (t2 < 0) && (t1 != t2) { t1 = t1-1 }
 				d[i] = t3-t1*Real.radix
 			}
 			d[1] = d[1]+t1;
 			if d[1] < 0 {
 				/* negate all words and re-normalize */
-				ia = -ia; d[2] = d[2]+Real.radix*d[1]; d[1] = 0;
+				ia = -ia; d[2] = d[2]+Real.radix*d[1]; d[1] = 0
 				for i = 1; i <= n4-1; i++ { d[i] = -d[i] }
 			} else if d[1] > 0 {
 				/* nonzero number spilled into d[1].  Shift the entire number
@@ -599,8 +598,8 @@ prefix func + (a: Real) -> Real {
 		
 		if Real.err != 0 { Zero(&c); return }
 		if Real.debug >= 8 {
-			println("Mul 1"); Write(a)
-			println("Mul 2"); Write(b)
+			println("Mul 1 "); Write(a)
+			println("Mul 2 "); Write(b)
 		}
 		ia = Sign(1, y: a[0]); ib = Sign(1, y: b[0])
 		na = Min(Int(abs(a[0])), y:Real.curMantissa)
@@ -639,7 +638,7 @@ prefix func + (a: Real) -> Real {
 			/* release carries periodically to avoid overflowing
 			the exact integer capacity of double precision
 			floating point words in d */
-			if j-2 % Real.NPR == 0 {
+			if ((j-2) % Real.NPR) == 0 {
 				i1 = Max(3, y: j-Real.NPR); i2 = n2+j3
 				for i = i1; i<=i2; i++ {
 					t1 = d.r[i-1]; t2 = Double(Int(Real.invRadix*t1))
@@ -659,7 +658,7 @@ prefix func + (a: Real) -> Real {
 		/* fix up result since some words may be negative or
 		exceed radix */
 		Normalize(d.r, a: &c);
-		if Real.debug >= 9 { println("Mul 3"); Write(c) }
+		if Real.debug >= 9 { println("Mul 3 "); Write(c) }
 	} //Mul;
 
 	private func Muld (inout c: RealArray, a: RealArray, b: Double, n: Int) {
@@ -865,7 +864,7 @@ prefix func + (a: Real) -> Real {
 			/* perform short division */
 			br = 1.0/bb; dd = a[2]
 			j = 2; ok = true
-			while ok & (j<=Real.curMantissa+3) {
+			while ok && (j <= Real.curMantissa+3) {
 				t1 = Double(Int(br*dd)); d.r[j] = t1
 				dd = Real.radix*(dd-t1*bb)
 				if j <= na {
@@ -1094,7 +1093,7 @@ prefix func + (a: Real) -> Real {
 		var k1 = FixedLReal()
 		var k2 = FixedLReal()
 		var k3 = FixedLReal()
-		var f2 = RealArray(count:3, repeatedValue: 0)
+		var f2 = RealArray(count:8, repeatedValue: 0)
 		var iq: Bool
 		var nws: Int
 		var ia, na, n2, k, mq, n1, n3: Int
@@ -1803,7 +1802,7 @@ prefix func + (a: Real) -> Real {
 		Real.curMantissa = nws; Round(&a)
 	} //ATan2;
 
-	private func fromString (string: String) {
+	private func fromString (string: String) -> Real {
 		/**
 		Converts the number in `str' to an extended Real and
 		returns the result.  The number representation is
@@ -1829,18 +1828,30 @@ prefix func + (a: Real) -> Real {
 		var isZero: Bool = false
 		var f = RealArray(count:8, repeatedValue: 0)
 		var str = string
-		var b = self
+		var b : Real
+		var ch : Character
+		
+		func TrimBlanks (s : String) -> String {
+			return s.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+		}
+		
+		func GetChar (s: String) -> Character {
+			return (s.isEmpty ? "\0" : s[s.startIndex])
+		}
+		
+		func NextChar (inout s: String) {
+			s.removeAtIndex(s.startIndex)
+		}
 		
 		func GetDigit () -> Int {
 			/* skips blanks to get a digit; returns -1 on an invalid digit */
-			var ch: String
-			
-			str = str.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
-			ch = "" + [str[str.startIndex]]
+			str = TrimBlanks(str)
+			let ch = GetChar(str)
 			if (ch >= "0") && (ch <= "9") {
-				str.removeAtIndex(str.startIndex)
+				NextChar(&str)
 				if ch > "0" { isZero = false }
-				return Int(atoi(ch))
+				let nstr = ""+[ch]
+				return Int(atoi(nstr))
 			} else {
 				return -1
 			}
@@ -1848,13 +1859,14 @@ prefix func + (a: Real) -> Real {
 		
 		func GetSign () -> Int {
 			/* skip leading blanks */
-			str = str.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+			str = TrimBlanks(str)
 			
 			/* check for leading sign */
-			if str[str.startIndex] == "+" {
-				str.removeAtIndex(str.startIndex); return 1
-			} else if str[str.startIndex] == "-" {
-				str.removeAtIndex(str.startIndex); return -1
+			let ch = GetChar(str)
+			if ch == "+" {
+				NextChar(&str); return 1
+			} else if ch == "-" {
+				NextChar(&str); return -1
 			} else {
 				return 1
 			}
@@ -1878,9 +1890,9 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* check for decimal point */
-		dp = 0;
-		if str[str.startIndex] == "." {
-			str.removeAtIndex(str.startIndex)
+		dp = 0; ch = GetChar(str)
+		if ch == "." {
+			NextChar(&str)
 			for ;; {
 				dig = GetDigit()
 				if dig < 0 { break }
@@ -1895,11 +1907,11 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* check for exponent */
-		nexp = 0;
-		let ch = str[str.startIndex]
+		nexp = 0
+		ch = GetChar(str)
 		if (ch == "E") || (ch == "D") {
-			str.removeAtIndex(str.startIndex)
-			es = GetSign();
+			NextChar(&str)
+			es = GetSign()
 			for ;; {
 				dig = GetDigit()
 				if dig<0 { break }
@@ -1910,11 +1922,12 @@ prefix func + (a: Real) -> Real {
 		
 		/* scale the resultant number */
 		s.r[0] = s.r[0]*Double(is1); nexp -= dp
-		f[0] = 1; f[2] = 10
+		f[0] = 1; f[2] = 10; b = Real(size: Real.curMantissa+4)
 		IntPower(&b.real, a: f, n: nexp); Mul(&s.r, a:b.real, b:s.r); copy(s.r, b:&b.real)
 		
 		/* back to original resolution */
 		Real.curMantissa = nws; Round(&b.real)
+		return b
 	} //ToReal;
 
 
@@ -1948,11 +1961,13 @@ prefix func + (a: Real) -> Real {
 		} //AddDigit;
 		
 		func AddInt (inout s: String, var n: Int) {
+			var ns = ""
 			while (n > 0) {
 				let digit = n % 10
-				s = digit.description + s
+				ns = digit.description + ns
 				n = n / 10
 			}
+			s += ns
 		} //AddInt;
 		
 		func GetDigit() {
@@ -1969,29 +1984,33 @@ prefix func + (a: Real) -> Real {
 		
 		func Round() {
 			var c: Int
-			var l = Str.endIndex
 			var res = ""
 			
 			/* BCD-based rounding algorithm */
 			c = 5
-			while l >= Str.startIndex {
-				if (Str[l] != ".") && (Str[l] != "-") {
-					let cs = "" + [Str[l]]
+			for ch in reverse(Str) {
+				if (ch != ".") && (ch != "-") {
+					let cs = "" + [ch]
 					c += cs.toInt()!
 					let digit = c % 10
 					res = digit.description + res
 					c = c / 10
 				} else {
-					res = [Str[l]] + res
+					res = [ch] + res
 				}
-				l--
 			}
-			
+			Str = res
 			if c > 0 {
-				/* insert a character at pos 0 */
+				/* insert "1" at pos 0 and move decimal to left */
 				Str.insert("1", atIndex: Str.startIndex)
+				if var range = Str.rangeOfString(".") {
+					Str.removeRange(range)
+					range.startIndex--; range.endIndex--
+					Str.replaceRange(range, with: ".")
+				}
 				nx++
 			}
+			removeLast(&Str)  // ignore the rounding digit
 		} //Round;
 		
 		func Trim() {
@@ -2014,7 +2033,7 @@ prefix func + (a: Real) -> Real {
 		nws = Real.curMantissa; Real.curMantissa++; Zero(&k.r)
 		
 		/* round the number */
-		f[0] = 1; f[1] = 0; f[2] = 10; nl = 0;
+		f[0] = 1; f[1] = 0; f[2] = 10; nl = 0
 		
 		/* determine the exact power of ten for exponent */
 		if na != 0 {
@@ -2446,6 +2465,7 @@ prefix func + (a: Real) -> Real {
 		var s, n, m: Real
 		
 		Initialize()
+		Real.sigDigs = 100
 		println("zero=\(MakeReal(Real.zero))")
 		println("one=\(MakeReal(Real.one))")
 		println("pi=\(MakeReal(Real.pi))")
@@ -2536,7 +2556,10 @@ prefix func + (a: Real) -> Real {
 		var x1 = RealArray(arrayLiteral: 1, 0, 1)
 		
 		/* initialize internal constants */
-		Real.err = 0; Real.curMantissa = Real.maxMant+1; Real.debug = 0; Real.numBits = 22;
+		Real.err = 0; Real.curMantissa = Real.maxMant+1; Real.debug = 0; Real.numBits = 22
+		
+		/************************* TEMPORARY ******************/
+//		Real.debug = 10
 		
 		/* compute required constants to correct precision */
 		Zero(&t1); Pi(&t1)						/* t1 = pi */
