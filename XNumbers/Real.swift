@@ -158,13 +158,40 @@ prefix func + (a: Real) -> Real {
 	private static var numBits : Int = 22
 	private static var sigDigs : Int = Real.maxDigits
 	
-	// internal parameters
-//	private static var eps = zero
-	private static var pi = zero
-//	private static var ln10 = zero
-	private	static var ln2 = zero
-	private static let one = RealArray(arrayLiteral: 1, 0, 1, 0, 0, 0, 0, 0)
-	private static let zero = RealArray(arrayLiteral: 0, 0)
+	static var digits : Int {
+		set {
+			/** Sets the number of active words in all Real computations.
+			One word contains about 7.22 digits. */
+			var words = Double(digits) / Real.digsPerWord
+			if words < 8 { words = 8 }
+			if words <= Double(Real.maxMant-2) {
+				Real.curMantissa = Int(words)+2
+				Real.sigDigs = digits
+			}
+		}
+		get { return Real.sigDigs }
+	}
+	
+	// inself.ternal parameters
+	private static var Pi = Zero
+	private	static var Log2 = Zero
+	private static let One = RealArray(arrayLiteral: 1, 0, 1, 0, 0, 0, 0, 0)
+	private static let Zero = RealArray(arrayLiteral: 0, 0)
+	
+	static let one = Real(fromInt: 1)
+	static let zero = Real(fromInt: 0)
+	static var pi : Real {
+		if Real.Pi.count == 0 {
+			Real.one.Initialize()
+		}
+		return Real(fromArray: Real.Pi)
+	}
+	static var ln2 : Real {
+		if Real.Log2.count == 0 {
+			Real.one.Initialize()
+		}
+		return Real(fromArray: Real.Log2)
+	}
 	
 	/* Speed up very large factorials */
 	private static let fact100000 = Real(fromString:
@@ -217,11 +244,15 @@ prefix func + (a: Real) -> Real {
 		self.init(size:Real.curMantissa+4)
 		NumbExpToReal(double, n: 0, b: &self.real)
 	}
+	
+	private init (fromArray: RealArray) {
+		self.init(size:Real.curMantissa+4)
+		copy(fromArray, b:&self.real)		/* b = a */
+	}
 
 	init (fromReal real: Real) {
 		/** return a copy of \e real. */
-		self.init(size:Real.curMantissa+4)
-		copy(real.real, b:&self.real)  /* b = a */
+		self.init(fromArray: real.real)
 	}
 
 	/*---------------------------------------------------------*/
@@ -920,13 +951,13 @@ prefix func + (a: Real) -> Real {
 		Real.curMantissa++
 		nn = abs(n)
 		if nn == 0 {
-			copy(Real.one, b:&b)									/* x^0 = 1 */
+			copy(Real.One, b:&b)									/* x^0 = 1 */
 			Real.curMantissa = nws; return
 		} else if nn == 1 { copy(a, b: &b)					/* x^1 = x */
 		} else if nn == 2 { Mul(&t.r, a:a, b:a); copy(t.r, b: &b)    /* x^2 = x*x */
 		} else {
 			/* apply Knuth's algorithm */
-			copy(Real.one, b:&b);	/* b = 1 */
+			copy(Real.One, b:&b);	/* b = 1 */
 			copy(a, b:&r.r);	/* r = a */
 			for ;; {
 				if ODD(nn) { Mul(&t.r, a:b, b:r.r); copy(t.r, b:&b) }
@@ -936,7 +967,7 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* take reciprocal if n<0 */
-		if n<0 { Div(&t.r, a:Real.one, b:b); copy(t.r, b:&b) }
+		if n<0 { Div(&t.r, a:Real.One, b:b); copy(t.r, b:&b) }
 		
 		/* restore original precision */
 		Real.curMantissa = nws; Round(&b)
@@ -1035,7 +1066,7 @@ prefix func + (a: Real) -> Real {
 			for ;; {
 				Mul(&k0.r, a: b, b: b)           /* k0 = X(k)^2 */
 				Mul(&k1.r, a: a, b: k0.r)         /* k1 = a * X(k)^2 */
-				Sub(&k0.r, a:Real.one, b:k1.r)       /* k0 = 1 - a * X(k)^2 */
+				Sub(&k0.r, a:Real.One, b:k1.r)       /* k0 = 1 - a * X(k)^2 */
 				Real.curMantissa = nw1
 				Mul(&k1.r, a:b, b:k0.r)          /* k1 = X(k)*(1 - a * X(k)^2) */
 				Muld(&k0.r, a: k1.r, b: Real.HALF, n: 0)   /* k0 = 0.5 * (X(k)*(1 - a * X(k)^2)) */
@@ -1132,8 +1163,8 @@ prefix func + (a: Real) -> Real {
 		t1 = Double(Real.curMantissa); mq = Int(Real.invLn2*log(t1)+1-Real.mprxx)
 		
 		/* check how close `a' is to 1 */
-		Sub(&k0.r, a:a, b:Real.one)
-		if k0.r[0] == 0 { copy(Real.one, b:&b); return }
+		Sub(&k0.r, a:a, b:Real.One)
+		if k0.r[0] == 0 { copy(Real.One, b:&b); return }
 		n1 = 0; t1 = 0
 		RealToNumbExp(k0.r, b: &t1, n: &n1)
 		n2 = Int(Real.invLn2*log(abs(t1)))
@@ -1146,7 +1177,7 @@ prefix func + (a: Real) -> Real {
 				/* `a' is so close to 1 that it is cheaper to use the
 				binomial series */
 				Real.curMantissa++
-				Divd(&k1.r, a: k0.r, b: t2, n: 0); Add(&k2.r, a:Real.one, b:k1.r)
+				Divd(&k1.r, a: k0.r, b: t2, n: 0); Add(&k2.r, a:Real.One, b:k1.r)
 				k = 0
 				for ;; {
 					k++; t1 = 1-Double(k*n); t2 = Double((k+1)*n)
@@ -1160,7 +1191,7 @@ prefix func + (a: Real) -> Real {
 						break
 					}
 				}
-				copy(k2.r, b:&b); Div(&k0.r, a:Real.one, b:k2.r)
+				copy(k2.r, b:&b); Div(&k0.r, a:Real.One, b:k2.r)
 				Real.curMantissa = nws; Round(&b)
 				b[0] = Double(Sign(Int(b[0]), y: Double(ia)))
 				return
@@ -1183,7 +1214,7 @@ prefix func + (a: Real) -> Real {
 			for ;; {
 				IntPower(&k0.r, a:b, n:n)
 				Mul(&k1.r, a:a, b:k0.r)
-				Sub(&k0.r, a:Real.one, b:k1.r)
+				Sub(&k0.r, a:Real.One, b:k1.r)
 				Mul(&k1.r, a:b, b:k0.r)
 				Divd(&k0.r, a: k1.r, b: tn, n: 0)
 				Add(&k1.r, a:b, b:k0.r)
@@ -1197,7 +1228,7 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* take reciprocal to give final result */
-		Div(&k1.r, a: Real.one, b: b); copy(k1.r, b: &b)
+		Div(&k1.r, a: Real.One, b: b); copy(k1.r, b: &b)
 		
 		/* restore original resolution */
 		Real.curMantissa = nws; Round(&b)
@@ -1246,7 +1277,7 @@ prefix func + (a: Real) -> Real {
 		mq = Int(Real.invLn2*(log(t1)-1)+1)
 		
 		/* initialize working variables */
-		copy(Real.one, b:&An.r)						  /* A(0) = 1 */
+		copy(Real.One, b:&An.r)						  /* A(0) = 1 */
 		f[0] = 1; f[1] = 0; f[2] = 2
 		Sqrt(&t.r, a:f)                           /* t = Sqrt(2) */
 		Muld(&Bn.r, a: t.r, b: Real.HALF, n: 0);               /* B(0) = 1 / Sqrt(2) */
@@ -1307,7 +1338,7 @@ prefix func + (a: Real) -> Real {
 		/* if (a < 0) & (Frac(a) != 0) { b = b - 1 */
 		if ia == -1 {
 			for i = nb+2; i<=na+1; i++ {
-				if a[i] != 0 { Sub(&b, a:b, b:Real.one); return }
+				if a[i] != 0 { Sub(&b, a:b, b:Real.One); return }
 			}
 		}
 	} //Entier;
@@ -1384,7 +1415,7 @@ prefix func + (a: Real) -> Real {
 		/* unless the argument is near Ln(2), ln2 must be precomputed.
 		This exception is necessary because Ln calls Exp to
 		initialize ln2 */
-		if (abs(t1-Real.Ln2) > Real.invRadix) && (Real.ln2.count == 0) {
+		if (abs(t1-Real.Ln2) > Real.invRadix) && (Real.Log2.count == 0) {
 			Initialize()
 //			println("*** Exp: ln2 must be precomputed!")
 //			Real.err = 34; return
@@ -1408,11 +1439,11 @@ prefix func + (a: Real) -> Real {
 		Save nz = Int(a/Ln(2)) for correcting the exponent of the
 		final result. */
 		if abs(t1-Real.Ln2) > Real.invRadix {
-			Div(&k0.r, a:a, b:Real.ln2)
+			Div(&k0.r, a:a, b:Real.Log2)
 			RoundInt(&k1.r, a: k0.r)
 			RealToNumbExp(k1.r, b: &t1, n: &n1)
 			nz = Int(t1*Double(ipower(2, base: n1)) + Double(Sign(Int(Real.mprxx), y: t1)))
-			Mul(&k2.r, a:Real.ln2, b:k1.r)
+			Mul(&k2.r, a:Real.Log2, b:k1.r)
 			Sub(&k0.r, a:a, b:k2.r)
 		} else {
 			copy(a, b:&k0.r); nz = 0
@@ -1421,13 +1452,13 @@ prefix func + (a: Real) -> Real {
 		
 		/* check if the reduced argument is zero */
 		if k0.r[0] == 0 {
-			copy(Real.one, b:&k0.r)
+			copy(Real.One, b:&k0.r)
 		} else {
 			/* divide the reduced argument by 2^nq */
 			Divd(&k1.r, a: k0.r, b: 1, n: NQ)
 			
 			/* compute Exp using the usual Taylor series */
-			copy(Real.one, b:&k2.r); copy(Real.one, b:&k3.r); l1 = 0
+			copy(Real.One, b:&k2.r); copy(Real.One, b:&k3.r); l1 = 0
 			for ;; {
 				l1++
 				if l1 == 10000 {
@@ -1494,7 +1525,7 @@ prefix func + (a: Real) -> Real {
 		/* unless the input is close to 2, ln2 must be known */
 		t1 = 0; n1 = 0
 		RealToNumbExp(a, b: &t1, n: &n1)
-		if ((abs(t1-2.0) > 1.0e-3) || (n1 != 0)) && (Real.ln2.count == 0) {
+		if ((abs(t1-2.0) > 1.0e-3) || (n1 != 0)) && (Real.Log2.count == 0) {
 			Initialize()
 //			println("*** Ln: Ln(2) must be precomputed!"); Real.err = 51; return
 		}
@@ -1564,13 +1595,15 @@ prefix func + (a: Real) -> Real {
 		
 		if Real.err != 0 { Zero(&sin); Zero(&cos); return }
 		
+//		println("Sincos angle ="); Write(a)
+		
 		ia = Sign(1, y:a[0]); na = Min(Int(abs(a[0])), y:Real.curMantissa)
 		
 		/* check for trivial case when a = 0 */
-		if na == 0 { copy(Real.one, b:&cos); Zero(&sin); return }
+		if na == 0 { copy(Real.One, b:&cos); Zero(&sin); return }
 		
 		/* check if pi has been precomputed */
-		if Real.pi.count == 0 {
+		if Real.Pi.count == 0 {
 			Initialize()
 //			println("*** SinCos: pi must be precomputed!")
 //			Real.err = 28; return
@@ -1580,7 +1613,7 @@ prefix func + (a: Real) -> Real {
 		nws = Real.curMantissa; Real.curMantissa++
 		
 		/* reduce input to between -pi and pi */
-		Muld(&k0.r, a: Real.pi, b: 2.0, n: 0)
+		Muld(&k0.r, a: Real.Pi, b: 2.0, n: 0)
 		Div(&k1.r, a:a, b:k0.r)
 		RoundInt(&k2.r, a:k1.r)       /* k2 = a DIV 2pi */
 		Sub(&k3.r, a:k1.r, b:k2.r)        /* k3 = a MOD 2pi */
@@ -1630,12 +1663,12 @@ prefix func + (a: Real) -> Real {
 		
 		/* compute Cos(s) = Sqrt(1-Sin(s)^2) */
 		copy(k0.r, b:&k1.r)
-		Mul(&k2.r, a:k0.r, b:k0.r); Sub(&k3.r, a:Real.one, b:k2.r); Sqrt(&k0.r, a:k3.r)
+		Mul(&k2.r, a:k0.r, b:k0.r); Sub(&k3.r, a:Real.One, b:k2.r); Sqrt(&k0.r, a:k3.r)
 		
 		/* compute cosine and sine of b*Pi/16 */
 		kc = abs(kb); f[0] = 1; f[1] = 0; f[2] = 2.0;
 		if kc == 0 {
-			copy(Real.one, b:&k2.r); Zero(&k3.r)
+			copy(Real.One, b:&k2.r); Zero(&k3.r)
 		} else {
 			switch kc {
 			case 1: Sqrt(&k4.r, a:f); Add(&k5.r, a:f, b:k4.r); Sqrt(&k4.r, a:k5.r)
@@ -1681,7 +1714,7 @@ prefix func + (a: Real) -> Real {
 		var nws: Int
 		
 		nws = Real.curMantissa; Real.curMantissa++
-		Exp(&k0.r, a: a); Div(&k1.r, a:Real.one, b:k0.r)			/* k1 = exp(-a); k0 = exp(a) */
+		Exp(&k0.r, a: a); Div(&k1.r, a:Real.One, b:k0.r)			/* k1 = exp(-a); k0 = exp(a) */
 		Add(&k2.r, a:k0.r, b:k1.r)										/* k2 = exp(a) + exp(-a) */
 		Muld(&k2.r, a: k2.r, b: Real.HALF, n: 0); copy(k2.r, b: &cosh)	/* cosh = (exp(a) + exp(-a))/2 */
 		Sub(&k2.r, a:k0.r, b:k1.r)										/* k2 = exp(a) - exp(-a) */
@@ -1735,7 +1768,7 @@ prefix func + (a: Real) -> Real {
 		}
 		
 		/* check if pi has been precomputed */
-		if Real.pi.count == 0 {
+		if Real.Pi.count == 0 {
 			Initialize()
 //			println("*** ATan2: Pi must be precomputed!")
 //			Real.err = 8; return
@@ -1744,13 +1777,13 @@ prefix func + (a: Real) -> Real {
 		/* check if one of x or y is zero */
 		if nx == 0 {
 			if iy > 0 {
-				Muld(&a, a: Real.pi, b: Real.HALF, n: 0)
+				Muld(&a, a: Real.Pi, b: Real.HALF, n: 0)
 			} else {
-				Muld(&a, a: Real.pi, b: -Real.HALF, n: 0)
+				Muld(&a, a: Real.Pi, b: -Real.HALF, n: 0)
 			}
 			return
 		} else if ny == 0 {
-			if ix > 0 { Zero(&a) } else { copy(Real.pi, b:&a) }
+			if ix > 0 { Zero(&a) } else { copy(Real.Pi, b:&a) }
 			return
 		}
 		
@@ -1762,7 +1795,7 @@ prefix func + (a: Real) -> Real {
 		
 		/* normalize x and y so that x^2 + y^2 = 1 */
 		Mul(&k0.r, a:x, b:x); Mul(&k1.r, a:y, b:y); Add(&k2.r, a:k0.r, b:k1.r); Sqrt(&k3.r, a:k2.r)
-		Div(&k1.r, a:x, b:k3.r); Div(&k2.r, a:y, b:k3.r);
+		Div(&k1.r, a:x, b:k3.r); Div(&k2.r, a:y, b:k3.r)
 		
 		/* compute initial approximation of the angle */
 		n1 = 0; t1 = 0; n2 = 0; t2 = 0
@@ -2146,6 +2179,14 @@ prefix func + (a: Real) -> Real {
 			return 0
 		}
 	} //Sign;
+	
+	func isNegative() -> Bool {
+		return (self.real[0] < 0)
+	}
+	
+	func isZero() -> Bool {
+		return (self.real[0] == 0)
+	}
 
 	func ToString () -> String {
 		return self.ToString(0, ExpWidth: 0, EngFormat: false)
@@ -2177,7 +2218,7 @@ prefix func + (a: Real) -> Real {
 		return the fractional part of 'q'.
 		*/
 		var r = self.Entier()
-		if self.real[0] < 0 { Add(&r.real, a:self.real, b:Real.one) }
+		if self.real[0] < 0 { Add(&r.real, a:self.real, b:Real.One) }
 		Sub(&r.real, a:self.real, b:r.real)
 		return r
 	} //Fraction;
@@ -2324,7 +2365,7 @@ prefix func + (a: Real) -> Real {
 		} else if n >= 100000 {
 			copy(Real.fact100000.real, b:&f.real); min = 100000
 		} else {
-			copy(Real.one, b:&f.real); min = 1
+			copy(Real.One, b:&f.real); min = 1
 		}
 
 		while n > min {
@@ -2374,10 +2415,10 @@ prefix func + (a: Real) -> Real {
 		var r = Real(size: Real.curMantissa+4)
 	
 		Abs(&t.r, x:self.real)
-		if Cmp(t.r, b: Real.one) > 0 {
+		if Cmp(t.r, b: Real.One) > 0 {
 			println("*** Illegal arcsin argument!"); Real.err = 20
 		} else {
-			Mul(&t.r, a:t.r, b:t.r); Sub(&t.r, a:Real.one, b:t.r); Sqrt(&t.r, a: t.r)	/* t = Sqrt(1 - z^2) */
+			Mul(&t.r, a:t.r, b:t.r); Sub(&t.r, a:Real.One, b:t.r); Sqrt(&t.r, a: t.r)	/* t = Sqrt(1 - z^2) */
 			ATan2(&r.real, x: t.r, y: self.real)										/* r = ATan(z/Sqrt(1-z^2)) */
 		}
 		return r
@@ -2389,10 +2430,10 @@ prefix func + (a: Real) -> Real {
 		var r = Real(size: Real.curMantissa+4)
 
 		Abs(&t.r, x:self.real)
-		if Cmp(t.r, b: Real.one) > 0 {
+		if Cmp(t.r, b: Real.One) > 0 {
 			println("*** Illegal arccos argument!"); Real.err = 21
 		} else {
-			Mul(&t.r, a:t.r, b:t.r); Sub(&t.r, a:Real.one, b:t.r); Sqrt(&t.r, a: t.r)	/* t = Sqrt(1 - z^2) */
+			Mul(&t.r, a:t.r, b:t.r); Sub(&t.r, a:Real.One, b:t.r); Sqrt(&t.r, a: t.r)	/* t = Sqrt(1 - z^2) */
 			ATan2(&r.real, x: self.real, y: t.r)										/* r = ATan(Sqrt(1-z^2)/z) */
 		}
 		return r
@@ -2401,7 +2442,7 @@ prefix func + (a: Real) -> Real {
 	func Arctan () -> Real {
 		/** returns the arctangent of z */
 		var r = Real(size: Real.curMantissa+4)
-		ATan2(&r.real, x: Real.one, y: self.real)
+		ATan2(&r.real, x: Real.One, y: self.real)
 		return r
 	} //Arctan;
 	
@@ -2446,8 +2487,8 @@ prefix func + (a: Real) -> Real {
 		/** return a random number between 0 and 1 */
 		var res = Real(size: Real.curMantissa+4)
 		var t: Real
-		if Real.pi.count == 0 { Initialize() }
-		Add(&res.real, a:Real.Seed.real, b:Real.pi)
+		if Real.Pi.count == 0 { Initialize() }
+		Add(&res.real, a:Real.Seed.real, b:Real.Pi)
 		t = res.Ln(); t = t.Mul(Real(fromInt: 5))
 		t = t.Exp(); res = t; t = t.Entier()
 		Real.Seed = res.Sub(t)
@@ -2466,10 +2507,10 @@ prefix func + (a: Real) -> Real {
 		
 		Initialize()
 		Real.sigDigs = 100
-		println("zero=\(MakeReal(Real.zero))")
-		println("one=\(MakeReal(Real.one))")
-		println("pi=\(MakeReal(Real.pi))")
-		println("ln2=\(MakeReal(Real.ln2))")
+		println("zero=\(Real.zero)")
+		println("one=\(Real.one)")
+		println("pi=\(MakeReal(Real.Pi))")
+		println("ln2=\(MakeReal(Real.Log2))")
 		n = Real(fromString: "123456789012345678901234567890123456789")
 		m = Real(fromString: "0.123456789012345678901234567890123456790")
 		switch n.Cmp(m) {
@@ -2506,10 +2547,10 @@ prefix func + (a: Real) -> Real {
 		println("-12 345 678=\(n)")
 		n = Real(fromString:"1E10000")
 		println("1E10000=\(n)")
-		MakeReal(Real.pi).SinCos(&m, cos: &n)
+		MakeReal(Real.Pi).SinCos(&m, cos: &n)
 		println("Sin(pi)=\(m)")
 		println("Cos(pi)=\(n)")
-		m = MakeReal(Real.pi).Div(Real(fromInt:8))
+		m = MakeReal(Real.Pi).Div(Real(fromInt:8))
 		m.SinCos(&m, cos: &n)
 		println("Sin(pi/8)=\(m)")
 		println("Cos(pi/8)=\(n)")
@@ -2522,30 +2563,16 @@ prefix func + (a: Real) -> Real {
 		m = Real(fromInt:2); m = m.Power(Real(fromInt:64));
 		println("(2^64)^(-1/64)=\(m.IRoot(64))")
 		m = Real(fromInt:4)
-		println("4*arctan(1)=\(m.Mul(MakeReal(Real.one).Arctan()))")
-		m = MakeReal(Real.one).Sin()
+		println("4*arctan(1)=\(m.Mul(Real.one.Arctan()))")
+		m = Real.one.Sin()
 		println("arcsin(sin(1))=\(m.Arcsin())")
-		m = MakeReal(Real.one).Cos()
+		m = Real.one.Cos()
 		println("arccos(cos(1))=\(m.Arccos())")
 		m = Real(fromDouble:3.6)
 		println("Entier(3.6)=\(m.Entier())")
 		m = Real(fromDouble:-3.6)
 		println("Entier(-3.6)=\(m.Entier())")
 	} //Test;
-
-	func SetDigits (digits: Int) {
-		/** Sets the number of active words in all Real computations.
-		One word contains about 7.22 digits. */
-		var words: Double
-		
-		words = Double(digits) / Real.digsPerWord
-		if words < 8 { words = 8 }
-		if words <= Double(Real.maxMant-2) {
-			Real.curMantissa = Int(words)+2;
-			Real.sigDigs = digits
-		}
-	} //SetDigits;
-
 
 	private func Initialize () {
 		var t0 = RealArray(count:2*(Real.maxMant+4), repeatedValue:0)
@@ -2557,6 +2584,7 @@ prefix func + (a: Real) -> Real {
 		
 		/* initialize internal constants */
 		Real.err = 0; Real.curMantissa = Real.maxMant+1; Real.debug = 0; Real.numBits = 22
+		println("Initializing...")
 		
 		/************************* TEMPORARY ******************/
 //		Real.debug = 10
@@ -2565,16 +2593,16 @@ prefix func + (a: Real) -> Real {
 		Zero(&t1); Pi(&t1)						/* t1 = pi */
 		NumbExpToReal(2, n: 0, b: &t0)			/* t0 = 2.0 */
 		Ln(&t2, a: t0)							/* t2 = Ln(2.0) */
-		Real.ln2 = RealArray(count: t2.count, repeatedValue:0)
-		copy(t2, b:&Real.ln2)
+		Real.Log2 = RealArray(count: t2.count, repeatedValue:0)
+		copy(t2, b:&Real.Log2)
 		NumbExpToReal(10, n: 0, b: &t0)			/* t0 = 10.0 */
 		Ln(&t3, a: t0)							/* t3 = Ln(10.0) */
 		IntPower(&t4, a: t0, n: Real.log10eps)  /* t4 = 10^(10-maxDigits) */
 	
 		/* transfer to current variables */
 		Real.curMantissa = Real.maxMant
-		Real.pi = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t1, b:&Real.pi)
-		Real.ln2 = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t2, b:&Real.ln2)
+		Real.Pi = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t1, b:&Real.Pi)
+		Real.Log2 = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t2, b:&Real.Log2)
 //		Real.ln10 = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t3, b:&Real.ln10)
 //		Real.eps = RealArray(count: Real.curMantissa+4, repeatedValue:0); copy(t4, b:&Real.eps)
 		

@@ -1,368 +1,371 @@
-////
-////  Complex.swift
-////  XNumbers
-////
-////  Created by Mike Griebling on 5 Mar 2015.
-////  Copyright (c) 2015 Computer Inspirations. All rights reserved.
-////
 //
-//import Foundation
+//  Complex.swift
+//  XNumbers
 //
-//struct Complex {
-//	
-//	/*
-//	Complex - Complex number math functions.
-//	Copyright (C) 1996-2010 Michael Griebling
-// 
-//	This module is free software; you can redistribute it and/or modify
-//	it under the terms of the GNU General Public License as published by
-//	the Free Software Foundation; either version 2 of the License, or
-//	(at your option) any later version.
-// 
-//	This module is distributed in the hope that it will be useful,
-//	but WITHOUT ANY WARRANTY; without even the implied warranty of
-//	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//	GNU General Public License for more details.
-// 
-//	You should have received a copy of the GNU General Public License
-//	along with this program; if not, write to the Free Software
-//	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-//	
-//	*/
-//	
-//	// IMPORT X  =  Reals, XI  =  Integers, ADT:Storable, Object:Boxed, Object, Out, IO;
-//	
-//	enum NotationType {
-//		case Normal
-//		case Scientific
-//		case Engineering
-//	}
-//	enum AngularMeasure {
-//		case Degrees
-//		case Radians
-//		case Gradians
-//	}
-//	
-//	var real, imag : Real
-//	
-//	struct NumbState {
-//		init () {
-//			LocalBase = 10
-//			Notation = NotationType.Normal
-//			DecPoint = 0
-//			DegRadFlag = AngularMeasure.Degrees
-//			DigSep = ","
-//			FracSep = "."
-//			Rational = false
-//		}
-//		
-//		var LocalBase  : Int
-//		var Notation   : NotationType
-//		var DecPoint   : Int
-//		var DegRadFlag : AngularMeasure
-//		var DigSep     : Character
-//		var FracSep    : Character
-//		var Rational   : Bool
-//	}
-//	
-//	static let zero = Complex()
-//	static let one = Complex()
-//	static var nState = NumbState()
-//	
-//	func IsZero (A : Real) -> Bool {
-//		return A.Cmp(Real.zero) == 0
-//	} // IsZero;
-//	
-//	func IsNegative (A : Real) -> Bool {
-//		return A.Cmp(X.zero) == -1
-//	} // IsNegative;
-//	
-//	/*---------------------------------------------------------*/
-//	/*                                                         */
-//	/* The following routines are intended for external users  */
-//	/*                                                         */
-//	/*---------------------------------------------------------*/
-//	/* Constructors */
-//	
-//	init() {
-//		self.real = Real(fromInteger: 0)
-//		self.imag = Real(fromInteger: 0)
-//	}
-//	
-//	func RealToInteger (A : Real) -> Integer {
-//	let MAXC = 0x40000000
-//	var x, iMAX : Integer;
-//	var a, MAX : Real;
-//	var exp : Int;
-//	var neg : Bool;
-//	
-//	A = A.Entier();
-//	x = XI.NewInt(0); exp = 0;
-//	MAX = X.Long(MAXC); iMAX = XI.NewInt(MAXC);
-//	neg = FALSE;
-//	if IsNegative(A) { A = A.Abs(); neg = TRUE }
-//	while A.Cmp(MAX) = 1 {
-//	A = A.Div(MAX);
-//	INC(exp)
-//	}
-//	do {
-//	a = A.Entier(); x = x.Mul(iMAX);
-//	x = x.Add(XI.NewInt(ENTIER(a.Short())));
-//	A = MAX.Mul(A.Fraction());
-//	DEC(exp)
-//	} while !(exp<0)
-//	if neg { x = XI.zero.Sub(x) }
-//	return x
-//	} // RealToInteger;
-//	
-//	func IntegerToReal (A : Integer) -> Real {
-//	let 
-//	MAXC = 1000000000;
-//	var
-//	iMAX, ia : Integer;
-//	x, y, MAX : Real;
-//	neg : Bool;
-//	
-//	x = X.Long(0);
-//	MAX = X.Long(MAXC); iMAX = XI.NewInt(MAXC);
-//	neg = FALSE; y = X.Long(1);
-//	if A.Sign() = -1 { A = A.Abs(); neg = TRUE }
-//	while A.Sign() = 1 {
-//	ia = A.Mod(iMAX);
-//	x = x.Add(y.Mul(X.Long(ia.ToLongInt())));
-//	A = A.Div(iMAX); y = y.Mul(MAX)
-//	}
-//	if neg { x = X.zero.Sub(x) }
-//	return x
-//	} // IntegerToReal;
-//	
-//	/*---------------------------------------------------------*/
-//	/* Conversion routines                                     */
-//	
-//	func (A: Complex) Format * () -> String;
-//	var
-//	Result : String;
-//	iZero, rZero: Bool;
-//	EngFormat: Bool;
-//	i, ds, dp: Int;
-//	ExpWidth: Int;
-//	cs: ARRAY 2 OF Character;
-//	Str: String;
-//	Aim: Real;
-//	
-//	func NumToStr (A : Real; Decimal, ExpWidth : Int; EngFormat: Bool) -> String;
-//	/* Combines radix and normal conversions */
-//	var
-//	ia: Integer;
-//	
-//	if nState.LocalBase=10 {
-//	return A.Format(Decimal, ExpWidth, EngFormat)
-//	} else {
-//	if nState.LocalBase#8 { ds = 4 }
-//	ia = RealToInteger(A);
-//	return ia.Format(nState.LocalBase)
-//	}
-//	} // NumToStr;
-//	
-//	func SetChar (s: String; pos: Int; ch: Character) -> String;
-//	var
-//	f: String;
-//	
-//	f = s.Substring(0, pos-1); f = f.Concat(Object.NewLatin1Char(ch));
-//	f = f.Concat(s.Substring(pos+1, s.length));
-//	return f
-//	} // SetChar;
-//	
-//	func InsertChar (s: String; pos: Int; ch: Character) -> String;
-//	var
-//	f: String;
-//	
-//	f = s.Substring(0, pos-1); f = f.Concat(Object.NewLatin1Char(ch));
-//	f = f.Concat(s.Substring(pos, s.length));
-//	return f
-//	} // InsertChar;
-//	
-//	
-//	/* round numbers */
-//	A.real = X.Sub2(A.real.Add(X.one), X.one);
-//	A.imag = X.Sub2(A.imag.Add(X.one), X.one);
-//	
-//	iZero  =  IsZero(A.imag); rZero  =  IsZero(A.real);
-//	ds = 3;
-//	if nState.Notation>Normal { ExpWidth = 1 } else { ExpWidth = 0 }
-//	EngFormat = nState.Notation=Engineering;
-//	if iZero OR ~rZero {
-//	Str = NumToStr(A.real, nState.DecPoint, ExpWidth, EngFormat) /* real part */
-//	} else { Str = ""
-//	}
-//	if ~iZero {
-//	Aim = A.imag;
-//	if ~IsNegative(Aim) {
-//	if ~rZero { Str = Str.Concat("+") }
-//	} else { Str = Str.Concat("-")
-//	}
-//	Aim = Aim.Abs();
-//	if Aim.Cmp(X.one) # 0 {
-//	Result = NumToStr(Aim, nState.DecPoint, ExpWidth, EngFormat);  /* imaginary part */
-//	Str = Str.Concat(Result)
-//	}
-//	Str = Str.Concat("i")
-//	}
-//	
-//	/* add digit separators */
-//	cs[1] = 0X;
-//	dp = Str.IndexOf(".", 0);                  /* find location of decimal point */
-//	if dp<0 { dp = Str.length
-//	ELSif nState.DigSep="." { Str = SetChar(Str, dp, ",")
-//	}
-//	if nState.DigSep # 0X {
-//	i = dp-ds;                               /* insert whole separator */
-//	while i>0 {
-//	Str = InsertChar(Str, i, nState.DigSep);
-//	DEC(i, ds); INC(dp)
-//	}
-//	}
-//	if nState.FracSep # 0X {
-//	i = dp+ds+1;                             /* insert fraction separator */
-//	while i<Str.length {
-//	Str = InsertChar(Str, i, nState.DigSep);
-//	INC(i, ds+1)
-//	}
-//	}
-//	return Str
-//	} // Format;
-//	
-//	func /* (x: Complex) */ ToString*(): String;
-//	
-//	return x.Format()
-//	} // ToString;
-//	
-//	func /* (x: Complex) */ Init * (re, im : Real);
-//	
-//	x.real  =  re; x.imag  =  im
-//	} // Init;
-//	
-//	func Init * (re, im : Real) -> Complex {
-//	var
-//	A: Complex;
-//	
-//	NEW(A); A.Init(re, im);
-//	return A
-//	} // Init;
-//	
-//	
-//	func /* (x: Complex) */ Conj * () -> Complex {
-//	
-//	return Init(x.real, X.zero.Sub(x.imag))
-//	} // Conj;
-//	
-//	
-//	func (B: Complex) PolarMag * () -> Real {
-//	var
-//	A: Real;
-//	
-//	if IsZero(B.imag) { return B.real.Abs()
-//	ELSif IsZero(B.real) { return B.imag.Abs()
-//	} else {
-//	A = B.imag.Mul(B.imag);
-//	A = A.Add(B.real.Mul(B.real));
-//	return A.Sqrt()
-//	}
-//	} // PolarMag;
-//	
-//	PROCEDURE^ fromRadians (radianAngle: Real) -> Real {
-//	
-//	func (B: Complex) PolarAngle * () -> Real {
-//	
-//	return fromRadians(B.imag.Arctan2(B.real))
-//	} // PolarAngle;
-//	
-//	PROCEDURE^ toRadians (radianAngle : Real) -> Real {
-//	
-//	func Long * (x : LONGREAL) -> Complex {
-//	
-//	return Init(X.Long(x), X.zero)
-//	} // Long;
-//	
-//	
-//	func (xc : Complex) Short * () -> LONGREAL;
-//	
-//	return xc.real.Short()
-//	} // Short;
-//	
-//	
-//	func /* (x: Complex) */ Neg * () -> Complex {
-//	
-//	return Init(X.zero.Sub(x.real), X.zero.Sub(x.imag))
-//	} // Neg;
-//	
-//	
-//	func /* (B : Complex) */ Add * (C : Complex) -> Complex {
-//	
-//	/** A = B + C = (a + bi) + (c + di) = (a+c) + (b+d)i */
-//	return Init(B.real.Add(C.real), B.imag.Add(C.imag))
-//	} // Add;
-//	
-//	
-//	func /* (B : Complex) */ Sub * (C : Complex) -> Complex {
-//	
-//	/** A = B - C = (a + bi) - (c + di) = (a-c) + (b-d)i */
-//	return Init(B.real.Sub(C.real), B.imag.Sub(C.imag))
-//	} // Sub;
-//	
-//	
-//	func ToRectangular * (r, theta : Real) -> Complex {
-//	var
-//	s, c: Real;
-//	t: Complex;
-//	
-//	s = toRadians(theta); s.SinCos(s, c);
-//	t = one.Add(Init(r.Mul(c), r.Mul(s)));   /* force rounding */
-//	return t.Sub(one)
-//	} // ToRectangular;
-//	
-//	
-//	func /* (B : Complex) */ Mul * (C : Complex) -> Complex {
-//	var
-//	r, i: Real;
-//	
-//	/* A = B * C = (a + bi) * (c + di) = (ac-bd) + (ad+bc)i */
-//	r = B.real.Mul(C.real); i = B.real.Mul(C.imag);
-//	return Init(r.Sub(B.imag.Mul(C.imag)), i.Add(B.imag.Mul(C.real)))
-//	} // Mul;
-//	
-//	
-//	func /* (B : Complex) */ Div * (C : Complex) -> Complex {
-//	var div, r, i : Real;
-//	
-//	/**
-//	A = B / C = (a + bi) / (c + di) = (ac+bd)/e + (bc-ad)/e i
-//	where e = c^2+d^2
-//	*/
-//	div = C.real.Mul(C.real); div = div.Add(C.imag.Mul(C.imag));
-//	r = B.real.Mul(C.real); r = r.Add(B.imag.Mul(C.imag));
-//	i = B.imag.Mul(C.real); i = i.Sub(B.real.Mul(C.imag));
-//	return Init(r.Div(div), i.Div(div))
-//	} // Div;
-//	
-//	func /* (a: Complex) */ Cmp * (b: Object.Object) -> Int;
-//	/**
-//	This routine compares the extended numbers `a' and `b' and
-//	returns the value -1, 0, or 1 depending on whether 'a'<'b',
-//	'a'='b', or 'a'>'b'.  It is faster than merely subtracting
-//	'a' and 'b' and looking at the sign of the result.
-// */
-//	var
-//	c: Real;
-//	
-//	if IsZero(a.imag) { c = a.real } else { c = a.PolarMag() }
-//	WITH b: Complex {
-//	if IsZero(b.imag) { return c.Cmp(b.real)
-//	} else { return c.Cmp(a.PolarMag())
-//	}
-//	}
-//	} // Cmp;
-//	
+//  Created by Mike Griebling on 5 Mar 2015.
+//  Copyright (c) 2015 Computer Inspirations. All rights reserved.
+//
+
+import Foundation
+
+func ToInteger (var A : Real) -> Integer {
+	let MAXC = 0x40000000
+	var x, iMAX : Integer
+	var a, MAX : Real
+	var exp : Int
+	var neg : Bool
+	
+	A = A.Entier()
+	x = Integer.zero; exp = 0
+	MAX = Real(fromInt: MAXC); iMAX = Integer(fromInt: MAXC)
+	neg = false;
+	if A.isNegative() { A = A.Abs(); neg = true }
+	while A > MAX {
+		A = A.Div(MAX)
+		++exp
+	}
+	do {
+		a = A.Entier(); x = x.Mul(iMAX)
+		x = x.Add(Integer(fromInt: Int(a.Short())))
+		A = MAX.Mul(A.Fraction())
+		--exp
+	} while !(exp < 0)
+	if neg { x = Integer.zero.Sub(x) }
+	return x
+} // RealToInteger;
+
+func ToReal (var A : Integer) -> Real {
+	let MAXC = 1000000000
+	var iMAX, ia : Integer
+	var x, y, MAX : Real
+	var neg : Bool
+	
+	x = Real(fromInt: 0)
+	MAX = Real(fromInt: MAXC); iMAX = Integer(fromInt: MAXC)
+	neg = false; y = Real(fromInt: 1);
+	if A.Sign() == -1 { A = A.Abs(); neg = true }
+	while A.Sign() == 1 {
+		ia = A.Mod(iMAX)
+		x = x.Add(y.Mul(Real(fromInt: ia.ToInt())))
+		A = A.Div(iMAX); y = y.Mul(MAX)
+	}
+	if neg { x = Real.zero.Sub(x) }
+	return x
+} // IntegerToReal;
+
+
+func FromRadians (radianAngle: Real) -> Real {
+	/* conversion from radians to an angular measure */
+	if Complex.nState.DegRadFlag == Complex.AngularMeasure.Degrees {
+		let K180 = Real(fromInt: 180)
+		return radianAngle.Mul(K180.Div(Real.pi))
+	} else if Complex.nState.DegRadFlag == Complex.AngularMeasure.Gradians {
+		let K200 = Real(fromInt: 200)
+		return radianAngle.Mul(K200.Div(Real.pi))
+	} else {
+		return radianAngle
+	}
+} // fromRadians;
+
+
+func ToRadians (radianAngle : Real) -> Real {
+	/* Convert an angular measure into radians */
+	if Complex.nState.DegRadFlag == Complex.AngularMeasure.Degrees {
+		return radianAngle.Mul(Real.pi.Div(Real(fromInt: 180)))
+	} else if Complex.nState.DegRadFlag == Complex.AngularMeasure.Gradians {
+		return radianAngle.Mul(Real.pi.Div(Real(fromInt: 200)))
+	} else {
+		return radianAngle
+	}
+} // toRadians;
+
+
+func Long (x : Double) -> Complex {
+	return Complex(re: Real(fromDouble: x), im: Real.zero)
+} // Long;
+
+struct Complex {
+	
+	/*
+	Complex - Complex number math functions.
+	Copyright (C) 1996-2010 Michael Griebling
+ 
+	This module is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+ 
+	This module is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+ 
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+	
+	*/
+
+	enum NotationType {
+		case Normal
+		case Scientific
+		case Engineering
+	}
+	enum AngularMeasure {
+		case Degrees
+		case Radians
+		case Gradians
+	}
+	
+	var real, imag : Real
+	
+	struct NumbState {
+		init () {
+			LocalBase = 10
+			Notation = NotationType.Normal
+			DecPoint = 0
+			DegRadFlag = AngularMeasure.Degrees
+			DigSep = ","
+			FracSep = "."
+			Rational = false
+		}
+		
+		mutating func Default() {
+			/* set up default state */
+			LocalBase = 10
+			Notation = NotationType.Normal
+			DecPoint = 0
+			DegRadFlag = AngularMeasure.Degrees
+			DigSep = "\0"
+			FracSep = "\0"
+			Rational = false
+		} // Default;
+	
+		var LocalBase  : Int
+		var Notation   : NotationType
+		var DecPoint   : Int
+		var DegRadFlag : AngularMeasure
+		var DigSep     : Character
+		var FracSep    : Character
+		var Rational   : Bool
+	}
+	
+	static let zero = Complex()
+	static let one = Complex(re: Real.one, im: Real.zero)
+	static var nState = NumbState()
+	
+	/*---------------------------------------------------------*/
+	/*                                                         */
+	/* The following routines are intended for external users  */
+	/*                                                         */
+	/*---------------------------------------------------------*/
+	/* Constructors */
+	
+	init() {
+		self.real = Real(fromInt: 0)
+		self.imag = Real(fromInt: 0)
+	}
+	
+	init (re: Real, im : Real) {
+		self.real = re; self.imag = im
+	} // Init;
+	
+	init (r: Real, theta: Real) {
+		var s, c: Real
+		var t: Complex
+		c = Real.zero
+		s = ToRadians(theta); s.SinCos(&s, cos: &c)
+		t = Complex.one.Add(Complex(re: r.Mul(c), im: r.Mul(s)))   /* force rounding */
+		self = t.Sub(Complex.one)
+	} // ToRectangular;
+	
+	/*---------------------------------------------------------*/
+	/* Conversion routines                                     */
+	
+	func description () -> String {
+		var Result : String
+		var iZero, rZero: Bool
+		var EngFormat: Bool
+		var ds: Int = 3
+		var ExpWidth: Int
+		var cs: String
+		var Str: String = ""
+		var Aim: Real
+		var A: Complex = self
+		
+		func NumToStr (A : Real, Decimal: Int, ExpWidth : Int, EngFormat: Bool) -> String {
+			/* Combines radix and normal conversions */
+			var ia: Integer
+			
+			if Complex.nState.LocalBase == 10 {
+				return A.ToString(Decimal, ExpWidth: ExpWidth, EngFormat: EngFormat)
+			} else {
+				if Complex.nState.LocalBase != 8 { ds = 4 }
+				ia = ToInteger(A)
+				return ia.description(Complex.nState.LocalBase)
+			}
+		} // NumToStr;
+		
+		func SetChar (s: String, pos: Range<String.Index>, ch: Character) -> String {
+			var f = s
+			f.replaceRange(pos, with: [ch])
+			return f
+		} // SetChar;
+		
+		func InsertChar (s: String, pos: String.Index, ch: Character) -> String {
+			var f = s
+			f.insert(ch, atIndex: pos)
+			return f
+		} // InsertChar;
+		
+		func DecIndex (pos : String.Index, var by: Int) -> String.Index {
+			var ipos = pos
+			while (by > 0) && (pos > Str.startIndex) {
+				ipos--; by--
+			}
+			return ipos
+		}
+		
+		func IncIndex (pos : String.Index, var by: Int) -> String.Index {
+			var ipos = pos
+			while (by > 0) && (pos < Str.endIndex) {
+				ipos++; by--
+			}
+			return ipos
+		}
+		
+		/* round numbers */
+		A.real = A.real.Add(Real.one).Sub(Real.one)
+		A.imag = A.imag.Add(Real.one).Sub(Real.one)
+		
+		iZero = A.imag.isZero(); rZero = A.real.isZero()
+		ds = 3
+		if Complex.nState.Notation != NotationType.Normal { ExpWidth = 1 } else { ExpWidth = 0 }
+		EngFormat = Complex.nState.Notation == NotationType.Engineering
+		if iZero || !rZero {
+			Str = A.real.ToString(Complex.nState.DecPoint, ExpWidth: ExpWidth, EngFormat: EngFormat) /* real part */
+		} else {
+			Str = ""
+		}
+		if !iZero {
+			Aim = A.imag
+			if !Aim.isNegative() {
+				if !rZero { Str.append(Character("+")) }
+			} else {
+				Str.append(Character("-"))
+			}
+			Aim = Aim.Abs()
+			if Aim.Cmp(Real.one) != 0 {
+				Result = Aim.ToString(Complex.nState.DecPoint, ExpWidth: ExpWidth, EngFormat: EngFormat)  /* imaginary part */
+				Str += Result
+			}
+			Str.append(Character("i"))
+		}
+		
+		/* add digit separators */
+		var dp = Str.rangeOfString(".")				/* find location of decimal point */
+		if dp == nil {
+			dp = Str.endIndex...Str.endIndex
+		} else if Complex.nState.DigSep == "." {
+			Str = SetChar(Str, dp!, ",")
+		}
+		if Complex.nState.DigSep != "\0" {
+			var i = DecIndex(dp!.startIndex, ds)	/* insert whole separator */
+			while i > Str.startIndex {
+				Str = InsertChar(Str, i, Complex.nState.DigSep)
+				i = DecIndex(i, ds)
+			}
+		}
+		if Complex.nState.FracSep != "\0" {
+			var i = IncIndex(dp!.startIndex, ds+1)	/* insert fraction separator */
+			while i < Str.endIndex {
+				Str = InsertChar(Str, i, Complex.nState.DigSep)
+				i = IncIndex(i, ds+1)
+			}
+		}
+		return Str
+	} // Format;
+	
+	func Conj () -> Complex {
+		return Complex(re: self.real, im: Real.zero.Sub(self.imag))
+	} // Conj;
+	
+	
+	func PolarMag () -> Real {
+		var A: Real
+		var B = self
+		
+		if B.imag.isZero() {
+			return B.real.Abs()
+		} else if B.real.isZero() {
+			return B.imag.Abs()
+		} else {
+			A = B.imag.Mul(B.imag)
+			A = A.Add(B.real.Mul(B.real))
+			return A.Sqrt()
+		}
+	} // PolarMag;
+	
+	func PolarAngle () -> Real {
+		return FromRadians(self.imag.Arctan2(self.real))
+	} // PolarAngle;
+	
+	func Short () -> Double {
+		return self.real.Short()
+	} // Short;
+	
+	
+	func Neg () -> Complex {
+		return Complex(re: Real.zero.Sub(self.real), im: Real.zero.Sub(self.imag))
+	} // Neg;
+	
+	
+	func Add (C : Complex) -> Complex {
+		/** A = B + C = (a + bi) + (c + di) = (a+c) + (b+d)i */
+		return Complex(re: self.real.Add(C.real), im: self.imag.Add(C.imag))
+	} // Add;
+	
+	
+	func Sub (C : Complex) -> Complex {
+		/** A = B - C = (a + bi) - (c + di) = (a-c) + (b-d)i */
+		return Complex(re: self.real.Sub(C.real), im: self.imag.Sub(C.imag))
+	} // Sub;
+	
+	func Mul (C : Complex) -> Complex {
+		var r, i: Real
+		/* A = B * C = (a + bi) * (c + di) = (ac-bd) + (ad+bc)i */
+		r = self.real.Mul(C.real); i = self.real.Mul(C.imag);
+		return Complex(re: r.Sub(self.imag.Mul(C.imag)), im: i.Add(self.imag.Mul(C.real)))
+	} // Mul;
+	
+	func Div (C : Complex) -> Complex {
+		var div, r, i : Real
+		/**
+		A = B / C = (a + bi) / (c + di) = (ac+bd)/e + (bc-ad)/e i
+		where e = c^2+d^2
+		*/
+		div = C.real.Mul(C.real); div = div.Add(C.imag.Mul(C.imag));
+		r = self.real.Mul(C.real); r = r.Add(self.imag.Mul(C.imag));
+		i = self.imag.Mul(C.real); i = i.Sub(self.real.Mul(C.imag));
+		return Complex(re: r.Div(div), im: i.Div(div))
+	} // Div;
+	
+	func Cmp (b: Complex) -> Int {
+		/**
+		This routine compares the extended numbers `a' and `b' and
+		returns the value -1, 0, or 1 depending on whether 'a'<'b',
+		'a'='b', or 'a'>'b'.  It is faster than merely subtracting
+		'a' and 'b' and looking at the sign of the result.
+		*/
+		var c: Real
+		if self.imag.isZero() { c = self.real } else { c = self.PolarMag() }
+		if b.imag.isZero() {
+			return c.Cmp(b.real)
+		} else {
+			return c.Cmp(self.PolarMag())
+		}
+	} // Cmp;
+	
 //	func /* (a: Complex) */ Store* (w: Storable.Writer) RAISES IO.Error;
 //	/** Write 'a' to the 'w' writer. */
 //	
@@ -375,114 +378,77 @@
 //	NEW(a.real); NEW(a.imag);
 //	a.real.Load(r); a.imag.Load(r);
 //	} // Load;
-//	
-//	/*---------------------------------------------------------*/
-//	/* Power and transcendental routines                       */
-//	
-//	func /* (x: Complex) */ IPower * (i : Int) -> Complex {
-//	var
-//	Y : Complex;
-//	negative : Bool;
-//	
-//	Y  =  one;
-//	negative  =  i < 0;
-//	i  =  ABS(i);
-//	LOOP
-//	if ODD(i) { Y = Y.Mul(x) }
-//	i  =  i DIV 2;
-//	if i = 0 { EXIT }
-//	x = x.Mul(x);
-//	}
-//	if negative {
-//	return one.Div(Y);
-//	} else {
-//	return Y
-//	}
-//	} // IPower;
-//	
-//	
-//	func /* (x: Complex) */ IRoot * (i : Int) -> Complex {
-//	var r, theta: Real; izero: Bool;
-//	
-//	izero = IsZero(x.imag);
-//	if izero & ~IsNegative(x.real) {
-//	return Init(x.real.IRoot(i), X.zero)
-//	ELSif izero & ODD(i) {
-//	r = x.real.Abs(); r = r.IRoot(i);
-//	return Init(X.zero.Sub(r), X.zero)
-//	} else {
-//	r = x.PolarMag(); theta = x.PolarAngle();
-//	return ToRectangular(r.IRoot(i), theta.Div(X.Long(i)))
-//	}
-//	} // IRoot;
-//	
-//	
-//	func fromRadians (radianAngle: Real) -> Real {
-//	var
-//	K180, K200: Real;
-//	
-//	/* conversion to/from radian angles */
-//	if nState.DegRadFlag=Degrees {
-//	K180 = X.Long(180);
-//	return radianAngle.Mul(K180.Div(X.pi))
-//	ELSif nState.DegRadFlag=Gradians {
-//	K200 = X.Long(200);
-//	return radianAngle.Mul(K200.Div(X.pi))
-//	} else {
-//	return radianAngle
-//	}
-//	} // fromRadians;
-//	
-//	
-//	func toRadians (radianAngle : Real) -> Real {
-//	/* Convert an angular measure into radians */
-//	
-//	/* conversion to/from radian angles */
-//	if nState.DegRadFlag=Degrees {
-//	return radianAngle.Mul(X.pi.Div(X.Long(180)))
-//	ELSif nState.DegRadFlag=Gradians {
-//	return radianAngle.Mul(X.pi.Div(X.Long(200)))
-//	} else {
-//	return radianAngle
-//	}
-//	} // toRadians;
-//	
-//	
-//	func /* (x: Complex) */ fromRadians * () -> Complex {
-//	/* Convert a radian measure into current angle measure */
-//	
-//	return Init(fromRadians(x.real), fromRadians(x.imag))
-//	} // fromRadians;
-//	
-//	
-//	func /* (x: Complex) */ toRadians*() -> Complex {
-//	/* Convert an angle measure into radians */
-//	
-//	return Init(toRadians(x.real), toRadians(x.imag))
-//	} // toRadians;
-//	
-//	
-//	func /* (x: Complex) */ Sqrt* () -> Complex {
-//	
-//	return x.IRoot(2);
-//	} // Sqrt;
-//	
-//	
+	
+	/*---------------------------------------------------------*/
+	/* Power and transcendental routines                       */
+	
+	func IPower (var i : Int) -> Complex {
+		var Y = Complex.one
+		var negative = i < 0
+		var x = self
+		i  =  abs(i)
+		for ;; {
+			if (i&1) != 0 { Y = Y.Mul(x) }
+			i  =  i / 2
+			if i == 0 { break }
+			x = x.Mul(x)
+		}
+		if negative {
+			return Complex.one.Div(Y)
+		} else {
+			return Y
+		}
+	} // IPower;
+	
+	
+	func /* (x: Complex) */ IRoot (i : Int) -> Complex {
+		var r, theta: Real
+		var x = self
+		let izero = x.imag.isZero()
+		if izero && !x.real.isZero() {
+			return Complex(re: x.real.IRoot(i), im: Real.zero)
+		} else if izero && ((i&1) != 0) {
+			r = x.real.Abs(); r = r.IRoot(i);
+			return Complex(re: Real.zero.Sub(r), im: Real.zero)
+		} else {
+			r = x.PolarMag(); theta = x.PolarAngle()
+			return Complex(r: r.IRoot(i), theta: theta.Div(Real(fromInt: i)))
+		}
+	} // IRoot;
+
+	
+	func fromRadians () -> Complex {
+		/* Convert a radian measure into current angle measure */
+		return Complex(re: FromRadians(self.real), im: FromRadians(self.imag))
+	} // fromRadians;
+	
+	
+	func toRadians () -> Complex {
+		/* Convert an angle measure into radians */
+		return Complex(re: ToRadians(self.real), im: ToRadians(self.imag))
+	} // toRadians;
+	
+	
+	func Sqrt () -> Complex {
+		return self.IRoot(2)
+	} // Sqrt;
+	
+	
 //	func /* (x: Complex) */ Ln* () -> Complex {
 //	var
 //	pos : Bool;
 //	t, half: Real;
 //	
 //	if IsZero(x.imag) {
-//	pos  =  ~IsNegative(x.real);
+//	pos  =  !IsNegative(x.real);
 //	t = x.real.Abs();
 //	if pos { return Init(t.Ln(), X.zero)
 //	} else { return Init(t.Ln(), X.pi)
 //	}
-//	ELSif IsZero(x.real) {
-//	pos  =  ~IsNegative(x.imag);
-//	t = x.imag.Abs(); half = X.Long(0.5);
-//	if ~pos {
+//	} else if IsZero(x.real) {
+//	pos  =  !IsNegative(x.imag);
+//	t = x.imag.Abs(); half = Real(fromInt: 0.5);
+//	if !pos {
 //	return Init(t.Ln(), X.zero.Sub(half.Mul(X.pi)))
 //	} else {
 //	return Init(t.Ln(), half.Mul(X.pi))
@@ -498,7 +464,7 @@
 //	var
 //	lne : Real; /* log e */
 //	
-//	lne = X.one.Exp();  /* e */
+//	lne = Real.one.Exp();  /* e */
 //	lne = lne.Log();
 //	x = x.Ln();
 //	return Init(x.real.Mul(lne), x.imag.Mul(lne))
@@ -514,8 +480,8 @@
 //	func /* (x: Complex) */ Power* (y : Complex) -> Complex {
 //	var p : LONGREAL;
 //	
-//	if IsZero(y.imag) & ~IsNegative(y.real) { /* just real powers */
-//	if IsZero(x.imag) & ~IsNegative(x.real) { /* real numbers */
+//	if IsZero(y.imag) & !IsNegative(y.real) { /* just real powers */
+//	if IsZero(x.imag) & !IsNegative(x.real) { /* real numbers */
 //	return Init(x.real.Power(y.real), X.zero)
 //	} else {
 //	p = y.Short();
@@ -532,8 +498,8 @@
 //	func /* (x: Complex) */ Root* (y : Complex) -> Complex {
 //	var r:LONGREAL;
 //	
-//	if IsZero(y.imag) & ~IsNegative(y.real) { /* just real roots */
-//	if IsZero(x.imag) & ~IsNegative(x.real) { /* real numbers */
+//	if IsZero(y.imag) & !IsNegative(y.real) { /* just real roots */
+//	if IsZero(x.imag) & !IsNegative(x.real) { /* real numbers */
 //	return Init(x.real.IRoot(ENTIER(y.real.Short())), X.zero)
 //	} else { r = y.Short();
 //	if (ABS(r) < MAX(Int)) & IsZero(y.real.Fraction()) {
@@ -580,7 +546,7 @@
 //	func /* (x: Complex) */ Tan* () -> Complex {
 //	var TWO, d, s, c, sh, ch: Real;
 //	
-//	TWO = X.Long(2.0); s = toRadians(x.real);
+//	TWO = Real(fromInt: 2.0); s = toRadians(x.real);
 //	s = TWO.Mul(s); sh = TWO.Mul(x.imag);
 //	s.SinCos(s, c); sh.SinhCosh(sh, ch);
 //	d = ch.Add(c);
@@ -591,9 +557,9 @@
 //	func CalcAlphaBeta (z : Complex; var a, b: Real);
 //	var x, x2, y, r, t, HALF: Real;
 //	
-//	HALF = X.Long(0.5);
-//	x = z.real.Add(X.one); x = x.Mul(x); y = z.imag.Mul(z.imag);
-//	x2 = z.real.Sub(X.one); x2 = x2.Mul(x2);
+//	HALF = Real(fromInt: 0.5);
+//	x = z.real.Add(Real.one); x = x.Mul(x); y = z.imag.Mul(z.imag);
+//	x2 = z.real.Sub(Real.one); x2 = x2.Mul(x2);
 //	t = x.Add(y); r = t.Sqrt(); t = x2.Add(y);
 //	t = t.Sqrt();
 //	a = HALF.Mul(r.Add(t));
@@ -605,7 +571,7 @@
 //	var a, b, t: Real;
 //	
 //	CalcAlphaBeta(x, a, b);
-//	t = a.Mul(a); t = t.Sub(X.one); t = a.Add(t.Sqrt());
+//	t = a.Mul(a); t = t.Sub(Real.one); t = a.Add(t.Sqrt());
 //	return Init(fromRadians(b.Arcsin()), t.Ln())
 //	} // Arcsin;
 //	
@@ -613,7 +579,7 @@
 //	var a, b, t: Real;
 //	
 //	CalcAlphaBeta(x, a, b);
-//	t = a.Mul(a); t = t.Sub(X.one); t = a.Add(t.Sqrt());
+//	t = a.Mul(a); t = t.Sub(Real.one); t = a.Add(t.Sqrt());
 //	return Init(fromRadians(b.Arccos()), X.zero.Sub(t.Ln()))
 //	} // Arccos;
 //	
@@ -621,11 +587,11 @@
 //	func (z : Complex) Arctan* () -> Complex {
 //	var x, x2, y2, y, yp, TWO, HALF, QUARTER, t: Real;
 //	
-//	TWO = X.Long(2.0); HALF = X.Long(0.5); QUARTER = X.Long(0.25);
-//	x = TWO.Mul(z.real); y = z.imag.Add(X.one); y = y.Mul(y);
-//	yp = z.imag.Sub(X.one); yp = yp.Mul(yp);
+//	TWO = Real(fromInt: 2.0); HALF = Real(fromInt: 0.5); QUARTER = Real(fromInt: 0.25);
+//	x = TWO.Mul(z.real); y = z.imag.Add(Real.one); y = y.Mul(y);
+//	yp = z.imag.Sub(Real.one); yp = yp.Mul(yp);
 //	x2 = z.real.Mul(z.real); y2 = z.imag.Mul(z.imag);
-//	t = X.one.Sub(x2); t = t.Sub(y2); t = x.Div(t);
+//	t = Real.one.Sub(x2); t = t.Sub(y2); t = x.Div(t);
 //	x = HALF.Mul(t.Arctan());
 //	t = x2.Add(y); t = t.Div(x2.Add(yp));
 //	y = QUARTER.Mul(t.Ln());
@@ -716,19 +682,6 @@
 //	w.WriteBool(nState.Rational);
 //	} // Store;
 //	
-//	func Default*;
-//	
-//	/* set up default state */
-//	nState.LocalBase = 10;
-//	nState.Notation = Normal;
-//	nState.DecPoint = 0;
-//	nState.DegRadFlag = Degrees;
-//	nState.DigSep = 0X;
-//	nState.FracSep = 0X;
-//	X.SetDigits(16);
-//	nState.Rational = FALSE;
-//	} // Default;
-//	
 //	func Load*(r: Storable.Reader) RAISES IO.Error;
 //	/** Read calculator state from the 'r' reader. */
 //	var digs: Int;
@@ -743,7 +696,13 @@
 //	X.SetDigits(digs);
 //	r.ReadBool(nState.Rational);
 //	} // Load;
-//	
+
+	func Default () {
+		Complex.nState.Default()
+		Real.digits = 10
+	}
+	
+	
 //	/*
 //	func Test;
 //	var
@@ -769,9 +728,5 @@
 //	Out.Object(x); Out.Ln;
 //	} // Test;
 //	*/
-//	
-////	
-////	Default();
-////	one = Init(X.one, X.zero);
-////	zero = Init(X.zero, X.zero);
-//}
+
+}

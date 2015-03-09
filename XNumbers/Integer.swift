@@ -31,7 +31,7 @@ func < (lhs: Integer, rhs: Integer) -> Bool {
 }
 
 prefix func - (a: Integer) -> Integer {
-	var z = Integer(a: a)
+	var z = Integer(fromInteger: a)
 	z.negative = !a.negative
 	return z
 }
@@ -95,7 +95,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 	@ofield{digit}[@var{i}] <= mask}.  */
 
 	static let zero = Integer(size: 0)
-	static let one = Integer(value: 1)
+	static let one = Integer(fromInt: 1)
 	
 	private let powerOf2: [Int] = [-1, -1, 1, -1, 2, -1, -1, -1, 3, -1, -1,
 		-1, -1, -1, -1, -1, 4, -1, -1, -1, -1,
@@ -130,22 +130,22 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		self.negative = false
 	}
 	
-	init (a: Integer) {
+	init (fromInteger a: Integer) {
 		self.init(size: a.digit.count)
 		digit = a.digit
 		negative = a.negative
 	}
 	
-	init (str: String, inputBase: Int) {
+	init (fromString str: String, withBase: Int) {
 		self.init(size:0)
-		self = self.ToInteger(str, inputBase: inputBase)
+		self = self.ToInteger(str, inputBase: withBase)
 	}
 	
-	init (str: String) {
-		self.init(str: str, inputBase: 10)
+	init (fromString str: String) {
+		self.init(fromString: str, withBase: 10)
 	}
 	
-	init (value: Int) {
+	init (fromInt value: Int) {
 		let maxDigits = (sizeof(Digit)*8+Integer.shift-2) / Integer.shift
 		var lvalue = value
 		var size, i: Int
@@ -156,7 +156,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		} else {
 			if lvalue < 0 {
 				if lvalue == Int.min { /* handle overflow for -MIN(LONGINT) */
-					self.init(value: Int(lvalue+1))
+					self.init(fromInt: Int(lvalue+1))
 					if digit[0] == Integer.mask {
 						self = AddAbs(self, b: Integer.one)
 						negative = true
@@ -276,6 +276,17 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 	func IsNegative () -> Bool {
 		return negative
 	}
+	
+	func Sign () -> Int {
+		var x = self
+		if x.negative {
+			return -1
+		} else if x.IsZero() {
+			return 0
+		} else {
+			return 1
+		}
+	}
 
 	func Cmp (b: Integer) -> Int {
 		var i, res: Int
@@ -308,7 +319,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		if !self.negative {
 			return self
 		} else {
-			z = Integer(a:self)
+			z = Integer(fromInteger:self)
 			z.negative = false
 			return z
 		}
@@ -603,7 +614,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 			if sizeB == 1 {
 				remDigit = 0
 				z = DivRem1(a, n:b.digit[0], rem:&remDigit)
-				rem = Integer(value:Int(remDigit))
+				rem = Integer(fromInt: Int(remDigit))
 			} else {
 				z = DivRemAbs(a, w1:b, rem:&rem)
 			}
@@ -707,7 +718,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 			}
 			
 			/* Get a scratch area for repeated division. */
-			scratch = Integer(a: self)
+			scratch = Integer(fromInteger: self)
 			size = sizeA;
 			
 			/* Repeatedly divide by powbase. */
@@ -930,7 +941,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 			return Integer.zero						/* out of range */
 		}
 		if x<2 { return Integer.one }				/* 0! & 1! */
-		f=Integer.one; xi=Integer(value: x)
+		f=Integer.one; xi=Integer(fromInt: x)
 		while lx>1 {
 			f=f.Mul(xi); lx--						/* f=f*x */
 			xi.digit[0] = lx % base					/* convert to Integer */
@@ -1062,10 +1073,8 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		
 		print("ZERO="); OutInt(Integer.zero)
 		print("ONE="); OutInt(Integer.one)
-		n=Integer(str: "123456789012345678900000000000000000000")
-//		n=Integer(str: "1000000000")
-		m=Integer(str:                    "55554444333322221111")
-//		m=Integer(str:                    "100000")
+		n=Integer(fromString: "123456789012345678900000000000000000000")
+		m=Integer(fromString:                    "55554444333322221111")
 		switch n.Cmp(m) {
 		case 0: println("n=m")
 		case 1: println("n>m")
@@ -1087,24 +1096,24 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		print("n % m="); OutInt(s)
 		s=n.Div(m); s=s.Mul(m); s=s.Add(n.Mod(m));
 		print("m*(n / m)+(n % m)="); OutInt(s)
-		n=Integer(value: 2)
+		n=Integer(fromInt: 2)
 		s=n.Power(64)
 		print("2^64="); OutInt(s)
-		n=Integer(str: "-FFFF", inputBase:16)
+		n=Integer(fromString: "-FFFF", withBase:16)
 		print("-FFFF="); OutInt(n)
 		print("-FFFF="); print(n.description(16)); println("H")
-		n=Integer(str: "-10000000000000", inputBase:10)
+		n=Integer(fromString: "-10000000000000", withBase:10)
 		print("-10000000000000="); OutInt(n)
-		n=Integer(str: "-10000000000000000", inputBase: 2)
+		n=Integer(fromString: "-10000000000000000", withBase: 2)
 		print("-10000000000000000B="); OutInt(n)
 		print("-10000000000000000B="); print(n.description(2)); println("B")
-		n=Integer(value: -8)
+		n=Integer(fromInt: -8)
 		print("-8^3="); OutInt(n.Power(3))
 		print("69!="); OutInt(Factorial(69))
-		n=Integer(str: "123456789012345")
-		print("GCD(123456789012345, 87654321)="); OutInt(n.GCD(Integer(value: 87654321)))
+		n=Integer(fromString: "123456789012345")
+		print("GCD(123456789012345, 87654321)="); OutInt(n.GCD(Integer(fromInt: 87654321)))
 		print("Random(50)="); OutInt(Random(50))
-		print("New(987654321)="); OutInt(Integer(value:987654321))
+		print("New(987654321)="); OutInt(Integer(fromInt: 987654321))
 		print("zero SetBit 16="); OutInt(Integer.zero.SetBit(16))
 		print("one ClearBit 0="); OutInt(Integer.one.ClearBit(0))
 		print("zero ToggleBit 16="); OutInt(Integer.zero.ToggleBit(16))
