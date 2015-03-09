@@ -434,171 +434,175 @@ struct Complex {
 	} // Sqrt;
 	
 	
-//	func /* (x: Complex) */ Ln* () -> Complex {
-//	var
-//	pos : Bool;
-//	t, half: Real;
-//	
-//	if IsZero(x.imag) {
-//	pos  =  !IsNegative(x.real);
-//	t = x.real.Abs();
-//	if pos { return Init(t.Ln(), X.zero)
-//	} else { return Init(t.Ln(), X.pi)
-//	}
-//	} else if IsZero(x.real) {
-//	pos  =  !IsNegative(x.imag);
-//	t = x.imag.Abs(); half = Real(fromInt: 0.5);
-//	if !pos {
-//	return Init(t.Ln(), X.zero.Sub(half.Mul(X.pi)))
-//	} else {
-//	return Init(t.Ln(), half.Mul(X.pi))
-//	}
-//	} else {
-//	t = x.PolarMag();
-//	return Init(t.Ln(), x.PolarAngle())
-//	}
-//	} // Ln;
-//	
-//	
-//	func /* (x: Complex) */ Log* (base: Real) -> Complex {
-//	var
-//	lne : Real; /* log e */
-//	
-//	lne = Real.one.Exp();  /* e */
-//	lne = lne.Log();
-//	x = x.Ln();
-//	return Init(x.real.Mul(lne), x.imag.Mul(lne))
-//	} // Log;
-//	
-//	
-//	func /* (x: Complex) */ Exp* () -> Complex {
-//	
-//	return ToRectangular(x.real.Exp(), x.imag)
-//	} // Exp;
-//	
-//	
-//	func /* (x: Complex) */ Power* (y : Complex) -> Complex {
-//	var p : LONGREAL;
-//	
-//	if IsZero(y.imag) & !IsNegative(y.real) { /* just real powers */
-//	if IsZero(x.imag) & !IsNegative(x.real) { /* real numbers */
-//	return Init(x.real.Power(y.real), X.zero)
-//	} else {
-//	p = y.Short();
-//	if (ABS(p) < MAX(Int)) & IsZero(y.real.Fraction()) {
-//	return x.IPower(ENTIER(p))
-//	} else { x = y.Mul(x.Ln()); return x.Exp()
-//	}
-//	}
-//	} else { x = y.Mul(x.Ln()); return x.Exp()
-//	}
-//	} // Power;
-//	
-//	
-//	func /* (x: Complex) */ Root* (y : Complex) -> Complex {
-//	var r:LONGREAL;
-//	
-//	if IsZero(y.imag) & !IsNegative(y.real) { /* just real roots */
-//	if IsZero(x.imag) & !IsNegative(x.real) { /* real numbers */
-//	return Init(x.real.IRoot(ENTIER(y.real.Short())), X.zero)
-//	} else { r = y.Short();
-//	if (ABS(r) < MAX(Int)) & IsZero(y.real.Fraction()) {
-//	return x.IRoot(ENTIER(r))
-//	} else { x = x.Ln(); x = x.Div(y); return x.Exp()
-//	}
-//	}
-//	} else { x = x.Ln(); x = x.Div(y); return x.Exp()
-//	}
-//	} // Root;
-//	
-//	
-//	func /* (x: Complex) */ Sin* () -> Complex {
-//	var
-//	s,c,sh,ch: Real;
-//	
-//	s = toRadians(x.real);
-//	s.SinCos(s, c); x.imag.SinhCosh(sh, ch);
-//	return Init(s.Mul(ch), c.Mul(sh))
-//	} // Sin;
-//	
-//	
-//	func /* (x: Complex) */ Cos* () -> Complex {
-//	var
-//	s,c,sh,ch: Real;
-//	
-//	s = toRadians(x.real);
-//	s.SinCos(s, c); x.imag.SinhCosh(sh, ch);
-//	return Init(c.Mul(ch), X.zero.Sub(s.Mul(sh)))
-//	} // Cos;
-//	
-//	
-//	func /* (x: Complex) */ SinCosC* (var sin, cos: Complex);
-//	var
-//	s,c,sh,ch: Real;
-//	
-//	s = toRadians(x.real);
-//	s.SinCos(s, c); x.imag.SinhCosh(sh, ch);
-//	sin = Init(s.Mul(ch), c.Mul(sh));
-//	cos = Init(s.Mul(c), X.zero.Sub(sh.Mul(sh)))
-//	} // SinCosC;
-//	
-//	
-//	func /* (x: Complex) */ Tan* () -> Complex {
-//	var TWO, d, s, c, sh, ch: Real;
-//	
-//	TWO = Real(fromInt: 2.0); s = toRadians(x.real);
-//	s = TWO.Mul(s); sh = TWO.Mul(x.imag);
-//	s.SinCos(s, c); sh.SinhCosh(sh, ch);
-//	d = ch.Add(c);
-//	return Init(s.Div(d), sh.Div(d))
-//	} // Tan;
-//	
-//	
-//	func CalcAlphaBeta (z : Complex; var a, b: Real);
-//	var x, x2, y, r, t, HALF: Real;
-//	
-//	HALF = Real(fromInt: 0.5);
-//	x = z.real.Add(Real.one); x = x.Mul(x); y = z.imag.Mul(z.imag);
-//	x2 = z.real.Sub(Real.one); x2 = x2.Mul(x2);
-//	t = x.Add(y); r = t.Sqrt(); t = x2.Add(y);
-//	t = t.Sqrt();
-//	a = HALF.Mul(r.Add(t));
-//	b = r.Sub(t); b = b.Mul(HALF)
-//	} // CalcAlphaBeta;
-//	
-//	
-//	func /* (x: Complex) */ Arcsin* () -> Complex {
-//	var a, b, t: Real;
-//	
-//	CalcAlphaBeta(x, a, b);
-//	t = a.Mul(a); t = t.Sub(Real.one); t = a.Add(t.Sqrt());
-//	return Init(fromRadians(b.Arcsin()), t.Ln())
-//	} // Arcsin;
-//	
-//	func /* (x: Complex) */ Arccos* () -> Complex {
-//	var a, b, t: Real;
-//	
-//	CalcAlphaBeta(x, a, b);
-//	t = a.Mul(a); t = t.Sub(Real.one); t = a.Add(t.Sqrt());
-//	return Init(fromRadians(b.Arccos()), X.zero.Sub(t.Ln()))
-//	} // Arccos;
-//	
-//	
-//	func (z : Complex) Arctan* () -> Complex {
-//	var x, x2, y2, y, yp, TWO, HALF, QUARTER, t: Real;
-//	
-//	TWO = Real(fromInt: 2.0); HALF = Real(fromInt: 0.5); QUARTER = Real(fromInt: 0.25);
-//	x = TWO.Mul(z.real); y = z.imag.Add(Real.one); y = y.Mul(y);
-//	yp = z.imag.Sub(Real.one); yp = yp.Mul(yp);
-//	x2 = z.real.Mul(z.real); y2 = z.imag.Mul(z.imag);
-//	t = Real.one.Sub(x2); t = t.Sub(y2); t = x.Div(t);
-//	x = HALF.Mul(t.Arctan());
-//	t = x2.Add(y); t = t.Div(x2.Add(yp));
-//	y = QUARTER.Mul(t.Ln());
-//	return Init(fromRadians(x), y)
-//	} // Arctan;
-//	
-//	
+	func Ln () -> Complex {
+		var pos : Bool
+		var t, half: Real
+		var x = self
+		
+		if x.imag.isZero() {
+			pos = !x.real.isNegative()
+			t = x.real.Abs()
+			if pos { return Complex(re: t.Ln(), im: Real.zero)
+			} else { return Complex(re: t.Ln(), im: Real.pi)
+			}
+		} else if x.real.isZero() {
+			pos = !x.imag.isNegative()
+			t = x.imag.Abs(); half = Real(fromDouble: 0.5)
+			if !pos {
+				return Complex(re: t.Ln(), im: Real.zero.Sub(half.Mul(Real.pi)))
+			} else {
+				return Complex(re: t.Ln(), im: half.Mul(Real.pi))
+			}
+		} else {
+			t = x.PolarMag()
+			return Complex(r: t.Ln(), theta: x.PolarAngle())
+		}
+	} // Ln;
+	
+	
+	func Log (base: Complex) -> Complex {
+		var x = self.Ln()
+		return x.Div(base.Ln())
+	} // Log;
+	
+	
+	func Exp () -> Complex {
+		return Complex(r: self.real.Exp(), theta: self.imag)
+	} // Exp;
+	
+	
+	func Power (y : Complex) -> Complex {
+		var p : Double
+		var x = self
+		
+		if y.imag.isZero() && !y.real.isNegative() { /* just real powers */
+			if x.imag.isZero() && !x.real.isNegative() { /* real numbers */
+				return Complex(re: x.real.Power(y.real), im: Real.zero)
+			} else {
+				p = y.Short()
+				if (abs(p) < Double(Int.max)) && y.real.Fraction().isZero() {
+					return x.IPower(Int(p))
+				} else {
+					x = y.Mul(x.Ln()); return x.Exp()
+				}
+			}
+		} else {
+			x = y.Mul(x.Ln()); return x.Exp()
+		}
+	} // Power;
+	
+	
+	func Root (y : Complex) -> Complex {
+		var r: Double
+		var x = self
+		
+		if y.imag.isZero() && !y.real.isNegative() { /* just real roots */
+			if x.imag.isZero() && !x.real.isNegative() { /* real numbers */
+				return Complex(re: x.real.IRoot(Int(y.real.Short())), im: Real.zero)
+			} else {
+				r = y.Short()
+				if (abs(r) < Double(Int.max)) && y.real.Fraction().isZero() {
+					return x.IRoot(Int(r))
+				} else {
+					x = x.Ln(); x = x.Div(y); return x.Exp()
+				}
+			}
+		} else {
+			x = x.Ln(); x = x.Div(y); return x.Exp()
+		}
+	} // Root;
+	
+	
+	func Sin () -> Complex {
+		var s,c,sh,ch: Real
+		var x = self
+		s = ToRadians(x.real); c = Real.zero; ch = Real.zero; sh = Real.zero
+		s.SinCos(&s, cos: &c); x.imag.SinhCosh(&sh, cosh: &ch)
+		return Complex(re: s.Mul(ch), im: c.Mul(sh))
+	} // Sin;
+	
+	
+	func Cos () -> Complex {
+		var s,c,sh,ch: Real
+		var x = self
+		s = ToRadians(x.real); c = Real.zero; ch = Real.zero; sh = Real.zero
+		s.SinCos(&s, cos: &c); x.imag.SinhCosh(&sh, cosh: &ch)
+		return Complex(re: c.Mul(ch), im: Real.zero.Sub(s.Mul(sh)))
+	} // Cos;
+	
+	
+	func SinCos (inout sin: Complex, inout cos: Complex) {
+		var s,c,sh,ch: Real
+		var x = self
+		s = ToRadians(x.real); c = Real.zero; ch = Real.zero; sh = Real.zero
+		s.SinCos(&s, cos: &c); x.imag.SinhCosh(&sh, cosh: &ch)
+		sin = Complex(re: s.Mul(ch), im: c.Mul(sh))
+		cos = Complex(re: s.Mul(c), im: Real.zero.Sub(sh.Mul(sh)))
+	} // SinCosC;
+	
+	
+	func Tan () -> Complex {
+		var d, s, c, sh, ch: Real
+		var x = self
+		
+		let TWO = Real(fromInt: 2); s = ToRadians(x.real)
+		s = TWO.Mul(s); sh = TWO.Mul(x.imag)
+		c = Real.zero; ch = Real.zero; sh = Real.zero
+		s.SinCos(&s, cos: &c); sh.SinhCosh(&sh, cosh: &ch)
+		d = ch.Add(c);
+		return Complex(re: s.Div(d), im: sh.Div(d))
+	} // Tan;
+	
+	
+	private func CalcAlphaBeta (inout a: Real, inout b: Real) {
+		var x, x2, y, r, t: Real
+		var z = self
+		let HALF = Real(fromDouble: 0.5)
+		x = z.real.Add(Real.one); x = x.Mul(x); y = z.imag.Mul(z.imag)
+		x2 = z.real.Sub(Real.one); x2 = x2.Mul(x2)
+		t = x.Add(y); r = t.Sqrt(); t = x2.Add(y)
+		t = t.Sqrt()
+		a = HALF.Mul(r.Add(t))
+		b = r.Sub(t); b = b.Mul(HALF)
+	} // CalcAlphaBeta;
+	
+	
+	func /* (x: Complex) */ Arcsin () -> Complex {
+		var a, b, t: Real
+		var x = self
+		a = Real.zero; b = Real.zero
+		x.CalcAlphaBeta(&a, b: &b)
+		t = a.Mul(a); t = t.Sub(Real.one); t = a.Add(t.Sqrt());
+		return Complex(re: FromRadians(b.Arcsin()), im: t.Ln())
+	} // Arcsin;
+	
+	func /* (x: Complex) */ Arccos () -> Complex {
+		var a, b, t: Real
+		var x = self
+		a = Real.zero; b = Real.zero
+		x.CalcAlphaBeta(&a, b: &b)
+		t = a.Mul(a); t = t.Sub(Real.one); t = a.Add(t.Sqrt())
+		return Complex(re: FromRadians(b.Arccos()), im: Real.zero.Sub(t.Ln()))
+	} // Arccos;
+	
+	
+	func Arctan () -> Complex {
+		var x, x2, y2, y, yp, t: Real
+		var z = self
+		let TWO = Real(fromInt: 2)
+		let HALF = Real(fromDouble: 0.5)
+		let QUARTER = Real(fromDouble: 0.25)
+		x = TWO.Mul(z.real); y = z.imag.Add(Real.one); y = y.Mul(y)
+		yp = z.imag.Sub(Real.one); yp = yp.Mul(yp)
+		x2 = z.real.Mul(z.real); y2 = z.imag.Mul(z.imag)
+		t = Real.one.Sub(x2); t = t.Sub(y2); t = x.Div(t)
+		x = HALF.Mul(t.Arctan())
+		t = x2.Add(y); t = t.Div(x2.Add(yp))
+		y = QUARTER.Mul(t.Ln())
+		return Complex(re: FromRadians(x), im: y)
+	} // Arctan;
+	
+	
 //	func /* (x: Complex) */ Sinh* () -> Complex {
 //	var
 //	s1, c1, s2, c2: Real;
