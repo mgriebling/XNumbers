@@ -162,13 +162,21 @@ struct Complex {
 	/* Constructors */
 	
 	init() {
-		self.real = Real(fromInt: 0)
-		self.imag = Real(fromInt: 0)
+		self.real = Real.zero
+		self.imag = Real.zero
 	}
 	
 	init (re: Real, im : Real) {
 		self.real = re; self.imag = im
 	} // Init;
+	
+	init (fromDouble: Double) {
+		self.init(fromReal:Real(fromDouble: fromDouble))
+	}
+	
+	init (fromReal: Real) {
+		self.init(re:fromReal, im:Real.zero)
+	}
 	
 	init (r: Real, theta: Real) {
 		var s, c: Real
@@ -603,76 +611,76 @@ struct Complex {
 	} // Arctan;
 	
 	
-//	func /* (x: Complex) */ Sinh* () -> Complex {
-//	var
-//	s1, c1, s2, c2: Real;
-//	
-//	x.real.SinhCosh(s1, c1); x.imag.SinhCosh(s2, c2);
-//	return Init(s1.Mul(c2), c1.Mul(s2))
-//	} // Sinh;
-//	
-//	
-//	func /* (x: Complex) */ Cosh* () -> Complex {
-//	var
-//	s1, c1, s2, c2: Real;
-//	
-//	x.real.SinhCosh(s1, c1); x.imag.SinhCosh(s2, c2);
-//	return Init(c1.Mul(c2), s1.Mul(s2))
-//	} // Cosh;
-//	
-//	
-//	func /* (x: Complex) */ SinhCoshC* (var sinh, cosh : Complex);
-//	var
-//	s1, c1, s2, c2: Real;
-//	
-//	x.real.SinhCosh(s1, c1); x.imag.SinhCosh(s2, c2);
-//	sinh = Init(s1.Mul(c2), c1.Mul(s2));
-//	cosh = Init(c1.Mul(c2), s1.Mul(s2))
-//	} // SinhCoshC;
-//	
-//	
-//	func /* (x: Complex) */ Tanh* () -> Complex {
-//	var
-//	a, b : Complex;
-//	
-//	x.SinhCoshC(a, b);
-//	return a.Div(b)
-//	} // Tanh;
-//	
-//	
-//	func /* (x: Complex) */ Arcsinh* () -> Complex {
-//	var
-//	Temp : Complex;
-//	
-//	/* Result = ln(x + sqrt(x*x + 1)) */
-//	Temp = one.Add(x.Mul(x)); Temp = x.Add(Temp.Sqrt());
-//	return Temp.Ln()
-//	} // Arcsinh;
-//	
-//	
-//	func /* (x: Complex) */ Arccosh* () -> Complex {
-//	var
-//	Temp : Complex;
-//	
-//	/* Result = ln(x + sqrt(x*x - 1)) */
-//	Temp = x.Mul(x); Temp = Temp.Sub(one); Temp = x.Add(Temp.Sqrt());
-//	return Temp.Ln()
-//	} // Arccosh;
-//	
-//	
-//	func /* (x: Complex) */ Arctanh* () -> Complex {
-//	var
-//	Temp, Temp2, Half: Complex;
-//	
-//	/* Result = ln((1 + x) / (1 - x)) / 2 */
-//	Temp = one.Add(x); Temp2 = one.Sub(x); Temp = Temp.Div(Temp2);
-//	if X.err=0 {
-//	Half = Long(0.5);
-//	return Half.Mul(Temp.Ln())
-//	} else { return zero
-//	}
-//	} // Arctanh;
-//	
+	func Sinh () -> Complex {
+		var s1, c1, s2, c2: Real
+		var x = self
+		s1 = Real.zero; c1 = Real.zero; c2 = Real.zero; s2 = Real.zero
+		x.real.SinhCosh(&s1, cosh: &c1); x.imag.SinhCosh(&s2, cosh: &c2)
+		return Complex(re: s1.Mul(c2), im: c1.Mul(s2))
+	} // Sinh;
+	
+	
+	func Cosh () -> Complex {
+		var s1, c1, s2, c2: Real
+		var x = self
+		s1 = Real.zero; c1 = Real.zero; c2 = Real.zero; s2 = Real.zero
+		x.real.SinhCosh(&s1, cosh: &c1); x.imag.SinhCosh(&s2, cosh: &c2)
+		return Complex(re: c1.Mul(c2), im: s1.Mul(s2))
+	} // Cosh;
+	
+	
+	func SinhCosh (inout sinh: Complex, inout cosh : Complex) {
+		var s1, c1, s2, c2: Real
+		var x = self
+		s1 = Real.zero; c1 = Real.zero; c2 = Real.zero; s2 = Real.zero
+		x.real.SinhCosh(&s1, cosh: &c1); x.imag.SinhCosh(&s2, cosh: &c2)
+		sinh = Complex(re: s1.Mul(c2), im: c1.Mul(s2))
+		cosh = Complex(re: c1.Mul(c2), im: s1.Mul(s2))
+	} // SinhCoshC;
+	
+	
+	func Tanh () -> Complex {
+		var a, b : Complex
+		a = Complex.zero; b = Complex.zero
+		self.SinhCosh(&a, cosh: &b)
+		return a.Div(b)
+	} // Tanh;
+	
+	
+	func Arcsinh () -> Complex {
+		var Temp : Complex
+		var x = self
+		
+		/* Result = ln(x + sqrt(x*x + 1)) */
+		Temp = Complex.one.Add(x.Mul(x)); Temp = x.Add(Temp.Sqrt())
+		return Temp.Ln()
+	} // Arcsinh;
+	
+	
+	func Arccosh () -> Complex {
+		var Temp : Complex
+		var x = self
+		
+		/* Result = ln(x + sqrt(x*x - 1)) */
+		Temp = x.Mul(x); Temp = Temp.Sub(Complex.one); Temp = x.Add(Temp.Sqrt())
+		return Temp.Ln()
+	} // Arccosh;
+	
+	
+	func Arctanh () -> Complex {
+		var Temp, Temp2, Half: Complex
+		var x = self
+		
+		/* Result = ln((1 + x) / (1 - x)) / 2 */
+		Temp = Complex.one.Add(x); Temp2 = Complex.one.Sub(x); Temp = Temp.Div(Temp2)
+		if Real.err == 0 {
+			Half = Complex(fromDouble: 0.5)
+			return Half.Mul(Temp.Ln())
+		} else {
+			return Complex.zero
+		}
+	} // Arctanh;
+
 //	func Store* (w: Storable.Writer) RAISES IO.Error;
 //	/** Write calculator state to the 'w' writer. */
 //	
@@ -707,30 +715,28 @@ struct Complex {
 	}
 	
 	
-//	/*
-//	func Test;
-//	var
-//	x:Real; xi:Integer;
-//	
-//	xi = RealToInteger(X.pi);
-//	Out.String("Real = "); Out.Object(X.pi); Out.String("; Int = ");
-//	Out.Object(xi); Out.Ln;
-//	
-//	x = X.ToReal("1234567890.12345");
-//	xi = RealToInteger(x);
-//	Out.String("Real = "); Out.Object(x); Out.String("; Int = ");
-//	Out.Object(xi); Out.Ln;
-//	
-//	x = X.ToReal("1234567890123456789012345678901234567890.12345");
-//	xi = RealToInteger(x);
-//	Out.String("Real = "); Out.Object(x); Out.String("; Int = ");
-//	Out.Object(xi); Out.Ln;
-//	
-//	xi = XI.New("98765432109876543210", 10);
-//	x = IntegerToReal(xi);
-//	Out.String("Int = "); Out.Object(xi); Out.String("; Real = ");
-//	Out.Object(x); Out.Ln;
-//	} // Test;
-//	*/
+	func Test () {
+		var x:Real
+		var xi:Integer
+		
+		xi = RealToInteger(X.pi);
+		Out.String("Real = "); Out.Object(X.pi); Out.String("; Int = ");
+		Out.Object(xi); Out.Ln;
+		
+		x = X.ToReal("1234567890.12345");
+		xi = RealToInteger(x);
+		Out.String("Real = "); Out.Object(x); Out.String("; Int = ");
+		Out.Object(xi); Out.Ln;
+		
+		x = X.ToReal("1234567890123456789012345678901234567890.12345");
+		xi = RealToInteger(x);
+		Out.String("Real = "); Out.Object(x); Out.String("; Int = ");
+		Out.Object(xi); Out.Ln;
+		
+		xi = XI.New("98765432109876543210", 10);
+		x = IntegerToReal(xi);
+		Out.String("Int = "); Out.Object(xi); Out.String("; Real = ");
+		Out.Object(x); Out.Ln;
+	} // Test;
 
 }
