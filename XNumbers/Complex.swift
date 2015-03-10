@@ -8,6 +8,26 @@
 
 import Foundation
 
+func == (lhs: Complex, rhs: Complex) -> Bool {
+	return lhs.Cmp(rhs) == 0
+}
+
+func > (lhs: Complex, rhs: Complex) -> Bool {
+	return lhs.Cmp(rhs) == 1
+}
+
+func < (lhs: Complex, rhs: Complex) -> Bool {
+	return lhs.Cmp(rhs) == -1
+}
+
+prefix func - (a: Complex) -> Complex {
+	return Complex.zero.Sub(a)
+}
+
+prefix func + (a: Complex) -> Complex {
+	return a
+}
+
 func ToInteger (var A : Real) -> Integer {
 	let MAXC = 0x40000000
 	var x, iMAX : Integer
@@ -84,7 +104,7 @@ func Long (x : Double) -> Complex {
 	return Complex(re: Real(fromDouble: x), im: Real.zero)
 } // Long;
 
-struct Complex {
+struct Complex : Printable, Equatable, Comparable {
 	
 	/*
 	Complex - Complex number math functions.
@@ -150,6 +170,10 @@ struct Complex {
 		var Rational   : Bool
 	}
 	
+	var description: String {
+		return self.ToString()
+	}
+	
 	static let zero = Complex()
 	static let one = Complex(re: Real.one, im: Real.zero)
 	static var nState = NumbState()
@@ -174,6 +198,10 @@ struct Complex {
 		self.init(fromReal:Real(fromDouble: fromDouble))
 	}
 	
+	init (fromComplex c: Complex) {
+		self.init(re:c.real, im:c.imag)
+	}
+	
 	init (fromReal: Real) {
 		self.init(re:fromReal, im:Real.zero)
 	}
@@ -190,7 +218,7 @@ struct Complex {
 	/*---------------------------------------------------------*/
 	/* Conversion routines                                     */
 	
-	func description () -> String {
+	func ToString () -> String {
 		var Result : String
 		var iZero, rZero: Bool
 		var EngFormat: Bool
@@ -409,7 +437,7 @@ struct Complex {
 	} // IPower;
 	
 	
-	func /* (x: Complex) */ IRoot (i : Int) -> Complex {
+	func IRoot (i : Int) -> Complex {
 		var r, theta: Real
 		var x = self
 		let izero = x.imag.isZero()
@@ -719,24 +747,19 @@ struct Complex {
 		var x:Real
 		var xi:Integer
 		
-		xi = RealToInteger(X.pi);
-		Out.String("Real = "); Out.Object(X.pi); Out.String("; Int = ");
-		Out.Object(xi); Out.Ln;
+		xi = ToInteger(Real.pi)
+		println("Real = \(Real.pi); Int = \(xi)")
+		x = Real(fromString: "1234567890.12345")
+		xi = ToInteger(x)
+		println("Real = \(x); Int = \(xi)")
 		
-		x = X.ToReal("1234567890.12345");
-		xi = RealToInteger(x);
-		Out.String("Real = "); Out.Object(x); Out.String("; Int = ");
-		Out.Object(xi); Out.Ln;
+		x = Real(fromString: "1234567890123456789012345678901234567890.12345")
+		xi = ToInteger(x)
+		println("Real = \(x); Int = \(xi)")
 		
-		x = X.ToReal("1234567890123456789012345678901234567890.12345");
-		xi = RealToInteger(x);
-		Out.String("Real = "); Out.Object(x); Out.String("; Int = ");
-		Out.Object(xi); Out.Ln;
-		
-		xi = XI.New("98765432109876543210", 10);
-		x = IntegerToReal(xi);
-		Out.String("Int = "); Out.Object(xi); Out.String("; Real = ");
-		Out.Object(x); Out.Ln;
+		xi = Integer(fromString: "98765432109876543210")
+		x = ToReal(xi)
+		println("Real = \(x); Int = \(xi)")
 	} // Test;
 
 }

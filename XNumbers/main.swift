@@ -10,7 +10,7 @@ import Foundation
 
 println("Hello, World!")
 
-var x = Real(fromInt: 0)
+var x = Complex(fromDouble: 0)
 
 x.Test()
 
