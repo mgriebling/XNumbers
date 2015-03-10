@@ -11,6 +11,7 @@ import Foundation
 struct Rational {
 
 	/*
+	
 	Implements rational number operations with unlimited size.
 	Copyright (c) 2010 - 2015 Michael Griebling
  
