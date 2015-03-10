@@ -62,7 +62,7 @@ func ToReal (var A : Integer) -> Real {
 	
 	x = Real(fromInt: 0)
 	MAX = Real(fromInt: MAXC); iMAX = Integer(fromInt: MAXC)
-	neg = false; y = Real(fromInt: 1);
+	neg = false; y = Real(fromInt: 1)
 	if A.Sign() == -1 { A = A.Abs(); neg = true }
 	while A.Sign() == 1 {
 		ia = A.Mod(iMAX)

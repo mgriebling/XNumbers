@@ -64,15 +64,14 @@ struct Rational {
 	
 	init (str: String) {
 		var pos: Int;
-		var str2 : String;
-		
-		pos = str.IndexOf("/", 0);
-		if pos < 0 {
-			return Init(XI.New(str.Trim(), 10), XI.one);
-			else
-			str2 = str.Substring(pos+1, str.length);
-			str = str.Substring(0, pos);
-			return Init(XI.New(str.Trim(), 10), XI.New(str2.Trim(), 10));
+		let elements : [String] = str.componentsSeparatedByString("/")
+		if elements.count <= 1 {
+			let s = str.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+			self.init(n: Integer(fromString: s), d: Integer.one)
+		} else {
+			let rstr = elements[0].stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+			let cstr = elements[1].stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+			self.init(n: Integer(fromString: rstr), d: Integer(fromString: cstr))
 		}
 	} //New;
 	
@@ -80,52 +79,33 @@ struct Rational {
 		self.init(n: Integer(fromInt: n), d:Integer(fromInt: d))
 	} //NewRational;
 	
-//	func /* (a: Rational) */ Add(b: Complex) -> Rational {
-//	var
-//	z: Integer;
-//	
-//	/* Ok, you caught me, this isn't mathematically correct because
-//	Rational numbers aren't a superset of Complex numbers but it
-//	lets me support Rational numbers fairly compactly with
-//	minimal disruption. */
-//	
-//	z = a.num.Mul(b.den);
-//	return Init(z.Add(b.num.Mul(a.den)), a.den.Mul(b.den));
-//	else
-//	return a.Add(RInit(b.real, 1))
-//	};
-//	} //Add;
-//	
-//	func /* (a: Rational) */ Sub(b: Complex) -> Rational {
-//	var
-//	z: Integer;
-//	
-//	
-//	z = a.num.Mul(b.den);
-//	return Init(z.Sub(b.num.Mul(a.den)), a.den.Mul(b.den));
-//	else
-//	return a.Sub(RInit(b.real, 1))
-//	};
-//	} //Sub;
-//	
-//	func /* (a: Rational) */ Mul(b: Complex) -> Rational {
-//	
-//	
-//	return Init(a.num.Mul(b.num), a.den.Mul(b.den));
-//	else
-//	return a.Mul(RInit(b.real, 1))
-//	};
-//	} //Mul;
-//	
-//	func /* (a: Rational) */ Div(b: Complex) -> Rational {
-//	
-//	
-//	return Init(a.num.Mul(b.den), a.den.Mul(b.num));
-//	else
-//	return a.Div(RInit(b.real, 1))
-//	};
-//	} //Div;
-//	
+	/*---------------------------------------------------------*/
+	/* User functions                                          */
+	
+	func /* (a: Rational) */ Add (b: Rational) -> Rational {
+		var z: Integer
+		var a = self
+		z = a.num.Mul(b.den)
+		return Rational(n: z.Add(b.num.Mul(a.den)), d: a.den.Mul(b.den))
+	} //Add;
+	
+	func /* (a: Rational) */ Sub(b: Rational) -> Rational {
+		var z: Integer
+		var a = self
+		z = a.num.Mul(b.den)
+		return Rational(n: z.Sub(b.num.Mul(a.den)), d: a.den.Mul(b.den))
+	} //Sub;
+
+	func /* (a: Rational) */ Mul(b: Rational) -> Rational {
+		var a = self
+		return Rational(n: a.num.Mul(b.num), d: a.den.Mul(b.den))
+	} //Mul;
+	
+	func /* (a: Rational) */ Div(b: Rational) -> Rational {
+		var a = self
+		return Rational(n: a.num.Mul(b.den), d: a.den.Mul(b.num))
+	} //Div;
+
 ////	func /* (a: Rational) */ Store(w: Storable.Writer) RAISES IO.Error;
 ////	
 ////	a.num.Store(w); a.den.Store(w);
@@ -138,66 +118,56 @@ struct Rational {
 ////	a.num.Load(r); a.den.Load(r);
 ////	a.Load^(r);				/* read parent parameters */
 ////	} //Load;
-//
-//	func /* (a: Rational) */ Equals(b: Object.Object) -> Bool {
-//	
-//	
-//	if a.num.Equals(b.num) & a.den.Equals(b.den) {
-//	return TRUE;
-//	else
-//	return FALSE;
-//	};
-//	else
-//	return FALSE;
-//	};
-//	} //Equals;
-//	
-//	func /* (a: Rational) */ IsZero() -> Bool {
-//	
-//	return a.num.IsZero();
-//	} //IsZero;
-//	
-//	func /* (a: Rational) */ NonZero() -> Bool {
-//	
-//	return ~a.num.IsZero();
-//	} //NonZero;
-//	
-//	func /* (a: Rational) */ ToReal() -> Real;
-//	var
-//	ra : Real;
-//	
-//	ra = C.IntegerToReal(a.num);
-//	return ra.Div(C.IntegerToReal(a.den));
-//	} //ToReal;
-//	
-//func /* (a: Rational) */ Sign() -> Int {
-//	
-//	if (a.num.IsZero()) { return 0;
-//	} else {return a.num.Sign();
-//	};
-//	} //Sign;
-//	
-//func /* (a: Rational) */ Cmp(b: Object.Object) -> Int {
-//	var
-//	ra, rb : Real;
-//	
-//	
-//	ra = a.ToReal();
-//	rb = b.ToReal();
-//	return ra.Cmp(rb);
-//	};
-//	} //Cmp;
-//	
-//	func /* (a: Rational) */ Abs() -> Rational {
-//	
-//	return Init(a.num.Abs(), a.den);
-//	} //Abs;
-//	
-//	func /* (a: Rational) */ Neg() -> Rational {
-//	
-//	return Init(a.num.Neg(), a.den);
-//	} //Neg;
-//	
+
+	func /* (a: Rational) */ Equals (b: Rational) -> Bool {
+		var a = self
+		if a.num == b.num && a.den == b.den {
+			return true
+		} else {
+			return false
+		}
+	} //Equals;
+	
+	func /* (a: Rational) */ IsZero() -> Bool {
+		return self.num.IsZero()
+	} //IsZero;
+	
+	func /* (a: Rational) */ NonZero() -> Bool {
+		return !self.num.IsZero()
+	} //NonZero;
+	
+	func /* (a: Rational) */ ToReal() -> Real {
+//		var ra = ToReal(self.num)
+//		// TBD - Compiler Bug? //
+//		return ra.Div(ToReal(self.den))
+		var ra = ToReal(Integer(fromInteger: self.num))
+		return Real.zero
+	} //ToReal;
+
+	func /* (a: Rational) */ Sign() -> Int {
+		if (self.num.IsZero()) {
+			return 0
+		} else {
+			return self.num.Sign()
+		}
+	} //Sign;
+	
+	func /* (a: Rational) */ Cmp (b: Rational) -> Int {
+		var ra, rb : Real
+		var a = self
+		ra = a.ToReal()
+		rb = b.ToReal()
+		return ra.Cmp(rb)
+	} //Cmp;
+	
+	func /* (a: Rational) */ Abs() -> Rational {
+		return Rational(n: self.num.Abs(), d: self.den)
+	} //Abs;
+	
+	func /* (a: Rational) */ Neg() -> Rational {
+		return Rational(n: -self.num, d: self.den)
+	} //Neg;
+	
 //	func Test;
 //	var
 //	a, b : Rational;
