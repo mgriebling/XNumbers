@@ -603,7 +603,7 @@ struct Complex : Printable, Equatable, Comparable {
 	} // CalcAlphaBeta;
 	
 	
-	func /* (x: Complex) */ Arcsin () -> Complex {
+	func Arcsin () -> Complex {
 		var a, b, t: Real
 		var x = self
 		a = Real.zero; b = Real.zero
@@ -612,7 +612,7 @@ struct Complex : Printable, Equatable, Comparable {
 		return Complex(re: FromRadians(b.Arcsin()), im: t.Ln())
 	} // Arcsin;
 	
-	func /* (x: Complex) */ Arccos () -> Complex {
+	func Arccos () -> Complex {
 		var a, b, t: Real
 		var x = self
 		a = Real.zero; b = Real.zero
