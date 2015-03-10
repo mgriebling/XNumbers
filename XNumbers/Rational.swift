@@ -62,7 +62,7 @@ struct Rational {
 		self.init(n: ToInteger(real), d: Integer(fromInt: int))
 	} //RInit;
 	
-	func New(str: String) -> Rational {
+	init (str: String) {
 		var pos: Int;
 		var str2 : String;
 		
