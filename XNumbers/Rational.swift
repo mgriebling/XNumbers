@@ -8,7 +8,27 @@
 
 import Foundation
 
-struct Rational {
+func == (lhs: Rational, rhs: Rational) -> Bool {
+	return lhs.Cmp(rhs) == 0
+}
+
+func > (lhs: Rational, rhs: Rational) -> Bool {
+	return lhs.Cmp(rhs) == 1
+}
+
+func < (lhs: Rational, rhs: Rational) -> Bool {
+	return lhs.Cmp(rhs) == -1
+}
+
+prefix func - (a: Rational) -> Rational {
+	return a.Neg()
+}
+
+prefix func + (a: Rational) -> Rational {
+	return a
+}
+
+struct Rational : Printable, Equatable, Comparable {
 
 	/*
 	
@@ -33,6 +53,10 @@ struct Rational {
 	
 	var num, den : Integer
 	
+	var description: String {
+		return self.ToString()
+	}
+	
 	func /* (a: Rational) */ ToString() -> String {
 		return self.num.description + "/" + self.den.description
 	} //Format;
@@ -56,6 +80,7 @@ struct Rational {
 	/* Constructors                                            */
 	
 	init (n: Integer, d : Integer) {
+		self.num = Integer.zero; self.den = Integer.zero
 		(self.num, self.den) = Normalize(n, d)
 	} //Init;
 	
@@ -63,7 +88,7 @@ struct Rational {
 		self.init(n: ToInteger(real), d: Integer(fromInt: int))
 	} //RInit;
 	
-	init (str: String) {
+	init (fromString str: String) {
 		var pos: Int;
 		let elements : [String] = str.componentsSeparatedByString("/")
 		if elements.count <= 1 {
@@ -129,6 +154,25 @@ struct Rational {
 		}
 	} //Equals;
 	
+	func ToReal (var A : Integer) -> Real {
+		let MAXC = 1000000000
+		var iMAX, ia : Integer
+		var x, y, MAX : Real
+		var neg : Bool
+		
+		x = Real(fromInt: 0)
+		MAX = Real(fromInt: MAXC); iMAX = Integer(fromInt: MAXC)
+		neg = false; y = Real(fromInt: 1)
+		if A.Sign() == -1 { A = A.Abs(); neg = true }
+		while A.Sign() == 1 {
+			ia = A.Mod(iMAX)
+			x = x.Add(y.Mul(Real(fromInt: ia.ToInt())))
+			A = A.Div(iMAX); y = y.Mul(MAX)
+		}
+		if neg { x = Real.zero.Sub(x) }
+		return x
+	} // IntegerToReal;
+	
 	func /* (a: Rational) */ IsZero() -> Bool {
 		return self.num.IsZero()
 	} //IsZero;
@@ -138,11 +182,9 @@ struct Rational {
 	} //NonZero;
 	
 	func /* (a: Rational) */ ToReal() -> Real {
-//		var ra = ToReal(self.num)
-//		// TBD - Compiler Bug? //
-//		return ra.Div(ToReal(self.den))
-		var ra = ToReal(Integer(fromInteger: self.num))
-		return Real.zero
+		var ra = ToReal(self.num)
+		// TBD - Compiler Bug? //
+		return ra.Div(ToReal(self.den))
 	} //ToReal;
 
 	func /* (a: Rational) */ Sign() -> Int {
@@ -169,27 +211,26 @@ struct Rational {
 		return Rational(n: -self.num, d: self.den)
 	} //Neg;
 	
-//	func Test;
-//	var
-//	a, b : Rational;
-//	
-//	a = NewRational(1, -2); b = NewRational(-6, 16);
-//	io.Object(a); io.String(" + "); io.Object(b); io.String(" = "); io.Object(a.Add(b)); io.Ln;
-//	io.Object(a); io.String(" - "); io.Object(b); io.String(" = "); io.Object(a.Sub(b)); io.Ln;
-//	io.Object(a); io.String(" * "); io.Object(b); io.String(" = "); io.Object(a.Mul(b)); io.Ln;
-//	io.Object(a); io.String(" / "); io.Object(b); io.String(" = "); io.Object(a.Div(b)); io.Ln;
-//	io.String("Real("); io.Object(a); io.String(") = "); io.Object(a.ToReal()); io.Ln;
-//	io.String("Real("); io.Object(b); io.String(") = "); io.Object(b.ToReal()); io.Ln;
-//	io.String("Abs("); io.Object(a); io.String(") = "); io.Object(a.Abs()); io.Ln;
-//	io.Object(a);
-//	if a.Cmp(b) > 0 { io.String(" > ");
-//	} else if  a.Cmp(b) = 0 { io.String(" = ");
-//	} else {io.String(" < ")
-//	};
-//	io.Object(b); io.Ln;
-//	
-//	a = New("12345678901234567890 / -234567890");
-//	io.String("12345678901234567890 / -234567890 = "); io.Object(a); io.Ln;
-//	} //Test;
-	
+	func Test () {
+		var a, b : Rational
+		
+		a = Rational(n: 1, d: -2); b = Rational(n: -6, d: 16)
+		println("\(a) + \(b) = \(a.Add(b))")
+		println("\(a) - \(b) = \(a.Sub(b))")
+		println("\(a) * \(b) = \(a.Mul(b))")
+		println("\(a) / \(b) = \(a.Div(b))")
+		println("Real(\(a)) = \(a.ToReal())")
+		println("Real(\(b)) = \(b.ToReal())")
+		println("Abs(\(a)) = \(a.Abs())")
+		print(a)
+		if a.Cmp(b) > 0 { print(" > ")
+		} else if  a.Cmp(b) == 0 { print(" = ")
+		} else { print(" < ")
+		}
+		println(b)
+		
+		a = Rational(fromString: "12345678901234567890 / -234567890")
+		println("12345678901234567890 / -234567890 = \(a)")
+	} //Test;
+
 }

@@ -10,7 +10,7 @@ import Foundation
 
 println("Hello, World!")
 
-var x = Complex(fromDouble: 0)
+var x = Rational(n: 0, d: 1)
 
 x.Test()
 
