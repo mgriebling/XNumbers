@@ -735,7 +735,7 @@ class Equation {
 //	Token:=sc.Empty;
 //	zero:=XM.Init(X.zero, X.zero);
 //	LastAnswer:=XM.Init(X.zero, X.zero);
-	END Equations.
+//	END Equations.
 	
 	
 }
