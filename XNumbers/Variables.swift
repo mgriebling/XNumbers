@@ -86,18 +86,18 @@ struct Variables {
 //a.Value.Load(r)
 //} // Load;
 
-	func Defined () -> Int {
+	static func Defined () -> Int {
 		/** Return the number of permanent variables */
 		return Variables.Var.count
 	} // Defined;
 
-	func Set (variable: String, value : Complex) -> Bool {
+	static func Set (variable: String, value : Complex) -> Bool {
 		/** Define a permanent variable */
 		Variables.Var[variable] = value
 		return true  // can't fail
 	} // Set;
 
-	func Setf (variable: String, value : Complex) -> Bool {
+	static func Setf (variable: String, value : Complex) -> Bool {
 		/** Define a temporary stack variable 'variable' = 'value' */
 		if let found = Variables.Var[variable] {
 			return false
@@ -107,22 +107,22 @@ struct Variables {
 		}
 	} // Setf;
 
-	func Get (variable: String) -> Complex? {
+	static func Get (variable: String) -> Complex? {
 		/** Return the current definition of 'variable' */
 		return Variables.Var[variable]
 	} // Get;
 
-	func Delete (variable : String) {
+	static func Delete (variable : String) {
 		/** Delete variable 'variable' */
 		Variables.Var[variable] = nil
 	} // Delete;
 	
-	func Deletef () {
+	static func Deletef () {
 		/** Delete all temporary stack variables */
 		Variables.fvar = [String: Complex]()
 	} // Deletef;
 
-	func Iterate (IterFunc: (String, String) -> ()) {
+	static func Iterate (IterFunc: (String, String) -> ()) {
 		/** Apply the function 'IterFunc' to all variables */
 		for (name, value) in Variables.Var {
 			let n = value.description

@@ -931,13 +931,14 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 	} // Power;
 
 	/* MG */
-	func Factorial (x: Int) -> Integer {
+	func Factorial () -> Integer {
 		/** Pre: x>=0; Post: return x!=x(x-1)(x-2)...(2)(1) */
 		var f, xi: Integer
 		var base = Digit(Integer.base)
+		var x = self.ToInt()
 		var lx = Digit(x)
 		
-		if x<0 {
+		if x < 0 {
 			return Integer.zero						/* out of range */
 		}
 		if x<2 { return Integer.one }				/* 0! & 1! */

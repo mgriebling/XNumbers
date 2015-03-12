@@ -9,733 +9,710 @@
 import Foundation
 
 class Equation {
+	
+ /*
+	Equations - Equation evaluation.
+	Copyright (c) 1996-2010 Michael Griebling
+ 
+	This module is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+ 
+	This module is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+ 
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+	
+	*/
+	
+	let zero = Complex.zero
+	
+	var Token: Scanner.Tokens
+	var CommandLine : String
+	var LastAnswer: Complex
+	
+	init (command: String) {
+		self.CommandLine = command
+		self.LastAnswer = Complex.zero
+		self.Token = .Empty
+	}
+	
+	private func StoreVariable (Location: String, Value : Complex) {
+		/* Store the `Value' argument in the `Location' variable. */
+		Variables.Set(Location, value: Value)
+	} // StoreVariable;
+	
+	private func Print (name: String, arg: String) {
+		println("\(name) = \(arg)")
+	} // Print;
+	
+	
+	private func Printf (name: String, arg:String, value: String) {
+		println("\(name)(\(arg)) = \(value)")
+	} // Printf;
+	
+	
+	private func Min (a: Complex, b: Complex) -> Complex {
+		if a.Cmp(b) > 0 {
+			return b
+		} else {
+			return a
+		}
+	} // Min;
+	
+	
+	private func Max (a: Complex, b: Complex) -> Complex {
+		if a.Cmp(b) > 0 {
+			return a
+		} else {
+			return b
+		}
+	} // Max;
+
+
+	func Permutations (n: Complex, _ r: Complex) -> Complex {
+		/** Return the number of permutations of n different objects
+		taken r at a time (i.e., n!/(n-r)! )
+		*/
+		var ni, ri: Integer
+		var nI: Integer
+		
+		ni = ToInteger(n.real)
+		ri = ToInteger(r.real)
+		nI = ni.Factorial()
+		nI = nI.Div(ni.Sub(ri).Factorial())
+		return Complex(re: ToReal(nI), im: Real.zero)
+	} // Permutations;
+	
+	
+	func Combinations (n: Complex, r: Complex) -> Complex {
+		/** Return the combinations of n different objects taken
+		r at a time (i.e., n!/(r!(n-r)!))
+		*/
+		var ni, ri: Integer
+		var nI: Integer
+		var n2 : Complex
+		
+		ni = ToInteger(n.real)
+		ri = ToInteger(r.real)
+		n2 = Permutations(n, r)            /* n=n!/(n-r)! */
+		nI = ri.Factorial()              /* n=r! */
+		nI = ni.Div(nI);               /* Result=n!/(r!(n-r)!) */
+		return Complex(re: ToReal(nI), im: Real.zero)
+	} // Combinations;
+	
+	
+	func Help () {
+		println()
+		println(" +, -, *, /      Addition/Subtraction/Multiplication/Division")
+		println("  != , <>, =        Inequality, equality comparison")
+		println(" >, >=           Greater than, Greater or equal comparison")
+		println(" <, <=           Less than, Less or equal comparison")
+		println(" true, false     Logical TRUE and FALSE")
+		println(" if(exp; a; b)   If exp > 0 return a else return b")
+		println(" ()              Brackets")
+		println(" ^, **           Power")
+		println(" %               x 0.01")
+		println(" &, and          Logical And")
+		println(" or, xor         Logical Inclusive/Exclusive Or")
+		println(" !, not          Logical Complement")
+		println(" mod, div        Modulo/Integer Division")
+		println(" sqrt, cbrt      Square/Cube Root")
+		println(" root            Any Root")
+		println(" abs, |x|        Absolute value or complex magnitude")
+		println(" rand            Random number between 0 and 1")
+		println(" e               Euler's constant")
+		println(" e^              Power of e")
+		println(" i               Imaginary number")
+		println(" angle           Complex angle")
+		println(" re, im          Real/Imaginary part of a number")
+		println(" rect            Polar to rectangle conversion")
+		println(" conj            Complex conjugate")
+		println(" nCr, nPr        Combinations/Permutations")
+		println(" int, frac       Integer/Fractional part of a number")
+		println(" sign            Sign of a number (-1 or 1)")
+		println(" min(x;y;...z)   Minimum of x, y, ...z")
+		println(" max(x;y;...z)   Maximum of x, y, ...z")
+		println(" sum(x;y;...z)   Summation of x, y, ...z")
+		println(" avg(x;y;...z)   Average of x, y, ...z")
+		println(" mul(x;y;...z)   Multiply x, y, ...z")
+		println(" ln, log         Natural, Base 10 Logarithm")
+		println(" sin, asin       Sine, Arcsine")
+		println(" cos, acos       Cosine, Arccosine")
+		println(" tan, atan       Tangent, Arctangent")
+		println(" sinh, asinh     Hyperbolic Sine, Arcsine")
+		println(" cosh, acosh     Hyperbolic Cosine, Arccosine")
+		println(" tanh, atanh     Hyperbolic Tangent, Arctangent")
+		println(" sbit, cbit      Set/Clear Bit")
+		println(" tbit            Toggle Bit")
+		println(" shr, shl        Shift Right/Left")
+		println(" <name>          Variable contents")
+		println(" f(x;y;...z)     Evaluate function <f>")
+		println(" let n=<exp>     Define variable 'n' with <exp>")
+		println(" let f(x)=<exp>  Define function 'f' with args 'x' and expression <exp>")
+		println(" del <name>      Deletes the variable, function")
+		println(" list            Lists all defined variables, functions")
+		println(" help            Displays this list")
+		println(" pi              Constant Pi")
+		println(" sci             Toggle Scientific/Engineering/Floating Point")
+		println(" rat             Toggle Rational calculations on/off")
+		println(" bas n           Change to Base n (n = 2..36)")
+		println(" dig n           Use n Digits")
+		println(" dp n            Use n Decimal Places")
+		println(" drg             Toggle Degree/Radian/Grad")
+	} // Help;
+	
+	func Function (fname: String) -> Complex {
+		var arg, eqn: String
+		var ok: Bool
+		var nargs: Int
+		var ptoken: Scanner.Tokens
+		var res: Complex
+		
+		/* evaluate the passed function */
+		Functions.Get(fname, eqn, ok);
+		nargs = 0;
+		res = Complex.zero;
+		if Token == .LeftBrace {
+			do {
+				sc.Get(Token); Expression(res);
+				f.GetArg(fname, nargs, arg, ok); INC(nargs);
+				V.Setf(arg, res, ok)
+			} while Token == .Semi
+			if Token != .RightBrace { sc.Mark(.MismatchBraces) };
+			if nargs != f.NumArgs(fname) { sc.Mark(.IncompatibleArgs) };
+			sc.Get(Token);   /* skip right brace */
+			
+			/* now we finally evaluate the function */
+			sc.PushState();                 /* save current expression's state */
+			ptoken = Token;                  /* save the current token */
+			Real.status = .Okay;             /* clear out any previous errors */
+			Real.err  =  0;
+			sc.Init(eqn); sc.Get(Token);    /* start things off with the first token */
+			Expression(res);
+			sc.PopState();                  /* restore our previous state */
+			V.Deletef();                    /* clear function stack */
+			Token = ptoken                   /* and active token */
+		} else if f.NumArgs(fname) > 0 {
+			sc.Mark(cli.ExpectingArgs);
+			res = Complex.zero
+		};
+		return res
+	} // Function;
+	
+	
+//	func IfCondition () -> Complex {
+//	/** Handle If(<expression>;<expression>;<expression>) */
+//	var
+//	cond, tval, fval: Complex;
 //	
-//	MODULE Equations;
-//	
-// (*
-//	Equations - Equation evaluation.
-//	Copyright (c) 1996-2010 Michael Griebling
-// 
-//	This module is free software; you can redistribute it and/or modify
-//	it under the terms of the GNU General Public License as published by
-//	the Free Software Foundation; either version 2 of the License, or
-//	(at your option) any later version.
-// 
-//	This module is distributed in the hope that it will be useful,
-//	but WITHOUT ANY WARRANTY; without even the implied warranty of
-//	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//	GNU General Public License for more details.
-// 
-//	You should have received a copy of the GNU General Public License
-//	along with this program; if not, write to the Free Software
-//	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-//	
-//	*)
-//	
-//	IMPORT        ADT:Storable,
-//	IO,
-//	Out,
-//	Object,
-//	
-//	cli := CLIErrors,
-//	XM  := Complex,
-//	f   := Functions,
-//	XI  := Integers,
-//	X   := Reals,
-//	R   := Rationals,
-//	sc  := Scanner,
-//	V   := Variables;
-//	
-//	VAR
-//	Token: INTEGER;
-//	zero: XM.Complex;
-//	CommandLine : STRING;
-//	LastAnswer: XM.Complex;
-//	
-//	
-//	PROCEDURE StoreVariable(Location: STRING; Value : XM.Complex);
-//	(* Store the `Value' argument in the `Location' variable. *)
-//	VAR ok: BOOLEAN;
-//	BEGIN
-//	V.Set(Location, Value, ok);
-//	IF ~ok THEN sc.Mark(cli.TooManyVariables) END
-//	END StoreVariable;
-//	
-//	PROCEDURE^ Expression (VAR Result : XM.Complex);
-//	
-//	PROCEDURE^ Evaluate (arg: STRING; VAR Result: XM.Complex): BOOLEAN;
-//	
-//	
-//	PROCEDURE Print (name, arg: STRING);
-//	BEGIN
-//	Out.Object(name); Out.String(" = "); Out.Object(arg); Out.Ln
-//	END Print;
-//	
-//	
-//	PROCEDURE Printf (name, arg, value: STRING);
-//	BEGIN
-//	Out.Object(name);
-//	Out.String("("); Out.Object(arg); Out.String(") = ");
-//	Out.Object(value); Out.Ln
-//	END Printf;
-//	
-//	
-//	PROCEDURE Min (a, b: XM.Complex) : XM.Complex;
-//	BEGIN
-//	IF a.Cmp(b) > 0 THEN RETURN b
-//	ELSE RETURN a
-//	END
-//	END Min;
-//	
-//	
-//	PROCEDURE Max (a, b: XM.Complex) : XM.Complex;
-//	BEGIN
-//	IF a.Cmp(b) > 0 THEN RETURN a
-//	ELSE RETURN b
-//	END
-//	END Max;
-//	
-//	
-//	PROCEDURE Permutations * (n, r: XM.Complex) : XM.Complex;
-//	(** Return the number of permutations of n different objects
-//	taken r at a time (i.e., n!/(n-r)! )
-// *)
-//	VAR ni, ri: LONGINT;
-//	nI: X.Real;
-//	BEGIN
-//	ni:=ENTIER(n.real.Short());
-//	ri:=ENTIER(r.real.Short());
-//	nI:=X.Factorial(ni);
-//	nI:=nI.Div(X.Factorial(ni-ri));
-//	RETURN XM.Init(nI.Entier(), X.zero)
-//	END Permutations;
-//	
-//	
-//	PROCEDURE Combinations * (n, r: XM.Complex) : XM.Complex;
-//	(** Return the combinations of n different objects taken
-//	r at a time (i.e., n!/(r!(n-r)!))
-// *)
-//	VAR ni, ri: LONGINT;
-//	nI: X.Real;
-//	BEGIN
-//	ni:=ENTIER(n.real.Short());
-//	ri:=ENTIER(r.real.Short());
-//	n:=Permutations(n, r);            (* n=n!/(n-r)! *)
-//	nI:=X.Factorial(ri);              (* n=r! *)
-//	nI:=n.real.Div(nI);               (* Result=n!/(r!(n-r)!) *)
-//	RETURN XM.Init(nI.Entier(), X.zero)
-//	END Combinations;
-//	
-//	
-//	
-//	PROCEDURE Help;
-//	BEGIN
-//	Out.Ln;
-//	Out.String(" +, -, *, /      Addition/Subtraction/Multiplication/Division"); Out.Ln;
-//	Out.String(" #, <>, =        Inequality, equality comparison"); Out.Ln;
-//	Out.String(" >, >=           Greater than, Greater or equal comparison"); Out.Ln;
-//	Out.String(" <, <=           Less than, Less or equal comparison"); Out.Ln;
-//	Out.String(" true, false     Logical TRUE and FALSE"); Out.Ln;
-//	Out.String(" if(exp; a; b)   If exp > 0 return a else return b"); Out.Ln;
-//	Out.String(" ()              Brackets"); Out.Ln;
-//	Out.String(" ^, **           Power"); Out.Ln;
-//	Out.String(" %               x 0.01"); Out.Ln;
-//	Out.String(" &, and          Logical And"); Out.Ln;
-//	Out.String(" or, xor         Logical Inclusive/Exclusive Or"); Out.Ln;
-//	Out.String(" ~, not          Logical Complement"); Out.Ln;
-//	Out.String(" mod, div        Modulo/Integer Division"); Out.Ln;
-//	Out.String(" sqrt, cbrt      Square/Cube Root"); Out.Ln;
-//	Out.String(" root            Any Root"); Out.Ln;
-//	Out.String(" abs, |x|        Absolute value or complex magnitude"); Out.Ln;
-//	Out.String(" rand            Random number between 0 and 1"); Out.Ln;
-//	Out.String(" e               Euler's constant"); Out.Ln;
-//	Out.String(" e^              Power of e"); Out.Ln;
-//	Out.String(" i               Imaginary number"); Out.Ln;
-//	Out.String(" angle           Complex angle"); Out.Ln;
-//	Out.String(" re, im          Real/Imaginary part of a number"); Out.Ln;
-//	Out.String(" rect            Polar to rectangle conversion"); Out.Ln;
-//	Out.String(" conj            Complex conjugate"); Out.Ln;
-//	Out.String(" nCr, nPr        Combinations/Permutations"); Out.Ln;
-//	Out.String(" int, frac       Integer/Fractional part of a number"); Out.Ln;
-//	Out.String(" sign            Sign of a number (-1 or 1)"); Out.Ln;
-//	Out.String(" min(x;y;...z)   Minimum of x, y, ...z"); Out.Ln;
-//	Out.String(" max(x;y;...z)   Maximum of x, y, ...z"); Out.Ln;
-//	Out.String(" sum(x;y;...z)   Summation of x, y, ...z"); Out.Ln;
-//	Out.String(" avg(x;y;...z)   Average of x, y, ...z"); Out.Ln;
-//	Out.String(" mul(x;y;...z)   Multiply x, y, ...z"); Out.Ln;
-//	Out.String(" ln, log         Natural, Base 10 Logarithm"); Out.Ln;
-//	Out.String(" sin, asin       Sine, Arcsine"); Out.Ln;
-//	Out.String(" cos, acos       Cosine, Arccosine"); Out.Ln;
-//	Out.String(" tan, atan       Tangent, Arctangent"); Out.Ln;
-//	Out.String(" sinh, asinh     Hyperbolic Sine, Arcsine"); Out.Ln;
-//	Out.String(" cosh, acosh     Hyperbolic Cosine, Arccosine"); Out.Ln;
-//	Out.String(" tanh, atanh     Hyperbolic Tangent, Arctangent"); Out.Ln;
-//	Out.String(" sbit, cbit      Set/Clear Bit"); Out.Ln;
-//	Out.String(" tbit            Toggle Bit"); Out.Ln;
-//	Out.String(" shr, shl        Shift Right/Left"); Out.Ln;
-//	Out.String(" <name>          Variable contents"); Out.Ln;
-//	Out.String(" f(x;y;...z)     Evaluate function <f>"); Out.Ln;
-//	Out.String(" let n=<exp>     Define variable 'n' with <exp>"); Out.Ln;
-//	Out.String(" let f(x)=<exp>  Define function 'f' with args 'x' and expression <exp>"); Out.Ln;
-//	Out.String(" del <name>      Deletes the variable, function"); Out.Ln;
-//	Out.String(" list            Lists all defined variables, functions"); Out.Ln;
-//	Out.String(" help            Displays this list"); Out.Ln;
-//	Out.String(" pi              Constant Pi"); Out.Ln;
-//	Out.String(" sci             Toggle Scientific/Engineering/Floating Point"); Out.Ln;
-//	Out.String(" rat             Toggle Rational calculations on/off"); Out.Ln;
-//	Out.String(" bas n           Change to Base n (n = 2..36)"); Out.Ln;
-//	Out.String(" dig n           Use n Digits"); Out.Ln;
-//	Out.String(" dp n            Use n Decimal Places"); Out.Ln;
-//	Out.String(" drg             Toggle Degree/Radian/Grad"); Out.Ln;
-//	END Help;
-//	
-//	PROCEDURE Function (fname: STRING) : XM.Complex;
-//	VAR
-//	arg, eqn: STRING;
-//	ok: BOOLEAN;
-//	nargs: LONGINT;
-//	ptoken: INTEGER;
-//	res: XM.Complex;
-//	BEGIN
-//	(* evaluate the passed function *)
-//	f.Get(fname, eqn, ok);
-//	nargs:=0;
-//	res:=XM.zero;
-//	IF Token = sc.LeftBrace THEN
-//	REPEAT
-//	sc.Get(Token); Expression(res);
-//	f.GetArg(fname, nargs, arg, ok); INC(nargs);
-//	V.Setf(arg, res, ok)
-//	UNTIL Token # sc.Semi;
-//	IF Token # sc.RightBrace THEN sc.Mark(X.MismatchBraces) END;
-//	IF nargs # f.NumArgs(fname) THEN sc.Mark(cli.IncompatibleArgs) END;
-//	sc.Get(Token);   (* skip right brace *)
-//	
-//	(* now we finally evaluate the function *)
-//	sc.PushState();                 (* save current expression's state *)
-//	ptoken:=Token;                  (* save the current token *)
-//	X.status := X.Okay;             (* clear out any previous errors *)
-//	X.err := 0;
-//	sc.Init(eqn); sc.Get(Token);    (* start things off with the first token *)
-//	Expression(res);
-//	sc.PopState();                  (* restore our previous state *)
-//	V.Deletef();                    (* clear function stack *)
-//	Token:=ptoken                   (* and active token *)
-//	ELSIF f.NumArgs(fname) > 0 THEN
-//	sc.Mark(cli.ExpectingArgs);
-//	res:=XM.zero
-//	END;
-//	RETURN res
-//	END Function;
-//	
-//	
-//	PROCEDURE IfCondition () : XM.Complex;
-//	(** Handle If(<expression>;<expression>;<expression>) *)
-//	VAR
-//	cond, tval, fval: XM.Complex;
-//	BEGIN
-//	IF Token = sc.LeftBrace THEN
+//	if Token = sc.LeftBrace {
 //	sc.Get(Token); Expression(cond);
-//	IF Token # sc.Semi THEN sc.Mark(cli.ExpectingArgs) END;
+//	if Token  !=  sc.Semi { sc.Mark(cli.ExpectingArgs) };
 //	sc.Get(Token); Expression(tval);
-//	IF Token # sc.Semi THEN sc.Mark(cli.ExpectingArgs) END;
+//	if Token  !=  sc.Semi { sc.Mark(cli.ExpectingArgs) };
 //	sc.Get(Token); Expression(fval);
-//	IF Token # sc.RightBrace THEN sc.Mark(X.MismatchBraces) END;
+//	if Token  !=  sc.RightBrace { sc.Mark(X.MismatchBraces) };
 //	sc.Get(Token);
-//	IF cond.Cmp(zero)>0 THEN RETURN tval ELSE RETURN fval END
-//	ELSE RETURN XM.zero
-//	END
-//	END IfCondition;
+//	if cond.Cmp(zero)>0 { return tval } else { return fval }
+//	} else { return Complex.zero
+//	}
+//	} // IfCondition;
 //	
 //	
-//	PROCEDURE Factor (VAR Result : XM.Complex);
-//	(** 'Result' = <[Factor Operator] (<Variable> | <Function> | "(" <Expression> ")" | <Number>) *)
+//	func Factor (var Result : Complex);
+//	/** 'Result' = <[Factor Operator] (<Variable> | <Function> | "(" <Expression> ")" | <Number>) */
 //	TYPE
-//	funcType = PROCEDURE(x,y:XM.Complex):XM.Complex;
+//	funcType = func(x,y:Complex):Complex;
 //	
-//	VAR
+//	var
 //	SaveBase : SHORTINT;
-//	tmp      : XM.Complex;
-//	t        : X.Real;
+//	tmp      : Complex;
+//	t        : Real
 //	i        : XI.Integer;
-//	Digits   : INTEGER;
-//	n        : LONGINT;
-//	str      : STRING;
-//	ok       : BOOLEAN;
+//	Digits   : Int
+//	n        : Int
+//	str      : String
+//	ok       : Bool;
 //	
-//	PROCEDURE Add (x,y: XM.Complex) : XM.Complex;
-//	BEGIN
-//	RETURN x.Add(y)
-//	END Add;
+//	func Add (x,y: Complex) -> Complex {
 //	
-//	PROCEDURE Avg (x,y: XM.Complex) : XM.Complex;
-//	BEGIN
-//	INC(n); RETURN x.Add(y)
-//	END Avg;
+//	return x.Add(y)
+//	} // Add;
 //	
-//	PROCEDURE Mul (x,y: XM.Complex) : XM.Complex;
-//	BEGIN
-//	RETURN x.Mul(y)
-//	END Mul;
+//	func Avg (x,y: Complex) -> Complex {
 //	
-//	PROCEDURE Next;
-//	BEGIN
+//	INC(n); return x.Add(y)
+//	} // Avg;
+//	
+//	func Mul (x,y: Complex) -> Complex {
+//	
+//	return x.Mul(y)
+//	} // Mul;
+//	
+//	func Next;
+//	
 //	sc.Get(Token);
-//	IF Token = sc.Minus THEN
+//	if Token = sc.Minus {
 //	sc.Get(Token); Factor(Result);
-//	Result := Result.Neg()
-//	ELSE
+//	Result  =  Result.Neg()
+//	} else {
 //	Factor(Result)
-//	END
-//	END Next;
+//	}
+//	} // Next;
 //	
-//	PROCEDURE Args (func: funcType) : XM.Complex;
-//	VAR
-//	tmp2: XM.Complex;
-//	BEGIN
-//	tmp:=XM.zero;
+//	func Args (func: funcType) -> Complex {
+//	var
+//	tmp2: Complex;
+//	
+//	tmp = Complex.zero;
 //	sc.Get(Token);
-//	IF Token#sc.LeftBrace THEN sc.Mark(X.MismatchBraces) END;
+//	if Token != sc.LeftBrace { sc.Mark(X.MismatchBraces) };
 //	sc.Get(Token); Expression(tmp);
-//	IF Token#sc.Semi THEN sc.Mark(cli.ExpectingArgs) END;
-//	REPEAT
+//	if Token != sc.Semi { sc.Mark(cli.ExpectingArgs) };
+//	do {
 //	sc.Get(Token); Expression(tmp2);
-//	tmp:=func(tmp, tmp2)
-//	UNTIL Token#sc.Semi;
-//	IF Token#sc.RightBrace THEN sc.Mark(X.MismatchBraces) END;
+//	tmp = func(tmp, tmp2)
+//	} while ! Token != sc.Semi;
+//	if Token != sc.RightBrace { sc.Mark(X.MismatchBraces) };
 //	sc.Get(Token);
-//	RETURN tmp
-//	END Args;
+//	return tmp
+//	} // Args;
 //	
-//	PROCEDURE FixR;
-//	BEGIN
-//	Result:=XM.Init(t, X.zero)
-//	END FixR;
+//	func FixR;
 //	
-//	PROCEDURE FixI;
-//	BEGIN
-//	Result:=XM.Init(XM.IntegerToReal(i), X.zero)
-//	END FixI;
+//	Result = XM.Init(t, X.zero)
+//	} // FixR;
 //	
-//	BEGIN
+//	func FixI;
+//	
+//	Result = XM.Init(XM.IntegerToReal(i), X.zero)
+//	} // FixI;
+//	
+//	
 //	CASE Token OF
 //	sc.LeftBrace  : sc.Get(Token); Expression(Result);
-//	IF Token = sc.RightBrace THEN sc.Get(Token);
-//	ELSE sc.Mark(X.MismatchBraces)
-//	END;
+//	if Token = sc.RightBrace { sc.Get(Token);
+//	} else { sc.Mark(X.MismatchBraces)
+//	};
 //	| sc.VertBrace  : sc.Get(Token); Expression(Result);
-//	t:=Result.PolarMag(); FixR;
-//	IF Token = sc.VertBrace THEN sc.Get(Token);
-//	ELSE sc.Mark(X.MismatchBraces)
-//	END;
-//	| sc.Number     : IF XM.nState.Rational THEN Result := R.RInit(sc.s.val.real, 1)
-//	ELSE Result := sc.s.val
-//	END;
+//	t = Result.PolarMag(); FixR;
+//	if Token = sc.VertBrace { sc.Get(Token);
+//	} else { sc.Mark(X.MismatchBraces)
+//	};
+//	| sc.Number     : if XM.nState.Rational { Result  =  R.RInit(sc.s.val.real, 1)
+//	} else { Result  =  sc.s.val
+//	};
 //	sc.Get(Token);
-//	(*
-//	IF Token = sc.Number THEN
-//	Result:=Result.Mul(sc.val);
+//	/*
+//	if Token = sc.Number {
+//	Result = Result.Mul(sc.val);
 //	sc.Get(Token)
-//	ELSIF Token = sc.LeftBrace THEN
+//	} else if Token = sc.LeftBrace {
 //	sc.Get(Token); Expression(tmp);
-//	IF Token = sc.RightBrace THEN sc.Get(Token);
-//	ELSE sc.Mark(X.MismatchBraces)
-//	END;
-//	Result:=Result.Mul(tmp)
-//	END
-//	*)
-//	| sc.If         : sc.Get(Token); Result:=IfCondition();
-//	| sc.True       : sc.Get(Token); Result:=XM.one
-//	| sc.False      : sc.Get(Token); Result:=XM.zero
-//	| sc.Pi         : sc.Get(Token); Result:=XM.Init(X.pi, X.zero)
-//	| sc.Complement : Next(); i:=XM.RealToInteger(Result.real); i:=i.Invert(); FixI
-//	| sc.Sin        : Next(); Result:=Result.Sin();
-//	| sc.Cos        : Next(); Result:=Result.Cos();
-//	| sc.Tan        : Next(); Result:=Result.Tan();
-//	| sc.ArcSin     : Next(); Result:=Result.Arcsin();
-//	| sc.ArcCos     : Next(); Result:=Result.Arccos();
-//	| sc.ArcTan     : Next(); Result:=Result.Arctan();
-//	| sc.Sinh       : Next(); Result:=Result.Sinh();
-//	| sc.Cosh       : Next(); Result:=Result.Cosh();
-//	| sc.Tanh       : Next(); Result:=Result.Tanh();
-//	| sc.ArcSinh    : Next(); Result:=Result.Arcsinh();
-//	| sc.ArcCosh    : Next(); Result:=Result.Arccosh();
-//	| sc.ArcTanh    : Next(); Result:=Result.Arctanh();
-//	| sc.SquareRoot : Next(); Result:=Result.Sqrt();
-//	| sc.CubeRoot   : Next(); Result:=Result.IRoot(3);
-//	| sc.NaturalLog : Next(); Result:=Result.Ln();
-//	| sc.Log        : Next(); Result:=Result.Log(X.Long(10));
-//	| sc.PowerOfe   : Next(); Result:=Result.Exp();
+//	if Token = sc.RightBrace { sc.Get(Token);
+//	} else { sc.Mark(X.MismatchBraces)
+//	};
+//	Result = Result.Mul(tmp)
+//	}
+//	*/
+//	| sc.If         : sc.Get(Token); Result = IfCondition();
+//	| sc.True       : sc.Get(Token); Result = XM.one
+//	| sc.False      : sc.Get(Token); Result = Complex.zero
+//	| sc.Pi         : sc.Get(Token); Result = XM.Init(X.pi, X.zero)
+//	| sc.Complement : Next(); i = XM.RealToInteger(Result.real); i = i.Invert(); FixI
+//	| sc.Sin        : Next(); Result = Result.Sin();
+//	| sc.Cos        : Next(); Result = Result.Cos();
+//	| sc.Tan        : Next(); Result = Result.Tan();
+//	| sc.ArcSin     : Next(); Result = Result.Arcsin();
+//	| sc.ArcCos     : Next(); Result = Result.Arccos();
+//	| sc.ArcTan     : Next(); Result = Result.Arctan();
+//	| sc.Sinh       : Next(); Result = Result.Sinh();
+//	| sc.Cosh       : Next(); Result = Result.Cosh();
+//	| sc.Tanh       : Next(); Result = Result.Tanh();
+//	| sc.ArcSinh    : Next(); Result = Result.Arcsinh();
+//	| sc.ArcCosh    : Next(); Result = Result.Arccosh();
+//	| sc.ArcTanh    : Next(); Result = Result.Arctanh();
+//	| sc.SquareRoot : Next(); Result = Result.Sqrt();
+//	| sc.CubeRoot   : Next(); Result = Result.IRoot(3);
+//	| sc.NaturalLog : Next(); Result = Result.Ln();
+//	| sc.Log        : Next(); Result = Result.Log(X.Long(10));
+//	| sc.PowerOfe   : Next(); Result = Result.Exp();
 //	| sc.Name       : V.Get(sc.s.var, Result, ok);
-//	IF ~ok THEN
-//	(* check if this is a function *)
+//	if !ok {
+//	/* check if this is a function */
 //	f.Get(sc.s.var, str, ok);
-//	IF ~ok THEN
+//	if !ok {
 //	sc.Mark(cli.Undefined)
-//	ELSE
-//	(* evaluate function *)
+//	} else {
+//	/* evaluate function */
 //	sc.Get(Token);
-//	Result:=Function(sc.s.var);
-//	END
-//	ELSE sc.Get(Token);
-//	IF Token=sc.LeftBrace THEN (* duplicated name? *)
+//	Result = Function(sc.s.var);
+//	}
+//	} else { sc.Get(Token);
+//	if Token=sc.LeftBrace { /* duplicated name? */
 //	f.Get(sc.s.var, str, ok);
-//	IF ~ok THEN
+//	if !ok {
 //	sc.Mark(cli.Undefined)
-//	ELSE
-//	(* evaluate function *)
-//	Result:=Function(sc.s.var);
-//	END
-//	END
-//	END
-//	| sc.Base       : SaveBase := XM.nState.LocalBase;
-//	XM.nState.LocalBase := 10;
+//	} else {
+//	/* evaluate function */
+//	Result = Function(sc.s.var);
+//	}
+//	}
+//	}
+//	| sc.Base       : SaveBase  =  XM.nState.LocalBase;
+//	XM.nState.LocalBase  =  10;
 //	Next();
-//	XM.nState.LocalBase := SHORT(SHORT(ENTIER(Result.real.Short())));
-//	IF (XM.nState.LocalBase < 2) OR (XM.nState.LocalBase > 36) THEN
-//	XM.nState.LocalBase := SaveBase;
-//	END;
-//	Result := LastAnswer;
+//	XM.nState.LocalBase  =  SHORT(SHORT(ENTIER(Result.real.Short())));
+//	if (XM.nState.LocalBase < 2) OR (XM.nState.LocalBase > 36) {
+//	XM.nState.LocalBase  =  SaveBase;
+//	};
+//	Result  =  LastAnswer;
 //	| sc.Digits     : Next();
-//	IF X.status = X.Okay THEN
-//	Digits:=SHORT(ENTIER(Result.real.Short()));
+//	if X.status = X.Okay {
+//	Digits = SHORT(ENTIER(Result.real.Short()));
 //	X.SetDigits(Digits);
-//	Result := LastAnswer;
-//	END;
+//	Result  =  LastAnswer;
+//	};
 //	| sc.Decimals   : Next();
-//	IF X.status = X.Okay THEN
-//	XM.nState.DecPoint:=SHORT(SHORT(ENTIER(Result.real.Short())));
-//	Result := LastAnswer;
-//	END;
+//	if X.status = X.Okay {
+//	XM.nState.DecPoint = SHORT(SHORT(ENTIER(Result.real.Short())));
+//	Result  =  LastAnswer;
+//	};
 //	| sc.Notation   : sc.Get(Token);
-//	XM.nState.Notation:=(XM.nState.Notation+1) MOD 3;
-//	Result := LastAnswer;
+//	XM.nState.Notation = (XM.nState.Notation+1) MOD 3;
+//	Result  =  LastAnswer;
 //	| sc.DegRadGrad : sc.Get(Token);
-//	IF XM.nState.DegRadFlag = XM.Gradians THEN
-//	XM.nState.DegRadFlag := XM.Degrees;
-//	ELSE INC(XM.nState.DegRadFlag) END;
-//	Result := LastAnswer;
+//	if XM.nState.DegRadFlag = XM.Gradians {
+//	XM.nState.DegRadFlag  =  XM.Degrees;
+//	} else { INC(XM.nState.DegRadFlag) };
+//	Result  =  LastAnswer;
 //	| sc.Rat		: sc.Get(Token);
-//	XM.nState.Rational := ~XM.nState.Rational;
-//	Result := LastAnswer;
+//	XM.nState.Rational  =  !XM.nState.Rational;
+//	Result  =  LastAnswer;
 //	| sc.List       : sc.Get(Token);
-//	IF V.Defined()>0 THEN
-//	Out.String("Variables:"); Out.Ln;
+//	if V.Defined()>0 {
+//	println("Variables:")
 //	V.Iterate(Print);
 //	Out.Ln;
-//	ELSE Out.String("No variables defined."); Out.Ln
-//	END;
-//	IF f.Defined()>0 THEN
-//	Out.String("Functions:"); Out.Ln;
+//	} else { println("No variables defined."); Out.Ln
+//	};
+//	if f.Defined()>0 {
+//	println("Functions:")
 //	f.Iterate(Printf);
-//	ELSE Out.String("No functions defined."); Out.Ln
-//	END;
-//	Result := LastAnswer
+//	} else { println("No functions defined."); Out.Ln
+//	};
+//	Result  =  LastAnswer
 //	| sc.Help       : sc.Get(Token);
 //	Help;
-//	Result := XM.zero
+//	Result  =  Complex.zero
 //	| sc.Delete     : sc.Get(Token);
-//	IF Token=sc.Name THEN
+//	if Token=sc.Name {
 //	V.Delete(sc.s.var);
 //	f.Delete(sc.s.var)
-//	ELSE sc.Mark(cli.IllegalVariable)
-//	END;
-//	Result := XM.zero; sc.Get(Token)
-//	| sc.iToken     : sc.Get(Token); Result:=XM.Init(X.zero, X.one)
-//	| sc.rToken     : Next(); t:=Result.PolarMag(); FixR
-//	| sc.Theta      : Next(); t:=Result.PolarAngle(); FixR
-//	| sc.ImagPart   : Next(); Result:=XM.Init(Result.imag, X.zero)
-//	| sc.RealPart   : Next(); Result:=XM.Init(Result.real, X.zero)
-//	| sc.IntPart    : Next(); t:=Result.real.Entier(); FixR
-//	| sc.FracPart   : Next(); t:=Result.real.Fraction(); FixR
+//	} else { sc.Mark(cli.IllegalVariable)
+//	};
+//	Result  =  Complex.zero; sc.Get(Token)
+//	| sc.iToken     : sc.Get(Token); Result = XM.Init(X.zero, X.one)
+//	| sc.rToken     : Next(); t = Result.PolarMag(); FixR
+//	| sc.Theta      : Next(); t = Result.PolarAngle(); FixR
+//	| sc.ImagPart   : Next(); Result = XM.Init(Result.imag, X.zero)
+//	| sc.RealPart   : Next(); Result = XM.Init(Result.real, X.zero)
+//	| sc.IntPart    : Next(); t = Result.real.Entier(); FixR
+//	| sc.FracPart   : Next(); t = Result.real.Fraction(); FixR
 //	| sc.SignOf     : Next();
-//	IF Result.real.Sign()>0 THEN Result:=XM.Init(X.one, X.zero)
-//	ELSE Result:=XM.Init(X.one.Neg(), X.zero)
-//	END
-//	| sc.Abs        : Next(); Result:=XM.Init(Result.real.Abs(), X.zero)
-//	| sc.Min        : Result:=Args(Min)
-//	| sc.Max        : Result:=Args(Max)
-//	| sc.Sum        : Result:=Args(Add)
-//	| sc.Average    : n:=1; tmp:=Args(Avg); Result:=tmp.Div(XM.Long(n))
-//	| sc.Multiply   : Result:=Args(Mul)
-//	| sc.Conj       : Next(); Result:=Result.Conj()
-//	| sc.Rand       : sc.Get(Token); t:=X.Random(); FixR
-//	ELSE              sc.Mark(X.IllegalOperator); Result := XM.zero
-//	END;
-//	IF X.status#X.Okay THEN sc.Mark(X.status) END
-//	END Factor;
+//	if Result.real.Sign()>0 { Result = XM.Init(X.one, X.zero)
+//	} else { Result = XM.Init(X.one.Neg(), X.zero)
+//	}
+//	| sc.Abs        : Next(); Result = XM.Init(Result.real.Abs(), X.zero)
+//	| sc.Min        : Result = Args(Min)
+//	| sc.Max        : Result = Args(Max)
+//	| sc.Sum        : Result = Args(Add)
+//	| sc.Average    : n = 1; tmp = Args(Avg); Result = tmp.Div(XM.Long(n))
+//	| sc.Multiply   : Result = Args(Mul)
+//	| sc.Conj       : Next(); Result = Result.Conj()
+//	| sc.Rand       : sc.Get(Token); t = X.Random(); FixR
+//	} else {              sc.Mark(X.IllegalOperator); Result  =  Complex.zero
+//	};
+//	if X.status != X.Okay { sc.Mark(X.status) }
+//	} // Factor;
 //	
 //	
-//	PROCEDURE Powers (VAR Result : XM.Complex);
-//	(** 'Result' = <Factor> @{<Power Operator> [Factor]@} *)
-//	VAR
-//	tmp : XM.Complex;
-//	xtmp : X.Real;
+//	func Powers (var Result : Complex);
+//	/** 'Result' = <Factor> @{<Power Operator> [Factor]@} */
+//	var
+//	tmp : Complex;
+//	xtmp : Real
 //	
-//	PROCEDURE Next;
-//	BEGIN
+//	func Next;
+//	
 //	sc.Get(Token);
-//	IF Token = sc.Minus THEN
+//	if Token = sc.Minus {
 //	sc.Get(Token); Factor(Result);
-//	Result := Result.Neg()
-//	ELSE
+//	Result  =  Result.Neg()
+//	} else {
 //	Factor(Result)
-//	END;
-//	END Next;
+//	};
+//	} // Next;
 //	
-//	BEGIN
-//	tmp:=XM.zero;
+//	
+//	tmp = Complex.zero;
 //	Factor(tmp);
 //	WHILE (Token>=sc.Power) & (Token<=sc.PolarToRect) DO
 //	CASE Token OF
-//	sc.Power     : Next(); tmp:=tmp.Power(Result);
-//	| sc.Root      : Next(); tmp:=Result.Root(tmp);
-//	| sc.Squared   : sc.Get(Token); tmp:=tmp.Mul(tmp);
-//	| sc.Cubed     : sc.Get(Token); tmp:=tmp.IPower(3);
-//	| sc.Inverse   : sc.Get(Token); tmp:=XM.one.Div(tmp);
+//	sc.Power     : Next(); tmp = tmp.Power(Result);
+//	| sc.Root      : Next(); tmp = Result.Root(tmp);
+//	| sc.Squared   : sc.Get(Token); tmp = tmp.Mul(tmp);
+//	| sc.Cubed     : sc.Get(Token); tmp = tmp.IPower(3);
+//	| sc.Inverse   : sc.Get(Token); tmp = XM.one.Div(tmp);
 //	| sc.Factorial : sc.Get(Token);
-//	xtmp:=X.Factorial(ENTIER(tmp.real.Short()));
-//	tmp:=XM.Init(xtmp, X.zero);
+//	xtmp = X.Factorial(ENTIER(tmp.real.Short()));
+//	tmp = XM.Init(xtmp, X.zero);
 //	| sc.PercentOf : sc.Get(Token);
-//	Result:=tmp.Div(XM.Init(X.Long(100), X.zero));
+//	Result = tmp.Div(XM.Init(X.Long(100), X.zero));
 //	Factor(tmp);
-//	tmp:=tmp.Mul(Result);
-//	| sc.PolarToRect:Next(); tmp:=XM.ToRectangular(tmp.real, Result.real)
-//	ELSE (* skip *)  sc.Mark(X.IllegalOperator); sc.Get(Token);
-//	END;
-//	END;
-//	Result := tmp;
-//	IF X.status#X.Okay THEN sc.Mark(X.status) END;
-//	END Powers;
+//	tmp = tmp.Mul(Result);
+//	| sc.PolarToRect:Next(); tmp = XM.ToRectangular(tmp.real, Result.real)
+//	} else { /* skip */  sc.Mark(X.IllegalOperator); sc.Get(Token);
+//	};
+//	};
+//	Result  =  tmp;
+//	if X.status != X.Okay { sc.Mark(X.status) };
+//	} // Powers;
 //	
 //	
-//	PROCEDURE Term (VAR Result : XM.Complex);
-//	(** 'Result' = <Powers> @{<Term Operator> <Powers>@} *)
-//	VAR
-//	tmp: XM.Complex;
+//	func Term (var Result : Complex);
+//	/** 'Result' = <Powers> @{<Term Operator> <Powers>@} */
+//	var
+//	tmp: Complex;
 //	itmp, ti : XI.Integer;
 //	
-//	PROCEDURE Next;
-//	BEGIN
+//	func Next;
+//	
 //	sc.Get(Token);
-//	IF Token = sc.Minus THEN
+//	if Token = sc.Minus {
 //	sc.Get(Token); Powers(Result);
-//	Result := Result.Neg()
-//	ELSE
+//	Result  =  Result.Neg()
+//	} else {
 //	Powers(Result)
-//	END;
+//	};
 //	WITH Result: R.Rational DO
-//	ti:=XM.RealToInteger(Result.ToReal())
-//	ELSE
-//	ti:=XM.RealToInteger(Result.real)
-//	END
-//	END Next;
+//	ti = XM.RealToInteger(Result.ToReal())
+//	} else {
+//	ti = XM.RealToInteger(Result.real)
+//	}
+//	} // Next;
 //	
-//	PROCEDURE ToCard(Ex : XM.Complex) : INTEGER;
-//	BEGIN
-//	RETURN SHORT(ENTIER(Ex.real.Short()));
-//	END ToCard;
+//	func ToCard(Ex : Complex) -> Int
 //	
-//	PROCEDURE Fix;
-//	BEGIN
-//	tmp:=XM.Init(XM.IntegerToReal(ti), X.zero)
-//	END Fix;
+//	return SHORT(ENTIER(Ex.real.Short()));
+//	} // ToCard;
 //	
-//	BEGIN
-//	tmp:=XM.zero;
+//	func Fix;
+//	
+//	tmp = XM.Init(XM.IntegerToReal(ti), X.zero)
+//	} // Fix;
+//	
+//	
+//	tmp = Complex.zero;
 //	Powers(tmp);
 //	WHILE (Token>=sc.Times) & (Token<=sc.nPr) OR (Token=sc.Number) DO
 //	CASE Token OF
-//	sc.Times       : Next(); tmp:=tmp.Mul(Result)
-//	| sc.Number      : tmp:=tmp.Mul(Result); Next()
-//	| sc.Divide      : Next(); tmp:=tmp.Div(Result)
-//	| sc.Div         : Next(); itmp:=XM.RealToInteger(tmp.real); ti:=itmp.Div(ti); Fix
-//	| sc.Mod         : Next(); itmp:=XM.RealToInteger(tmp.real); ti:=itmp.Mod(ti); Fix
-//	| sc.And         : Next(); itmp:=XM.RealToInteger(tmp.real); ti:=itmp.And(ti); Fix
-//	| sc.ShiftRight  : Next(); itmp:=XM.RealToInteger(tmp.real); ti:=itmp.RShift(ToCard(Result)); Fix
-//	| sc.AShiftRight : Next(); itmp:=XM.RealToInteger(tmp.real); ti:=itmp.RShift(ToCard(Result)); Fix
-//	| sc.RotateRight : Next(); itmp:=XM.RealToInteger(tmp.real); ti:=itmp.RShift(ToCard(Result)); Fix
-//	| sc.ShiftLeft   : Next(); itmp:=XM.RealToInteger(tmp.real); ti:=itmp.LShift(ToCard(Result)); Fix
-//	| sc.RotateLeft  : Next(); itmp:=XM.RealToInteger(tmp.real); ti:=itmp.LShift(ToCard(Result)); Fix
-//	| sc.ClearBit    : Next(); itmp:=XM.RealToInteger(tmp.real); ti:=itmp.ClearBit(ToCard(Result)); Fix
-//	| sc.SetBit      : Next(); itmp:=XM.RealToInteger(tmp.real); ti:=itmp.SetBit(ToCard(Result)); Fix
-//	| sc.ToggleBit   : Next(); itmp:=XM.RealToInteger(tmp.real); ti:=itmp.ToggleBit(ToCard(Result)); Fix
-//	| sc.nCr         : Next(); tmp:=Combinations(tmp, Result)
-//	| sc.nPr         : Next(); tmp:=Permutations(tmp, Result)
-//	ELSE
+//	sc.Times       : Next(); tmp = tmp.Mul(Result)
+//	| sc.Number      : tmp = tmp.Mul(Result); Next()
+//	| sc.Divide      : Next(); tmp = tmp.Div(Result)
+//	| sc.Div         : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.Div(ti); Fix
+//	| sc.Mod         : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.Mod(ti); Fix
+//	| sc.And         : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.And(ti); Fix
+//	| sc.ShiftRight  : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
+//	| sc.AShiftRight : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
+//	| sc.RotateRight : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
+//	| sc.ShiftLeft   : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.LShift(ToCard(Result)); Fix
+//	| sc.RotateLeft  : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.LShift(ToCard(Result)); Fix
+//	| sc.ClearBit    : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.ClearBit(ToCard(Result)); Fix
+//	| sc.SetBit      : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.SetBit(ToCard(Result)); Fix
+//	| sc.ToggleBit   : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.ToggleBit(ToCard(Result)); Fix
+//	| sc.nCr         : Next(); tmp = Combinations(tmp, Result)
+//	| sc.nPr         : Next(); tmp = Permutations(tmp, Result)
+//	} else {
 //	sc.Mark(X.IllegalOperator); sc.Get(Token)
-//	END
-//	END;
-//	Result := tmp;
-//	IF X.status#X.Okay THEN sc.Mark(X.status) END;
-//	END Term;
+//	}
+//	};
+//	Result  =  tmp;
+//	if X.status != X.Okay { sc.Mark(X.status) };
+//	} // Term;
 //	
 //	
-//	PROCEDURE SimpleExpression (VAR Result : XM.Complex);
-//	(** 'Result' = [+|-] <Term> @{+|- <Term>@} *)
-//	VAR
-//	tmp : XM.Complex;
+//	func SimpleExpression (var Result : Complex);
+//	/** 'Result' = [+|-] <Term> @{+|- <Term>@} */
+//	var
+//	tmp : Complex;
 //	ti  : XI.Integer;
 //	ires : XI.Integer;
 //	
-//	PROCEDURE Next(VAR Result : XM.Complex);
-//	BEGIN
+//	func Next(var Result : Complex);
+//	
 //	sc.Get(Token);
-//	IF Token = sc.Minus THEN
+//	if Token = sc.Minus {
 //	sc.Get(Token); Term(Result);
-//	Result := Result.Neg()
-//	ELSE
+//	Result  =  Result.Neg()
+//	} else {
 //	Term(Result)
-//	END;
+//	};
 //	WITH tmp: R.Rational DO
-//	ires:=XM.RealToInteger(tmp.ToReal())
-//	ELSE
-//	ires:=XM.RealToInteger(tmp.real)
-//	END
-//	END Next;
+//	ires = XM.RealToInteger(tmp.ToReal())
+//	} else {
+//	ires = XM.RealToInteger(tmp.real)
+//	}
+//	} // Next;
 //	
-//	PROCEDURE Fix;
-//	BEGIN
-//	tmp:=XM.Init(XM.IntegerToReal(ti), X.zero)
-//	END Fix;
+//	func Fix;
 //	
-//	BEGIN
-//	tmp:=XM.zero;
+//	tmp = XM.Init(XM.IntegerToReal(ti), X.zero)
+//	} // Fix;
+//	
+//	
+//	tmp = Complex.zero;
 //	CASE Token OF
 //	sc.Plus  : Next(tmp);
-//	| sc.Minus : Next(tmp); tmp:=tmp.Neg()
-//	ELSE       Term(tmp)
-//	END;
+//	| sc.Minus : Next(tmp); tmp = tmp.Neg()
+//	} else {       Term(tmp)
+//	};
 //	WHILE (Token >= sc.Plus) & (Token <= sc.Xor) DO
 //	CASE Token OF
-//	sc.Plus  : Next(Result); tmp:=tmp.Add(Result);
-//	| sc.Minus : Next(Result); tmp:=tmp.Sub(Result);
-//	| sc.Or    : Next(Result); ti:=ires.Or(XM.RealToInteger(Result.real)); Fix
-//	| sc.Xor   : Next(Result); ti:=ires.Xor(XM.RealToInteger(Result.real)); Fix
-//	ELSE         Term(tmp);
-//	END;
-//	END;
-//	Result := tmp;
-//	IF X.status#X.Okay THEN sc.Mark(X.status) END
-//	END SimpleExpression;
+//	sc.Plus  : Next(Result); tmp = tmp.Add(Result);
+//	| sc.Minus : Next(Result); tmp = tmp.Sub(Result);
+//	| sc.Or    : Next(Result); ti = ires.Or(XM.RealToInteger(Result.real)); Fix
+//	| sc.Xor   : Next(Result); ti = ires.Xor(XM.RealToInteger(Result.real)); Fix
+//	} else {         Term(tmp);
+//	};
+//	};
+//	Result  =  tmp;
+//	if X.status != X.Okay { sc.Mark(X.status) }
+//	} // SimpleExpression;
 //	
 //	
-//	PROCEDURE Expression (VAR Result : XM.Complex);
-//	(** 'Result' = <Expression> @{+|- <Term>@} *)
-//	VAR
-//	tmp : XM.Complex;
+//	func Expression (var Result : Complex);
+//	/** 'Result' = <Expression> @{+|- <Term>@} */
+//	var
+//	tmp : Complex;
 //	
-//	PROCEDURE Next(VAR Result : XM.Complex);
-//	BEGIN
+//	func Next(var Result : Complex);
+//	
 //	sc.Get(Token);
 //	SimpleExpression(Result)
-//	END Next;
+//	} // Next;
 //	
-//	BEGIN
+//	
 //	SimpleExpression(tmp);
-//	IF (Token >= sc.Greater) & (Token <= sc.Assign) THEN
+//	if (Token >= sc.Greater) & (Token <= sc.Assign) {
 //	CASE Token OF
 //	sc.Greater      : Next(Result);
-//	IF tmp.Cmp(Result)=1 THEN tmp:=XM.one ELSE tmp:=zero END
+//	if tmp.Cmp(Result)=1 { tmp = XM.one } else { tmp = zero }
 //	| sc.GreaterEqual : Next(Result);
-//	IF tmp.Cmp(Result)>=0 THEN tmp:=XM.one ELSE tmp:=zero END
+//	if tmp.Cmp(Result)>=0 { tmp = XM.one } else { tmp = zero }
 //	| sc.Less         : Next(Result);
-//	IF tmp.Cmp(Result)<0 THEN tmp:=XM.one ELSE tmp:=zero END
+//	if tmp.Cmp(Result)<0 { tmp = XM.one } else { tmp = zero }
 //	| sc.LessEqual    : Next(Result);
-//	IF tmp.Cmp(Result)<=0 THEN tmp:=XM.one ELSE tmp:=zero END
+//	if tmp.Cmp(Result)<=0 { tmp = XM.one } else { tmp = zero }
 //	| sc.NotEqual     : Next(Result);
-//	IF tmp.Cmp(Result)#0 THEN tmp:=XM.one ELSE tmp:=zero END
+//	if tmp.Cmp(Result) != 0 { tmp = XM.one } else { tmp = zero }
 //	| sc.Assign       : Next(Result);
-//	IF tmp.Cmp(Result)=0 THEN tmp:=XM.one ELSE tmp:=zero END
-//	ELSE                sc.Mark(X.IllegalOperator); sc.Get(Token)
-//	END;
-//	END;
-//	Result:=tmp;
-//	IF X.status#X.Okay THEN sc.Mark(X.status) END
-//	END Expression;
+//	if tmp.Cmp(Result)=0 { tmp = XM.one } else { tmp = zero }
+//	} else {                sc.Mark(X.IllegalOperator); sc.Get(Token)
+//	};
+//	};
+//	Result = tmp;
+//	if X.status != X.Okay { sc.Mark(X.status) }
+//	} // Expression;
 //	
 //	
-//	PROCEDURE Evaluate* (arg: STRING; VAR Result: XM.Complex): BOOLEAN;
-//	(** Evaluate 'arg' input and return the result in 'Result'.  The
-//	function returns true if there were no evaluation errors. *)
-//	VAR
-//	name: STRING;
-//	ok: BOOLEAN;
-//	r: XM.Complex;
-//	BEGIN
-//	CommandLine:=arg;              (* remember this string for later        *)
-//	X.status := X.Okay;            (* clear out any previous errors         *)
-//	X.err := 0;
-//	sc.Init(arg); sc.Get(Token);   (* start things off with the first token *)
+//	func Evaluate* (arg: String var Result: Complex): Bool;
+//	/** Evaluate 'arg' input and return the result in 'Result'.  The
+//	function returns true if there were no evaluation errors. */
+//	var
+//	name: String
+//	ok: Bool;
+//	r: Complex;
 //	
-//	IF Token = sc.Let THEN         (* define a variable or a function *)
+//	CommandLine = arg;              /* remember this string for later        */
+//	X.status  =  X.Okay;            /* clear out any previous errors         */
+//	X.err  =  0;
+//	sc.Init(arg); sc.Get(Token);   /* start things off with the first token */
+//	
+//	if Token = sc.Let {         /* define a variable or a function */
 //	sc.Get(Token);
-//	IF Token # sc.Name THEN sc.Mark(cli.ExpectingName); name:="Error"
-//	ELSE name:=sc.s.var
-//	END;
+//	if Token  !=  sc.Name { sc.Mark(cli.ExpectingName); name = "Error"
+//	} else { name = sc.s.var
+//	};
 //	sc.Get(Token);
-//	IF Token = sc.LeftBrace THEN
-//	(* defining a function *)
+//	if Token = sc.LeftBrace {
+//	/* defining a function */
 //	sc.Get(Token);
-//	f.Set(name);                (* define a new function *)
-//	WHILE Token = sc.Name DO    (* define the argument list *)
+//	f.Set(name);                /* define a new function */
+//	WHILE Token = sc.Name DO    /* define the argument list */
 //	f.AddArg(name, sc.s.var, ok);
-//	IF ~ok THEN sc.Mark(cli.IllegalArg) END;
+//	if !ok { sc.Mark(cli.IllegalArg) };
 //	sc.Get(Token);
-//	IF Token = sc.Semi THEN sc.Get(Token) END
-//	END;
-//	IF Token # sc.RightBrace THEN sc.Mark(cli.ExpectingRBrace) END;
+//	if Token = sc.Semi { sc.Get(Token) }
+//	};
+//	if Token  !=  sc.RightBrace { sc.Mark(cli.ExpectingRBrace) };
 //	sc.Get(Token);
-//	IF Token # sc.Assign THEN sc.Mark(cli.ExpectingAssign) END;
+//	if Token  !=  sc.Assign { sc.Mark(cli.ExpectingAssign) };
 //	f.SetEquation(name, sc.GetString());
-//	r:=XM.zero
-//	ELSE
-//	(* defining a variable *)
-//	IF Token # sc.Assign THEN sc.Mark(cli.ExpectingAssign) END;
+//	r = Complex.zero
+//	} else {
+//	/* defining a variable */
+//	if Token  !=  sc.Assign { sc.Mark(cli.ExpectingAssign) };
 //	sc.Get(Token);
 //	Expression(r);
 //	StoreVariable(name, r)
-//	END;
-//	Token:=sc.Empty;
-//	ELSE Expression(r)
-//	END;
-//	IF Token#sc.Empty THEN
+//	};
+//	Token = sc.Empty;
+//	} else { Expression(r)
+//	};
+//	if Token != sc.Empty {
 //	sc.Mark(cli.IllegalExpression)
-//	END;
-//	Result:=r;
-//	LastAnswer:=r;
-//	RETURN X.status=X.Okay
-//	END Evaluate;
+//	};
+//	Result = r;
+//	LastAnswer = r;
+//	return X.status=X.Okay
+//	} // Evaluate;
 //	
 //	
-//	PROCEDURE Store* (w: Storable.Writer) RAISES IO.Error;
-//	(** Store the defined functions to writer 'w' *)
-//	BEGIN
+//	func Store* (w: Storable.Writer) RAISES IO.Error;
+//	/** Store the defined functions to writer 'w' */
+//	
 //	f.Store(w);
-//	IF LastAnswer IS R.Rational THEN w.WriteLInt(1) ELSE w.WriteLInt(0) END;
+//	if LastAnswer IS R.Rational { w.WriteLInt(1) } else { w.WriteLInt(0) };
 //	LastAnswer.Store(w)
-//	END Store;
+//	} // Store;
 //	
 //	
-//	PROCEDURE Load * (r: Storable.Reader) RAISES IO.Error;
-//	(** Load functions from the reader 'r' *)
-//	VAR
-//	type: LONGINT;
+//	func Load * (r: Storable.Reader) RAISES IO.Error;
+//	/** Load functions from the reader 'r' */
+//	var
+//	type: Int
 //	n: R.Rational;
-//	BEGIN
+//	
 //	f.Load(r);
 //	r.ReadLInt(type);
-//	IF type = 1 THEN NEW(n); n.Load(r); LastAnswer := n
-//	ELSE NEW(LastAnswer); LastAnswer.Load(r)
-//	END
-//	END Load;
+//	if type = 1 { NEW(n); n.Load(r); LastAnswer  =  n
+//	} else { NEW(LastAnswer); LastAnswer.Load(r)
+//	}
+//	} // Load;
 //	
 //	
-//	BEGIN
-//	Token:=sc.Empty;
-//	zero:=XM.Init(X.zero, X.zero);
-//	LastAnswer:=XM.Init(X.zero, X.zero);
-//	END Equations.
+//	
+//	Token = sc.Empty;
+//	zero = XM.Init(X.zero, X.zero);
+//	LastAnswer = XM.Init(X.zero, X.zero);
+//	} // Equations.
 	
 	
 }

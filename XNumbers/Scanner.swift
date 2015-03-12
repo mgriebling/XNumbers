@@ -74,7 +74,7 @@ struct Scanner {
 
 	typealias VarStr = String
 	
-	let ExpChar : Character = "E"
+	static let ExpChar : Character = "E"
 	
 	struct StateType {
 		var val     : Complex  /* number value */
@@ -96,11 +96,10 @@ struct Scanner {
 		}
 	}
 	
-	var s = StateType()
-	var stack: [StateType] = []
-	var nkw: Int = 0
+	static var s = StateType()
+	static var stack: [StateType] = []
 
-	let keyTab: [Tokens: String] = [
+	static let keyTab: [Tokens: String] = [
 		.nCr:          "nCr",
 		.nPr:          "nPr",
 		.Let:          "let",
@@ -175,7 +174,7 @@ struct Scanner {
 		.Tan:          "tan"
 	]
 
-	mutating func Mark (errid: Real.Status) {
+	static func Mark (errid: Real.Status) {
 		if s.pos > s.errpos {
 //			err.DisplayError(errid, s.pos, s.pline);
 			Real.status = errid
@@ -183,17 +182,17 @@ struct Scanner {
 		s.errpos = s.pos; s.error = true
 	} // Mark;
 	
-	mutating func PushState () {
+	static func PushState () {
 		stack.insert(s, atIndex: 0) /* push on the stack */
 	} // PushState;
 	
-	mutating func PopState () {
+	static func PopState () {
 		if var s = stack.last {
 			removeLast(&stack)
 		}
 	} // PopState;
 	
-	mutating func Read () {
+	static func Read () {
 		if !self.s.pline.isEmpty {
 			s.ch = self.s.pline[s.pline.startIndex]
 			removeAtIndex(&self.s.pline, s.pline.startIndex)
@@ -201,21 +200,21 @@ struct Scanner {
 		++s.pos
 	} // Read();
 
-	init (str: String) {
+	static func Initialize (str: String) {
 		self.s = StateType()
 		self.s.pline = str
 		Read() /* prime the tokenizer */
 	} // Init;
 	
-	private func LocateChar(Str : String, ch : Character, start : Int) -> String.Index? {
+	static private func LocateChar(Str : String, ch : Character, start : Int) -> String.Index? {
 		return find(Str, ch)
 	} // LocateChar;
 	
-	func GetString () -> String {
+	static func GetString () -> String {
 		return s.pline   // .Substring(s.pos-1, s.pline.length)
 	} // GetString;
 
-	mutating func Get () -> Tokens {
+	static func Get () -> Tokens {
 		let sqrt : Character = "√"
 		let pi  : Character = "π"
 		var sym : Tokens = .Empty
