@@ -122,12 +122,12 @@ struct Variables {
 		Variables.fvar = [String: Complex]()
 	} // Deletef;
 
-	func Iterate (IterFunc: (String, String)) {
+	func Iterate (IterFunc: (String, String) -> ()) {
 		/** Apply the function 'IterFunc' to all variables */
 		for (name, value) in Variables.Var {
 			let n = value.description
 			println("Variable \(name) = \(n)")
-//			IterFunc(name, n)   // why is the type an issue?
+			IterFunc(name, n)
 		}
 	} // Iterate;
 
