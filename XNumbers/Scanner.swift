@@ -8,6 +8,15 @@
 
 import Foundation
 
+
+func > (lhs: Scanner.Tokens, rhs: Scanner.Tokens) -> Bool {
+	return lhs.rawValue > rhs.rawValue
+}
+
+func < (lhs: Scanner.Tokens, rhs: Scanner.Tokens) -> Bool {
+	return lhs.rawValue < rhs.rawValue
+}
+
 struct Scanner {
 
 /*
@@ -30,8 +39,8 @@ struct Scanner {
 	
 	*/
 
-	enum Tokens {
-		case Empty
+	enum Tokens : Int, Comparable {
+		case Empty = 0
 		
 		/* expression tokens */
 		case Plus; case Minus; case Or;	case Xor

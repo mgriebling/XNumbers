@@ -32,11 +32,11 @@ struct Functions {
 
 	struct FuncType {
 		var Func: String
-		var Args: [String: Complex]
+		var Args: [String]
 		
 		init (value: String) {
-			self.Func = value;
-			self.Args = [String: Complex]()
+			self.Func = value
+			self.Args = [String]()
 		} // New;
 	}
 	
@@ -111,8 +111,13 @@ struct Functions {
 	} // Get;
 
 	
-	static func GetArgValue (fname: String, argName: String) -> Complex? {
-		return Functions.Funcs[fname]?.Args[argName]
+	static func GetArg (fname: String, argNumber: Int) -> String? {
+		if let args = Functions.Funcs[fname]?.Args {
+			if argNumber < args.count {
+				return args[argNumber]
+			}
+		}
+		return nil
 	} // GetArg;
 
 	
@@ -128,7 +133,7 @@ struct Functions {
 		var s = ""
 		var i = 0
 		if let args = Functions.Funcs[fname]?.Args {
-			for (arg, _) in args {
+			for arg in args {
 				if i > 0 { s = s + "; " }
 				s = s + arg; i++
 			}
@@ -139,7 +144,7 @@ struct Functions {
 
 	static func AddArg (fname: String, name: String) -> Bool {
 		if let args = Functions.Funcs[fname]?.Args {
-			Functions.Funcs[fname]?.Args[name] = Complex(fromDouble: 0)
+			Functions.Funcs[fname]?.Args.append(name)
 			return true
 		}
 		return false

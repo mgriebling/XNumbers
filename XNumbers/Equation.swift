@@ -75,7 +75,7 @@ class Equation {
 	} // Max;
 
 
-	func Permutations (n: Complex, _ r: Complex) -> Complex {
+	private func Permutations (n: Complex, _ r: Complex) -> Complex {
 		/** Return the number of permutations of n different objects
 		taken r at a time (i.e., n!/(n-r)! )
 		*/
@@ -90,7 +90,7 @@ class Equation {
 	} // Permutations;
 	
 	
-	func Combinations (n: Complex, r: Complex) -> Complex {
+	private func Combinations (n: Complex, _ r: Complex) -> Complex {
 		/** Return the combinations of n different objects taken
 		r at a time (i.e., n!/(r!(n-r)!))
 		*/
@@ -167,7 +167,7 @@ class Equation {
 		println(" drg             Toggle Degree/Radian/Grad")
 	} // Help;
 	
-	func Function (fname: String) -> Complex {
+	private func Function (fname: String) -> Complex {
 		var arg: String
 		var ok: Bool
 		var nargs: Int
@@ -180,13 +180,18 @@ class Equation {
 		res = Complex.zero
 		if Token == .LeftBrace {
 			do {
-				Token = Scanner.Get(); Expression(res)
-				Functions.GetArg(fname, nargs, arg); ++nargs
+				Token = Scanner.Get(); res = Expression()
+				if let arg = Functions.GetArg(fname, argNumber: nargs) {
+					// nothing to do
+				} else {
+					arg = ""
+				}
+				++nargs
 				Variables.Setf(arg, value: res)
 			} while Token == .Semi
 			if Token != .RightBrace { Scanner.Mark(.MismatchBraces) }
 			if nargs != Functions.NumArgs(fname) { Scanner.Mark(.IncompatibleArgs) }
-			Token = Scanner.Get();   /* skip right brace */
+			Token = Scanner.Get()   /* skip right brace */
 			
 			/* now we finally evaluate the function */
 			Scanner.PushState()                 /* save current expression's state */
@@ -194,28 +199,28 @@ class Equation {
 			Real.status = .Okay             /* clear out any previous errors */
 			Real.err = 0
 			Scanner.Initialize(eqn!); Token = Scanner.Get()    /* start things off with the first token */
-			Expression(res)
+			res = Expression()
 			Scanner.PopState()                  /* restore our previous state */
 			Variables.Deletef()                    /* clear function stack */
 			Token = ptoken                   /* and active token */
 		} else if Functions.NumArgs(fname) > 0 {
-			Scanner.Mark(cli.ExpectingArgs)
+			Scanner.Mark(.ExpectingArgs)
 			res = Complex.zero
-		};
+		}
 		return res
 	} // Function;
 	
 	
-	func IfCondition () -> Complex {
+	private func IfCondition () -> Complex {
 		/** Handle If(<expression>;<expression>;<expression>) */
 		var cond, tval, fval: Complex
 		
 		if Token == .LeftBrace {
-			Token = Scanner.Get(); Expression(cond)
+			Token = Scanner.Get(); cond = Expression()
 			if Token != .Semi { Scanner.Mark(cli.ExpectingArgs) }
-			Token = Scanner.Get(); Expression(tval)
+			Token = Scanner.Get(); tval = Expression()
 			if Token != .Semi { Scanner.Mark(cli.ExpectingArgs) }
-			Token = Scanner.Get(); Expression(fval)
+			Token = Scanner.Get(); fval = Expression()
 			if Token != .RightBrace { Scanner.Mark(.MismatchBraces) }
 			Token = Scanner.Get();
 			if cond.Cmp(zero) > 0 { return tval } else { return fval }
@@ -225,7 +230,7 @@ class Equation {
 	} // IfCondition;
 	
 	
-	func Factor (var Result : Complex) {
+	private func Factor () -> Complex {
 		/** 'Result' = <[Factor Operator] (<Variable> | <Function> | "(" <Expression> ")" | <Number>) */
 		//		typeAlias funcType = (x:Complex, y:Complex) -> Complex
 		
@@ -237,6 +242,7 @@ class Equation {
 		var n        : Int
 		var str      : String
 		var ok       : Bool
+		var Result	 : Complex
 		
 		func Add (x: Complex, y: Complex) -> Complex {
 			return x.Add(y)
@@ -253,10 +259,9 @@ class Equation {
 		func Next() {
 			Token = Scanner.Get()
 			if Token == .Minus {
-				Token = Scanner.Get(); Factor(Result)
-				Result = Result.Neg()
+				Token = Scanner.Get(); Result = -Factor()
 			} else {
-				Factor(Result)
+				Result = Factor()
 			}
 		} // Next;
 		
@@ -265,10 +270,10 @@ class Equation {
 			tmp = Complex.zero
 			Token = Scanner.Get()
 			if Token != .LeftBrace { Scanner.Mark(.MismatchBraces) }
-			Token = Scanner.Get(); Expression(tmp)
+			Token = Scanner.Get(); tmp = Expression()
 			if Token != .Semi { Scanner.Mark(.ExpectingArgs) }
 			do {
-				Token = Scanner.Get(); Expression(tmp2)
+				Token = Scanner.Get(); tmp2 = Expression()
 				tmp = function(x: tmp, y: tmp2)
 			} while Token == .Semi
 			if Token != .RightBrace { Scanner.Mark(.MismatchBraces) }
@@ -287,16 +292,16 @@ class Equation {
 		
 		switch Token {
 		case .LeftBrace :
-			Token = Scanner.Get();
-			Expression(Result)
+			Token = Scanner.Get()
+			Result = Expression()
 			if Token == .RightBrace {
 				Token = Scanner.Get()
 			} else {
 				Scanner.Mark(.MismatchBraces)
 			}
 		case .VertBrace :
-			Token = Scanner.Get();
-			Expression(Result)
+			Token = Scanner.Get()
+			Result = Expression()
 			t = Result.PolarMag(); FixR()
 			if Token == .VertBrace {
 				Token = Scanner.Get()
@@ -305,7 +310,7 @@ class Equation {
 			}
 		case .Number :
 			if Complex.nState.Rational {
-				Result = Complex(re: Scanner.s.val.real, im: 1.0)
+				Result = Complex(re: Scanner.s.val.real, im: Real.one)
 			} else {
 				Result = Scanner.s.val
 			}
@@ -342,19 +347,20 @@ class Equation {
 		case .SquareRoot : Next(); Result = Result.Sqrt()
 		case .CubeRoot   : Next(); Result = Result.IRoot(3)
 		case .NaturalLog : Next(); Result = Result.Ln()
-		case .Log        : Next(); Result = Result.Log(Real(fromInt: 10))
+		case .Log        : Next(); Result = Result.Log(Complex(fromDouble: 10))
 		case .PowerOfe   : Next(); Result = Result.Exp()
 		case .Name       :
-			if let Result = Variables.Get(Scanner.s.varn) {
+			if var temp = Variables.Get(Scanner.s.varn) {
 				Token = Scanner.Get()
 				if Token == .LeftBrace { /* duplicated name? */
 					if let str = Functions.Get(Scanner.s.varn) {
 						/* evaluate function */
-						Result = Function(Scanner.s.varn)
+						temp = Function(Scanner.s.varn)
 					} else {
 						Scanner.Mark(.Undefined)
 					}
 				}
+				Result = temp
 			} else {
 				/* check if this is a function */
 				if let str = Functions.Get(Scanner.s.varn) {
@@ -461,251 +467,235 @@ class Equation {
 		default: Scanner.Mark(.IllegalOperator); Result = Complex.zero
 		}
 		if Real.status != .Okay { Scanner.Mark(Real.status) }
+		return Result
 	} // Factor;
 	
 	
-//	func Powers (var Result : Complex);
-//	/** 'Result' = <Factor> @{<Power Operator> [Factor]@} */
-//	var
-//	tmp : Complex;
-//	xtmp : Real
-//	
-//	func Next;
-//	
-//	Token = Scanner.Get();
-//	if Token = .Minus {
-//	Token = Scanner.Get(); Factor(Result);
-//	Result = Result.Neg()
-//	} else {
-//	Factor(Result)
-//	};
-//	} // Next;
-//	
-//	
-//	tmp = Complex.zero;
-//	Factor(tmp);
-//	while (Token>=.Power) & (Token<=.PolarToRect) {
-//	switch Token {
-//	.Power     : Next(); tmp = tmp.Power(Result);
-//	case .Root      : Next(); tmp = Result.Root(tmp);
-//	case .Squared   : Token = Scanner.Get(); tmp = tmp.Mul(tmp);
-//	case .Cubed     : Token = Scanner.Get(); tmp = tmp.IPower(3);
-//	case .Inverse   : Token = Scanner.Get(); tmp = Complex.one.Div(tmp);
-//	case .Factorial : Token = Scanner.Get();
-//	xtmp =Real.Factorial(ENTIER(tmp.real.Short()));
-//	tmp = Complex(xtmp, Real.zero);
-//	case .PercentOf : Token = Scanner.Get();
-//	Result = tmp.Div(Complex(X.Long(100), Real.zero));
-//	Factor(tmp);
-//	tmp = tmp.Mul(Result);
-//	case .PolarToRect:Next(); tmp = Complex.ToRectangular(tmp.real, Result.real)
-//	} else { /* skip */  Scanner.Mark(X.IllegalOperator); Token = Scanner.Get();
-//	};
-//	};
-//	Result = tmp;
-//	ifReal.status !=Real.Okay { Scanner.Mark(X.status) };
-//	} // Powers;
-//	
-//	
-//	func Term (var Result : Complex);
-//	/** 'Result' = <Powers> @{<Term Operator> <Powers>@} */
-//	var
-//	tmp: Complex;
-//	itmp, ti : XI.Integer;
-//	
-//	func Next;
-//	
-//	Token = Scanner.Get();
-//	if Token = .Minus {
-//	Token = Scanner.Get(); Powers(Result);
-//	Result = Result.Neg()
-//	} else {
-//	Powers(Result)
-//	};
-//	WITH Result: R.Rational {
-//	ti = Complex.RealToInteger(Result.ToReal())
-//	} else {
-//	ti = Complex.RealToInteger(Result.real)
-//	}
-//	} // Next;
-//	
-//	func ToCard(Ex : Complex) -> Int
-//	
-//	return SHORT(ENTIER(Ex.real.Short()));
-//	} // ToCard;
-//	
-//	func Fix;
-//	
-//	tmp = Complex(Complex.IntegerToReal(ti), Real.zero)
-//	} // Fix;
-//	
-//	
-//	tmp = Complex.zero;
-//	Powers(tmp);
-//	while (Token>=.Times) & (Token<=.nPr) || (Token=.Number) {
-//	switch Token {
-//	.Times       : Next(); tmp = tmp.Mul(Result)
-//	case .Number      : tmp = tmp.Mul(Result); Next()
-//	case .Divide      : Next(); tmp = tmp.Div(Result)
-//	case .Div         : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.Div(ti); Fix
-//	case .Mod         : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.Mod(ti); Fix
-//	case .And         : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.And(ti); Fix
-//	case .ShiftRight  : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
-//	case .AShiftRight : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
-//	case .RotateRight : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
-//	case .ShiftLeft   : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.LShift(ToCard(Result)); Fix
-//	case .RotateLeft  : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.LShift(ToCard(Result)); Fix
-//	case .ClearBit    : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.ClearBit(ToCard(Result)); Fix
-//	case .SetBit      : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.SetBit(ToCard(Result)); Fix
-//	case .ToggleBit   : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.ToggleBit(ToCard(Result)); Fix
-//	case .nCr         : Next(); tmp = Combinations(tmp, Result)
-//	case .nPr         : Next(); tmp = Permutations(tmp, Result)
-//	} else {
-//	Scanner.Mark(X.IllegalOperator); Token = Scanner.Get()
-//	}
-//	};
-//	Result = tmp;
-//	ifReal.status !=Real.Okay { Scanner.Mark(X.status) };
-//	} // Term;
-//	
-//	
-//	func SimpleExpression (var Result : Complex);
-//	/** 'Result' = [+|-] <Term> @{+|- <Term>@} */
-//	var
-//	tmp : Complex;
-//	ti  : XI.Integer;
-//	ires : XI.Integer;
-//	
-//	func Next(var Result : Complex);
-//	
-//	Token = Scanner.Get();
-//	if Token = .Minus {
-//	Token = Scanner.Get(); Term(Result);
-//	Result = Result.Neg()
-//	} else {
-//	Term(Result)
-//	};
-//	WITH tmp: R.Rational {
-//	ires = Complex.RealToInteger(tmp.ToReal())
-//	} else {
-//	ires = Complex.RealToInteger(tmp.real)
-//	}
-//	} // Next;
-//	
-//	func Fix;
-//	
-//	tmp = Complex(Complex.IntegerToReal(ti), Real.zero)
-//	} // Fix;
-//	
-//	
-//	tmp = Complex.zero;
-//	switch Token {
-//	.Plus  : Next(tmp);
-//	case .Minus : Next(tmp); tmp = tmp.Neg()
-//	} else {       Term(tmp)
-//	};
-//	while (Token >= .Plus) & (Token <= .Xor) {
-//	switch Token {
-//	.Plus  : Next(Result); tmp = tmp.Add(Result);
-//	case .Minus : Next(Result); tmp = tmp.Sub(Result);
-//	case .Or    : Next(Result); ti = ires.Or(Complex.RealToInteger(Result.real)); Fix
-//	case .Xor   : Next(Result); ti = ires.Xor(Complex.RealToInteger(Result.real)); Fix
-//	} else {         Term(tmp);
-//	};
-//	};
-//	Result = tmp;
-//	ifReal.status !=Real.Okay { Scanner.Mark(X.status) }
-//	} // SimpleExpression;
-//	
-//	
-//	func Expression (var Result : Complex);
-//	/** 'Result' = <Expression> @{+|- <Term>@} */
-//	var
-//	tmp : Complex;
-//	
-//	func Next(var Result : Complex);
-//	
-//	Token = Scanner.Get();
-//	SimpleExpression(Result)
-//	} // Next;
-//	
-//	
-//	SimpleExpression(tmp);
-//	if (Token >= .Greater) & (Token <= .Assign) {
-//	switch Token {
-//	.Greater      : Next(Result);
-//	if tmp.Cmp(Result)=1 { tmp = Complex.one } else { tmp = zero }
-//	case .GreaterEqual : Next(Result);
-//	if tmp.Cmp(Result)>=0 { tmp = Complex.one } else { tmp = zero }
-//	case .Less         : Next(Result);
-//	if tmp.Cmp(Result)<0 { tmp = Complex.one } else { tmp = zero }
-//	case .LessEqual    : Next(Result);
-//	if tmp.Cmp(Result)<=0 { tmp = Complex.one } else { tmp = zero }
-//	case .NotEqual     : Next(Result);
-//	if tmp.Cmp(Result) != 0 { tmp = Complex.one } else { tmp = zero }
-//	case .Assign       : Next(Result);
-//	if tmp.Cmp(Result)=0 { tmp = Complex.one } else { tmp = zero }
-//	} else {                Scanner.Mark(X.IllegalOperator); Token = Scanner.Get()
-//	};
-//	};
-//	Result = tmp;
-//	ifReal.status !=Real.Okay { Scanner.Mark(X.status) }
-//	} // Expression;
-//	
-//	
-//	func Evaluate* (arg: String var Result: Complex): Bool;
-//	/** Evaluate 'arg' input and return the result in 'Result'.  The
-//	function returns true if there were no evaluation errors. */
-//	var
-//	name: String
-//	ok: Bool;
-//	r: Complex;
-//	
-//	CommandLine = arg;              /* remember this string for later        */
-//	X.status  = Real.Okay;            /* clear out any previous errors         */
-//	X.err = 0;
-//	Scanner.Init(arg); Token = Scanner.Get();   /* start things off with the first token */
-//	
-//	if Token = .Let {         /* define a variable or a function */
-//	Token = Scanner.Get();
-//	if Token  !=  .Name { Scanner.Mark(cli.ExpectingName); name = "Error"
-//	} else { name = Scanner.s.varn
-//	};
-//	Token = Scanner.Get();
-//	if Token = .LeftBrace {
-//	/* defining a function */
-//	Token = Scanner.Get();
-//	f.Set(name);                /* define a new function */
-//	while Token = .Name {    /* define the argument list */
-//	f.AddArg(name, Scanner.s.varn, ok);
-//	if !ok { Scanner.Mark(cli.IllegalArg) };
-//	Token = Scanner.Get();
-//	if Token = .Semi { Token = Scanner.Get() }
-//	};
-//	if Token  !=  .RightBrace { Scanner.Mark(cli.ExpectingRBrace) };
-//	Token = Scanner.Get();
-//	if Token  !=  .Assign { Scanner.Mark(cli.ExpectingAssign) };
-//	f.SetEquation(name, Scanner.GetString());
-//	r = Complex.zero
-//	} else {
-//	/* defining a variable */
-//	if Token  !=  .Assign { Scanner.Mark(cli.ExpectingAssign) };
-//	Token = Scanner.Get();
-//	Expression(r);
-//	StoreVariable(name, r)
-//	};
-//	Token = .Empty;
-//	} else { Expression(r)
-//	};
-//	if Token != .Empty {
-//	Scanner.Mark(cli.IllegalExpression)
-//	};
-//	Result = r;
-//	LastAnswer = r;
-//	returnReal.status=X.Okay
-//	} // Evaluate;
-//	
-//	
+	private func Powers () -> Complex {
+		/** 'Result' = <Factor> @{<Power Operator> [Factor]@} */
+		var tmp : Complex
+		var xtmp : Real
+		var Result : Complex
+		
+		func Next () {
+			Token = Scanner.Get()
+			if Token == .Minus {
+				Token = Scanner.Get(); Result = Factor()
+				Result = -Result
+			} else {
+				Result = Factor()
+			}
+		} // Next;
+		
+		tmp = Factor()
+		while (Token >= .Power && Token <= .PolarToRect) {
+			switch Token {
+			case .Power     : Next(); tmp = tmp.Power(Result)
+			case .Root      : Next(); tmp = Result.Root(tmp)
+			case .Squared   : Token = Scanner.Get(); tmp = tmp.Mul(tmp)
+			case .Cubed     : Token = Scanner.Get(); tmp = tmp.IPower(3)
+			case .Inverse   : Token = Scanner.Get(); tmp = Complex.one.Div(tmp)
+			case .Factorial : Token = Scanner.Get();
+				xtmp = tmp.real.Factorial()
+				tmp = Complex(re: xtmp, im: Real.zero)
+			case .PercentOf : Token = Scanner.Get()
+				Result = tmp.Div(Complex(fromDouble: 100))
+				tmp = Factor()
+				tmp = tmp.Mul(Result);
+			case .PolarToRect:Next(); tmp = Complex(r: tmp.real, theta: Result.real)
+			default:  /* skip */  Scanner.Mark(.IllegalOperator); Token = Scanner.Get()
+			}
+		}
+		if Real.status != .Okay { Scanner.Mark(Real.status) }
+		return tmp
+	} // Powers;
+	
+	
+	private func Term () -> Complex {
+		/** 'Result' = <Powers> @{<Term Operator> <Powers>@} */
+		var tmp: Complex
+		var itmp, ti : Integer
+		var Result : Complex
+		
+		func Next () {
+			Token = Scanner.Get();
+			if Token == .Minus {
+				Token = Scanner.Get(); Result = Powers()
+				Result = -Result
+			} else {
+				Result = Powers()
+			}
+			ti = ToInteger(Result.real)
+		} // Next;
+		
+		func ToCard(Ex : Complex) -> Int {
+			return Int(Ex.real.Short())
+		} // ToCard;
+		
+		func Fix () {
+			tmp = Complex(re: ToReal(ti), im: Real.zero)
+		} // Fix;
+		
+		tmp = Powers()
+		while (Token >= .Times && Token <= .nPr) || (Token == .Number) {
+			switch Token {
+			case .Times       : Next(); tmp = tmp.Mul(Result)
+			case .Number      : tmp = tmp.Mul(Result); Next()
+			case .Divide      : Next(); tmp = tmp.Div(Result)
+			case .Div         : Next(); itmp = ToInteger(tmp.real); ti = itmp.Div(ti); Fix()
+			case .Mod         : Next(); itmp = ToInteger(tmp.real); ti = itmp.Mod(ti); Fix()
+			case .And         : Next(); itmp = ToInteger(tmp.real); ti = itmp.And(ti); Fix()
+			case .ShiftRight  : Next(); itmp = ToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix()
+			case .AShiftRight : Next(); itmp = ToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix()
+			case .RotateRight : Next(); itmp = ToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix()
+			case .ShiftLeft   : Next(); itmp = ToInteger(tmp.real); ti = itmp.LShift(ToCard(Result)); Fix()
+			case .RotateLeft  : Next(); itmp = ToInteger(tmp.real); ti = itmp.LShift(ToCard(Result)); Fix()
+			case .ClearBit    : Next(); itmp = ToInteger(tmp.real); ti = itmp.ClearBit(ToCard(Result)); Fix()
+			case .SetBit      : Next(); itmp = ToInteger(tmp.real); ti = itmp.SetBit(ToCard(Result)); Fix()
+			case .ToggleBit   : Next(); itmp = ToInteger(tmp.real); ti = itmp.ToggleBit(ToCard(Result)); Fix()
+			case .nCr         : Next(); tmp = Combinations(tmp, Result)
+			case .nPr         : Next(); tmp = Permutations(tmp, Result)
+			default: 			Scanner.Mark(.IllegalOperator); Token = Scanner.Get()
+			}
+		}
+		if Real.status != .Okay { Scanner.Mark(Real.status) }
+		return tmp
+	} // Term;
+	
+	
+	private func SimpleExpression () -> Complex {
+		/** 'Result' = [+|-] <Term> @{+|- <Term>@} */
+		var tmp : Complex
+		var ti  : Integer
+		var ires : Integer
+		var Result : Complex
+		
+		func Next() -> Complex {
+			var Result : Complex
+			Token = Scanner.Get()
+			if Token == .Minus {
+				Token = Scanner.Get(); Result = -Term()
+			} else {
+				Result = Term()
+			}
+			ires = ToInteger(tmp.real)
+			return Result
+		} // Next;
+		
+		func Fix() {
+			tmp = Complex(re: ToReal(ti), im: Real.zero)
+		} // Fix;
+		
+		tmp = Complex.zero
+		switch Token {
+			case .Plus  : tmp = Next()
+			case .Minus : tmp = -Next()
+			default:      tmp = Term()
+		}
+		while (Token >= .Plus) && (Token <= .Xor) {
+			switch Token {
+				case .Plus  : Result = Next(); tmp = tmp.Add(Result)
+				case .Minus : Result = Next(); tmp = tmp.Sub(Result)
+				case .Or    : Result = Next(); ti = ires.Or(ToInteger(Result.real)); Fix()
+				case .Xor   : Result = Next(); ti = ires.Xor(ToInteger(Result.real)); Fix()
+				default		: tmp = Term()
+			}
+		}
+		if Real.status != .Okay { Scanner.Mark(Real.status) }
+		return tmp
+	} // SimpleExpression;
+	
+	
+	private func Expression () -> Complex {
+		/** 'Result' = <Expression> @{+|- <Term>@} */
+		var tmp : Complex
+		var Result : Complex
+		
+		func Next() -> Complex {
+			Token = Scanner.Get()
+			return SimpleExpression()
+		} // Next;
+		
+		tmp = SimpleExpression()
+		if (Token >= .Greater) && (Token <= .Assign) {
+			switch Token {
+			case .Greater : Result = Next()
+				tmp = tmp > Result ? Complex.one : zero
+			case .GreaterEqual : Result = Next()
+				tmp = tmp >= Result ? Complex.one : zero
+			case .Less : Result = Next()
+				tmp = tmp < Result ? Complex.one : zero
+			case .LessEqual : Result = Next()
+				tmp = tmp <= Result ? Complex.one : zero
+			case .NotEqual : Result = Next()
+				tmp = tmp != Result ? Complex.one : zero
+			case .Assign : Result = Next()
+				tmp = tmp == Result ? Complex.one : zero
+			default: Scanner.Mark(.IllegalOperator); Token = Scanner.Get()
+			}
+		}
+		if Real.status != .Okay { Scanner.Mark(Real.status) }
+		return tmp
+	} // Expression;
+	
+	
+	func Evaluate (arg: String ) -> Complex? {
+		/** Evaluate 'arg' input and return the result in 'Result'.  The
+		function returns true if there were no evaluation errors. */
+		var name: String
+		var ok: Bool;
+		var r: Complex;
+		var Result: Complex
+		
+		CommandLine = arg              /* remember this string for later        */
+		Real.status  = .Okay           /* clear out any previous errors         */
+		Real.err = 0;
+		Scanner.Initialize(arg); Token = Scanner.Get()   /* start things off with the first token */
+		
+		if Token == .Let {         /* define a variable or a function */
+			Token = Scanner.Get();
+			if Token != .Name {
+				Scanner.Mark(cli.ExpectingName); name = "Error"
+			} else {
+				name = Scanner.s.varn
+			}
+			Token = Scanner.Get()
+			if Token == .LeftBrace {
+				/* defining a function */
+				Token = Scanner.Get();
+				Functions.Set(name)       /* define a new function */
+				while Token == .Name {    /* define the argument list */
+					Functions.AddArg(name, name: Scanner.s.varn)
+					Token = Scanner.Get()
+					if Token == .Semi { Token = Scanner.Get() }
+				}
+				if Token != .RightBrace { Scanner.Mark(cli.ExpectingRBrace) }
+				Token = Scanner.Get()
+				if Token != .Assign { Scanner.Mark(cli.ExpectingAssign) }
+				Functions.SetEquation(name, value: Scanner.GetString())
+				r = Complex.zero
+			} else {
+				/* defining a variable */
+				if Token != .Assign { Scanner.Mark(cli.ExpectingAssign) }
+				Token = Scanner.Get()
+				r = Expression()
+				StoreVariable(name, Value: r)
+			}
+			Token = .Empty
+		} else {
+			r = Expression()
+		}
+		if Token != .Empty {
+			Scanner.Mark(cli.IllegalExpression)
+		}
+		LastAnswer = r
+		if Real.status == .Okay {
+			return r
+		}
+		return nil
+	} // Evaluate;
+	
+	
 //	func Store* (w: Storable.Writer) RAISES IO.Error;
 //	/** Store the defined functions to writer 'w' */
 //	
@@ -727,13 +717,5 @@ class Equation {
 //	} else { NEW(LastAnswer); LastAnswer.Load(r)
 //	}
 //	} // Load;
-//	
-//	
-//	
-//	Token = .Empty;
-//	zero = Complex(Real.zero, Real.zero);
-//	LastAnswer = Complex(Real.zero, Real.zero);
-//	} // Equations.
-	
 	
 }
