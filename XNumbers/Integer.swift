@@ -1110,7 +1110,7 @@ struct Integer : Equatable, Comparable, Printable, Hashable {
 		print("-10000000000000000B="); print(n.description(2)); println("B")
 		n=Integer(fromInt: -8)
 		print("-8^3="); OutInt(n.Power(3))
-		print("69!="); OutInt(Factorial(69))
+		print("69!="); OutInt(Integer(fromInt: 69).Factorial())
 		n=Integer(fromString: "123456789012345")
 		print("GCD(123456789012345, 87654321)="); OutInt(n.GCD(Integer(fromInt: 87654321)))
 		print("Random(50)="); OutInt(Random(50))

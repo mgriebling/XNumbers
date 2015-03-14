@@ -342,17 +342,17 @@ struct Scanner {
 			case "+"     : Read(); sym = .Plus
 			case "-"     :
 				Read(); sym = .Minus
-				if s.ch == "π" { Read(); sym = .Inverse }
+				if s.ch == "¹" { Read(); sym = .Inverse }
 			case sqrt    : Read(); sym = .SquareRoot
 			case "²"     : Read(); sym = .Squared
 			case "³"     : Read(); sym = .Cubed;
-			if s.ch == sqrt { Read(); sym = .CubeRoot }
-			case "°"     : Read(); sym = .iToken
+				if s.ch == sqrt { Read(); sym = .CubeRoot }
+			case "ⅈ"      : Read(); sym = .iToken
 			case "i"     : Read();
-			if IsAlphaNumeric(s.ch) {
-				--s.pos; s.ch = "i"; Variable()
-			} else {
-				sym = .iToken
+				if IsAlphaNumeric(s.ch) {
+					--s.pos; s.ch = "i"; Variable()
+				} else {
+					sym = .iToken
 				}
 			case "~"     : Read(); sym = .Complement
 			case "×"     : Read(); sym = .Times
@@ -382,24 +382,24 @@ struct Scanner {
 				} else if s.ch == sqrt {
 					Read(); sym = .Root
 				}
-			case "ª"     : Read(); if s.ch == "°" { Read(); sym = .PolarToRect } else { Illegal() }
+			case "→"     : Read(); if s.ch == "ℝ" { Read(); sym = .PolarToRect } else { Illegal() }
 			case "="     : Read(); sym = .Assign
 			case "#"     : Read(); sym = .NotEqual
 			case ">"     : Read();
-			if s.ch == "=" {
-				Read(); sym = .GreaterEqual
-			} else {
-				sym = .Greater
+				if s.ch == "=" {
+					Read(); sym = .GreaterEqual
+				} else {
+					sym = .Greater
+					}
+				case "<"     : Read();
+				if s.ch == "=" {
+					Read(); sym = .LessEqual
+				} else if s.ch == ">" {
+					Read(); sym = .NotEqual
+				} else {
+					sym = .Less
 				}
-			case "<"     : Read();
-			if s.ch == "=" {
-				Read(); sym = .LessEqual
-			} else if s.ch == ">" {
-				Read(); sym = .NotEqual
-			} else {
-				sym = .Less
-			}
-			case "Ø"     : Read(); if s.ch == "π" { Read(); sym = .Inverse } else { Illegal() }
+			case "⁻"     : Read(); if s.ch == "¹" { Read(); sym = .Inverse } else { Illegal() }
 			case "A"..."Z", "a"..."d", "f"..."h", "j"..."z" : Variable()
 			default: Read(); sym = .Empty
 			}

@@ -52,7 +52,7 @@ class Equation {
 	} // Print;
 	
 	
-	private func Printf (name: String, arg:String, value: String) {
+	private func Printf (name: String, arg: String, value: Functions.FuncType) {
 		println("\(name)(\(arg)) = \(value)")
 	} // Printf;
 	
@@ -168,281 +168,302 @@ class Equation {
 	} // Help;
 	
 	func Function (fname: String) -> Complex {
-		var arg, eqn: String
+		var arg: String
 		var ok: Bool
 		var nargs: Int
 		var ptoken: Scanner.Tokens
 		var res: Complex
 		
 		/* evaluate the passed function */
-		Functions.Get(fname, eqn, ok);
-		nargs = 0;
-		res = Complex.zero;
+		let eqn = Functions.Get(fname)
+		nargs = 0
+		res = Complex.zero
 		if Token == .LeftBrace {
 			do {
-				sc.Get(Token); Expression(res);
-				f.GetArg(fname, nargs, arg, ok); INC(nargs);
-				V.Setf(arg, res, ok)
+				Token = Scanner.Get(); Expression(res)
+				Functions.GetArg(fname, nargs, arg); ++nargs
+				Variables.Setf(arg, value: res)
 			} while Token == .Semi
-			if Token != .RightBrace { sc.Mark(.MismatchBraces) };
-			if nargs != f.NumArgs(fname) { sc.Mark(.IncompatibleArgs) };
-			sc.Get(Token);   /* skip right brace */
+			if Token != .RightBrace { Scanner.Mark(.MismatchBraces) }
+			if nargs != Functions.NumArgs(fname) { Scanner.Mark(.IncompatibleArgs) }
+			Token = Scanner.Get();   /* skip right brace */
 			
 			/* now we finally evaluate the function */
-			sc.PushState();                 /* save current expression's state */
-			ptoken = Token;                  /* save the current token */
-			Real.status = .Okay;             /* clear out any previous errors */
-			Real.err  =  0;
-			sc.Init(eqn); sc.Get(Token);    /* start things off with the first token */
-			Expression(res);
-			sc.PopState();                  /* restore our previous state */
-			V.Deletef();                    /* clear function stack */
+			Scanner.PushState()                 /* save current expression's state */
+			ptoken = Token                  /* save the current token */
+			Real.status = .Okay             /* clear out any previous errors */
+			Real.err = 0
+			Scanner.Initialize(eqn!); Token = Scanner.Get()    /* start things off with the first token */
+			Expression(res)
+			Scanner.PopState()                  /* restore our previous state */
+			Variables.Deletef()                    /* clear function stack */
 			Token = ptoken                   /* and active token */
-		} else if f.NumArgs(fname) > 0 {
-			sc.Mark(cli.ExpectingArgs);
+		} else if Functions.NumArgs(fname) > 0 {
+			Scanner.Mark(cli.ExpectingArgs)
 			res = Complex.zero
 		};
 		return res
 	} // Function;
 	
 	
-//	func IfCondition () -> Complex {
-//	/** Handle If(<expression>;<expression>;<expression>) */
-//	var
-//	cond, tval, fval: Complex;
-//	
-//	if Token = sc.LeftBrace {
-//	sc.Get(Token); Expression(cond);
-//	if Token  !=  sc.Semi { sc.Mark(cli.ExpectingArgs) };
-//	sc.Get(Token); Expression(tval);
-//	if Token  !=  sc.Semi { sc.Mark(cli.ExpectingArgs) };
-//	sc.Get(Token); Expression(fval);
-//	if Token  !=  sc.RightBrace { sc.Mark(X.MismatchBraces) };
-//	sc.Get(Token);
-//	if cond.Cmp(zero)>0 { return tval } else { return fval }
-//	} else { return Complex.zero
-//	}
-//	} // IfCondition;
-//	
-//	
-//	func Factor (var Result : Complex);
-//	/** 'Result' = <[Factor Operator] (<Variable> | <Function> | "(" <Expression> ")" | <Number>) */
-//	TYPE
-//	funcType = func(x,y:Complex):Complex;
-//	
-//	var
-//	SaveBase : SHORTINT;
-//	tmp      : Complex;
-//	t        : Real
-//	i        : XI.Integer;
-//	Digits   : Int
-//	n        : Int
-//	str      : String
-//	ok       : Bool;
-//	
-//	func Add (x,y: Complex) -> Complex {
-//	
-//	return x.Add(y)
-//	} // Add;
-//	
-//	func Avg (x,y: Complex) -> Complex {
-//	
-//	INC(n); return x.Add(y)
-//	} // Avg;
-//	
-//	func Mul (x,y: Complex) -> Complex {
-//	
-//	return x.Mul(y)
-//	} // Mul;
-//	
-//	func Next;
-//	
-//	sc.Get(Token);
-//	if Token = sc.Minus {
-//	sc.Get(Token); Factor(Result);
-//	Result  =  Result.Neg()
-//	} else {
-//	Factor(Result)
-//	}
-//	} // Next;
-//	
-//	func Args (func: funcType) -> Complex {
-//	var
-//	tmp2: Complex;
-//	
-//	tmp = Complex.zero;
-//	sc.Get(Token);
-//	if Token != sc.LeftBrace { sc.Mark(X.MismatchBraces) };
-//	sc.Get(Token); Expression(tmp);
-//	if Token != sc.Semi { sc.Mark(cli.ExpectingArgs) };
-//	do {
-//	sc.Get(Token); Expression(tmp2);
-//	tmp = func(tmp, tmp2)
-//	} while ! Token != sc.Semi;
-//	if Token != sc.RightBrace { sc.Mark(X.MismatchBraces) };
-//	sc.Get(Token);
-//	return tmp
-//	} // Args;
-//	
-//	func FixR;
-//	
-//	Result = XM.Init(t, X.zero)
-//	} // FixR;
-//	
-//	func FixI;
-//	
-//	Result = XM.Init(XM.IntegerToReal(i), X.zero)
-//	} // FixI;
-//	
-//	
-//	CASE Token OF
-//	sc.LeftBrace  : sc.Get(Token); Expression(Result);
-//	if Token = sc.RightBrace { sc.Get(Token);
-//	} else { sc.Mark(X.MismatchBraces)
-//	};
-//	| sc.VertBrace  : sc.Get(Token); Expression(Result);
-//	t = Result.PolarMag(); FixR;
-//	if Token = sc.VertBrace { sc.Get(Token);
-//	} else { sc.Mark(X.MismatchBraces)
-//	};
-//	| sc.Number     : if XM.nState.Rational { Result  =  R.RInit(sc.s.val.real, 1)
-//	} else { Result  =  sc.s.val
-//	};
-//	sc.Get(Token);
-//	/*
-//	if Token = sc.Number {
-//	Result = Result.Mul(sc.val);
-//	sc.Get(Token)
-//	} else if Token = sc.LeftBrace {
-//	sc.Get(Token); Expression(tmp);
-//	if Token = sc.RightBrace { sc.Get(Token);
-//	} else { sc.Mark(X.MismatchBraces)
-//	};
-//	Result = Result.Mul(tmp)
-//	}
-//	*/
-//	| sc.If         : sc.Get(Token); Result = IfCondition();
-//	| sc.True       : sc.Get(Token); Result = XM.one
-//	| sc.False      : sc.Get(Token); Result = Complex.zero
-//	| sc.Pi         : sc.Get(Token); Result = XM.Init(X.pi, X.zero)
-//	| sc.Complement : Next(); i = XM.RealToInteger(Result.real); i = i.Invert(); FixI
-//	| sc.Sin        : Next(); Result = Result.Sin();
-//	| sc.Cos        : Next(); Result = Result.Cos();
-//	| sc.Tan        : Next(); Result = Result.Tan();
-//	| sc.ArcSin     : Next(); Result = Result.Arcsin();
-//	| sc.ArcCos     : Next(); Result = Result.Arccos();
-//	| sc.ArcTan     : Next(); Result = Result.Arctan();
-//	| sc.Sinh       : Next(); Result = Result.Sinh();
-//	| sc.Cosh       : Next(); Result = Result.Cosh();
-//	| sc.Tanh       : Next(); Result = Result.Tanh();
-//	| sc.ArcSinh    : Next(); Result = Result.Arcsinh();
-//	| sc.ArcCosh    : Next(); Result = Result.Arccosh();
-//	| sc.ArcTanh    : Next(); Result = Result.Arctanh();
-//	| sc.SquareRoot : Next(); Result = Result.Sqrt();
-//	| sc.CubeRoot   : Next(); Result = Result.IRoot(3);
-//	| sc.NaturalLog : Next(); Result = Result.Ln();
-//	| sc.Log        : Next(); Result = Result.Log(X.Long(10));
-//	| sc.PowerOfe   : Next(); Result = Result.Exp();
-//	| sc.Name       : V.Get(sc.s.var, Result, ok);
-//	if !ok {
-//	/* check if this is a function */
-//	f.Get(sc.s.var, str, ok);
-//	if !ok {
-//	sc.Mark(cli.Undefined)
-//	} else {
-//	/* evaluate function */
-//	sc.Get(Token);
-//	Result = Function(sc.s.var);
-//	}
-//	} else { sc.Get(Token);
-//	if Token=sc.LeftBrace { /* duplicated name? */
-//	f.Get(sc.s.var, str, ok);
-//	if !ok {
-//	sc.Mark(cli.Undefined)
-//	} else {
-//	/* evaluate function */
-//	Result = Function(sc.s.var);
-//	}
-//	}
-//	}
-//	| sc.Base       : SaveBase  =  XM.nState.LocalBase;
-//	XM.nState.LocalBase  =  10;
-//	Next();
-//	XM.nState.LocalBase  =  SHORT(SHORT(ENTIER(Result.real.Short())));
-//	if (XM.nState.LocalBase < 2) OR (XM.nState.LocalBase > 36) {
-//	XM.nState.LocalBase  =  SaveBase;
-//	};
-//	Result  =  LastAnswer;
-//	| sc.Digits     : Next();
-//	if X.status = X.Okay {
-//	Digits = SHORT(ENTIER(Result.real.Short()));
-//	X.SetDigits(Digits);
-//	Result  =  LastAnswer;
-//	};
-//	| sc.Decimals   : Next();
-//	if X.status = X.Okay {
-//	XM.nState.DecPoint = SHORT(SHORT(ENTIER(Result.real.Short())));
-//	Result  =  LastAnswer;
-//	};
-//	| sc.Notation   : sc.Get(Token);
-//	XM.nState.Notation = (XM.nState.Notation+1) MOD 3;
-//	Result  =  LastAnswer;
-//	| sc.DegRadGrad : sc.Get(Token);
-//	if XM.nState.DegRadFlag = XM.Gradians {
-//	XM.nState.DegRadFlag  =  XM.Degrees;
-//	} else { INC(XM.nState.DegRadFlag) };
-//	Result  =  LastAnswer;
-//	| sc.Rat		: sc.Get(Token);
-//	XM.nState.Rational  =  !XM.nState.Rational;
-//	Result  =  LastAnswer;
-//	| sc.List       : sc.Get(Token);
-//	if V.Defined()>0 {
-//	println("Variables:")
-//	V.Iterate(Print);
-//	Out.Ln;
-//	} else { println("No variables defined."); Out.Ln
-//	};
-//	if f.Defined()>0 {
-//	println("Functions:")
-//	f.Iterate(Printf);
-//	} else { println("No functions defined."); Out.Ln
-//	};
-//	Result  =  LastAnswer
-//	| sc.Help       : sc.Get(Token);
-//	Help;
-//	Result  =  Complex.zero
-//	| sc.Delete     : sc.Get(Token);
-//	if Token=sc.Name {
-//	V.Delete(sc.s.var);
-//	f.Delete(sc.s.var)
-//	} else { sc.Mark(cli.IllegalVariable)
-//	};
-//	Result  =  Complex.zero; sc.Get(Token)
-//	| sc.iToken     : sc.Get(Token); Result = XM.Init(X.zero, X.one)
-//	| sc.rToken     : Next(); t = Result.PolarMag(); FixR
-//	| sc.Theta      : Next(); t = Result.PolarAngle(); FixR
-//	| sc.ImagPart   : Next(); Result = XM.Init(Result.imag, X.zero)
-//	| sc.RealPart   : Next(); Result = XM.Init(Result.real, X.zero)
-//	| sc.IntPart    : Next(); t = Result.real.Entier(); FixR
-//	| sc.FracPart   : Next(); t = Result.real.Fraction(); FixR
-//	| sc.SignOf     : Next();
-//	if Result.real.Sign()>0 { Result = XM.Init(X.one, X.zero)
-//	} else { Result = XM.Init(X.one.Neg(), X.zero)
-//	}
-//	| sc.Abs        : Next(); Result = XM.Init(Result.real.Abs(), X.zero)
-//	| sc.Min        : Result = Args(Min)
-//	| sc.Max        : Result = Args(Max)
-//	| sc.Sum        : Result = Args(Add)
-//	| sc.Average    : n = 1; tmp = Args(Avg); Result = tmp.Div(XM.Long(n))
-//	| sc.Multiply   : Result = Args(Mul)
-//	| sc.Conj       : Next(); Result = Result.Conj()
-//	| sc.Rand       : sc.Get(Token); t = X.Random(); FixR
-//	} else {              sc.Mark(X.IllegalOperator); Result  =  Complex.zero
-//	};
-//	if X.status != X.Okay { sc.Mark(X.status) }
-//	} // Factor;
-//	
-//	
+	func IfCondition () -> Complex {
+		/** Handle If(<expression>;<expression>;<expression>) */
+		var cond, tval, fval: Complex
+		
+		if Token == .LeftBrace {
+			Token = Scanner.Get(); Expression(cond)
+			if Token != .Semi { Scanner.Mark(cli.ExpectingArgs) }
+			Token = Scanner.Get(); Expression(tval)
+			if Token != .Semi { Scanner.Mark(cli.ExpectingArgs) }
+			Token = Scanner.Get(); Expression(fval)
+			if Token != .RightBrace { Scanner.Mark(.MismatchBraces) }
+			Token = Scanner.Get();
+			if cond.Cmp(zero) > 0 { return tval } else { return fval }
+		} else {
+			return Complex.zero
+		}
+	} // IfCondition;
+	
+	
+	func Factor (var Result : Complex) {
+		/** 'Result' = <[Factor Operator] (<Variable> | <Function> | "(" <Expression> ")" | <Number>) */
+		//		typeAlias funcType = (x:Complex, y:Complex) -> Complex
+		
+		var SaveBase : Int
+		var tmp      : Complex
+		var t        : Real
+		var i        : Integer
+		var Digits   : Int
+		var n        : Int
+		var str      : String
+		var ok       : Bool
+		
+		func Add (x: Complex, y: Complex) -> Complex {
+			return x.Add(y)
+		} // Add;
+		
+		func Avg (x: Complex, y: Complex) -> Complex {
+			++n; return x.Add(y)
+		} // Avg;
+		
+		func Mul (x: Complex, y: Complex) -> Complex {
+			return x.Mul(y)
+		} // Mul;
+		
+		func Next() {
+			Token = Scanner.Get()
+			if Token == .Minus {
+				Token = Scanner.Get(); Factor(Result)
+				Result = Result.Neg()
+			} else {
+				Factor(Result)
+			}
+		} // Next;
+		
+		func Args (function: (x:Complex, y:Complex) -> Complex) -> Complex {
+			var tmp2: Complex
+			tmp = Complex.zero
+			Token = Scanner.Get()
+			if Token != .LeftBrace { Scanner.Mark(.MismatchBraces) }
+			Token = Scanner.Get(); Expression(tmp)
+			if Token != .Semi { Scanner.Mark(.ExpectingArgs) }
+			do {
+				Token = Scanner.Get(); Expression(tmp2)
+				tmp = function(x: tmp, y: tmp2)
+			} while Token == .Semi
+			if Token != .RightBrace { Scanner.Mark(.MismatchBraces) }
+			Token = Scanner.Get()
+			return tmp
+		} // Args;
+		
+		func FixR () {
+			Result = Complex(re: t, im: Real.zero)
+		} // FixR;
+		
+		func FixI () {
+			Result = Complex(re: ToReal(i), im: Real.zero)
+		} // FixI;
+		
+		
+		switch Token {
+		case .LeftBrace :
+			Token = Scanner.Get();
+			Expression(Result)
+			if Token == .RightBrace {
+				Token = Scanner.Get()
+			} else {
+				Scanner.Mark(.MismatchBraces)
+			}
+		case .VertBrace :
+			Token = Scanner.Get();
+			Expression(Result)
+			t = Result.PolarMag(); FixR()
+			if Token == .VertBrace {
+				Token = Scanner.Get()
+			} else {
+				Scanner.Mark(.MismatchBraces)
+			}
+		case .Number :
+			if Complex.nState.Rational {
+				Result = Complex(re: Scanner.s.val.real, im: 1.0)
+			} else {
+				Result = Scanner.s.val
+			}
+			Token = Scanner.Get()
+			/*
+			if Token = .Number {
+			Result = Result.Mul(Scanner.val);
+			Token = Scanner.Get()
+			} else if Token = .LeftBrace {
+			Token = Scanner.Get(); Expression(tmp);
+			if Token = .RightBrace { Token = Scanner.Get();
+			} else { Scanner.Mark(X.MismatchBraces)
+			};
+			Result = Result.Mul(tmp)
+			}
+			*/
+		case .If         : Token = Scanner.Get(); Result = IfCondition();
+		case .True       : Token = Scanner.Get(); Result = Complex.one
+		case .False      : Token = Scanner.Get(); Result = Complex.zero
+		case .Pi         : Token = Scanner.Get(); Result = Complex(re: Real.pi, im: Real.zero)
+		case .Complement : Next(); i = ToInteger(Result.real); i = i.Invert(); FixI()
+		case .Sin        : Next(); Result = Result.Sin()
+		case .Cos        : Next(); Result = Result.Cos()
+		case .Tan        : Next(); Result = Result.Tan()
+		case .ArcSin     : Next(); Result = Result.Arcsin()
+		case .ArcCos     : Next(); Result = Result.Arccos()
+		case .ArcTan     : Next(); Result = Result.Arctan()
+		case .Sinh       : Next(); Result = Result.Sinh()
+		case .Cosh       : Next(); Result = Result.Cosh()
+		case .Tanh       : Next(); Result = Result.Tanh()
+		case .ArcSinh    : Next(); Result = Result.Arcsinh()
+		case .ArcCosh    : Next(); Result = Result.Arccosh()
+		case .ArcTanh    : Next(); Result = Result.Arctanh()
+		case .SquareRoot : Next(); Result = Result.Sqrt()
+		case .CubeRoot   : Next(); Result = Result.IRoot(3)
+		case .NaturalLog : Next(); Result = Result.Ln()
+		case .Log        : Next(); Result = Result.Log(Real(fromInt: 10))
+		case .PowerOfe   : Next(); Result = Result.Exp()
+		case .Name       :
+			if let Result = Variables.Get(Scanner.s.varn) {
+				Token = Scanner.Get()
+				if Token == .LeftBrace { /* duplicated name? */
+					if let str = Functions.Get(Scanner.s.varn) {
+						/* evaluate function */
+						Result = Function(Scanner.s.varn)
+					} else {
+						Scanner.Mark(.Undefined)
+					}
+				}
+			} else {
+				/* check if this is a function */
+				if let str = Functions.Get(Scanner.s.varn) {
+					/* evaluate function */
+					Token = Scanner.Get();
+					Result = Function(Scanner.s.varn)
+				} else {
+					Scanner.Mark(.Undefined)
+				}
+			}
+		case .Base :
+			SaveBase = Complex.nState.LocalBase
+			Complex.nState.LocalBase = 10
+			Next();
+			Complex.nState.LocalBase = Int(Result.real.Short())
+			if (Complex.nState.LocalBase < 2) || (Complex.nState.LocalBase > 36) {
+				Complex.nState.LocalBase = SaveBase
+			}
+			Result = LastAnswer
+		case .Digits :
+			Next()
+			if Real.status == .Okay {
+				Digits = Int(Result.real.Short())
+				Real.digits = Digits
+				Result = LastAnswer
+			}
+		case .Decimals :
+			Next()
+			if Real.status == .Okay {
+				Complex.nState.DecPoint = Int(Result.real.Short())
+				Result = LastAnswer
+			}
+		case .Notation :
+			Token = Scanner.Get();
+			switch Complex.nState.Notation {
+				case .Normal: Complex.nState.Notation  = .Scientific
+				case .Scientific: Complex.nState.Notation  = .Engineering
+				case .Engineering: Complex.nState.Notation  = .Normal
+			}
+			Result = LastAnswer
+		case .DegRadGrad :
+			Token = Scanner.Get()
+			switch Complex.nState.DegRadFlag {
+				case .Degrees: Complex.nState.DegRadFlag = .Radians
+				case .Radians: Complex.nState.DegRadFlag = .Gradians
+				case .Gradians: Complex.nState.DegRadFlag = .Degrees
+			}
+			Result = LastAnswer
+		case .Rat :
+			Token = Scanner.Get()
+			Complex.nState.Rational = !Complex.nState.Rational
+			Result = LastAnswer
+		case .List :
+			Token = Scanner.Get()
+			if Variables.Defined() > 0 {
+				println("Variables:")
+				Variables.Iterate(Print)
+				println()
+			} else {
+				println("No variables defined.")
+			}
+			if Functions.Defined() > 0 {
+				println("Functions:")
+				Functions.Iterate(Printf)
+			} else {
+				println("No functions defined.")
+			}
+			Result = LastAnswer
+		case .Help :
+			Token = Scanner.Get();
+			Help()
+			Result = Complex.zero
+		case .Delete :
+			Token = Scanner.Get();
+			if Token == .Name {
+				Variables.Delete(Scanner.s.varn)
+				Functions.Delete(Scanner.s.varn)
+			} else {
+				Scanner.Mark(cli.IllegalVariable)
+			}
+			Result = Complex.zero; Token = Scanner.Get()
+		case .iToken     : Token = Scanner.Get(); Result = Complex(re: Real.zero, im:Real.one)
+		case .rToken     : Next(); t = Result.PolarMag(); FixR()
+		case .Theta      : Next(); t = Result.PolarAngle(); FixR()
+		case .ImagPart   : Next(); Result = Complex(re: Result.imag, im:Real.zero)
+		case .RealPart   : Next(); Result = Complex(re: Result.real, im:Real.zero)
+		case .IntPart    : Next(); t = Result.real.Entier(); FixR()
+		case .FracPart   : Next(); t = Result.real.Fraction(); FixR()
+		case .SignOf     :
+			Next();
+			if Result.real.Sign() > 0 {
+				Result = Complex(re: Real.one, im: Real.zero)
+			} else {
+				Result = Complex(re: -Real.one, im: Real.zero)
+			}
+		case .Abs        : Next(); Result = Complex(re: Result.real.Abs(), im: Real.zero)
+		case .Min        : Result = Args(Min)
+		case .Max        : Result = Args(Max)
+		case .Sum        : Result = Args(Add)
+		case .Average    : n = 1; tmp = Args(Avg); Result = tmp.Div(Complex(fromDouble: Double(n)))
+		case .Multiply   : Result = Args(Mul)
+		case .Conj       : Next(); Result = Result.Conj()
+		case .Rand       : Token = Scanner.Get(); t = t.Random(); FixR()
+		default: Scanner.Mark(.IllegalOperator); Result = Complex.zero
+		}
+		if Real.status != .Okay { Scanner.Mark(Real.status) }
+	} // Factor;
+	
+	
 //	func Powers (var Result : Complex);
 //	/** 'Result' = <Factor> @{<Power Operator> [Factor]@} */
 //	var
@@ -451,10 +472,10 @@ class Equation {
 //	
 //	func Next;
 //	
-//	sc.Get(Token);
-//	if Token = sc.Minus {
-//	sc.Get(Token); Factor(Result);
-//	Result  =  Result.Neg()
+//	Token = Scanner.Get();
+//	if Token = .Minus {
+//	Token = Scanner.Get(); Factor(Result);
+//	Result = Result.Neg()
 //	} else {
 //	Factor(Result)
 //	};
@@ -463,26 +484,26 @@ class Equation {
 //	
 //	tmp = Complex.zero;
 //	Factor(tmp);
-//	WHILE (Token>=sc.Power) & (Token<=sc.PolarToRect) DO
-//	CASE Token OF
-//	sc.Power     : Next(); tmp = tmp.Power(Result);
-//	| sc.Root      : Next(); tmp = Result.Root(tmp);
-//	| sc.Squared   : sc.Get(Token); tmp = tmp.Mul(tmp);
-//	| sc.Cubed     : sc.Get(Token); tmp = tmp.IPower(3);
-//	| sc.Inverse   : sc.Get(Token); tmp = XM.one.Div(tmp);
-//	| sc.Factorial : sc.Get(Token);
-//	xtmp = X.Factorial(ENTIER(tmp.real.Short()));
-//	tmp = XM.Init(xtmp, X.zero);
-//	| sc.PercentOf : sc.Get(Token);
-//	Result = tmp.Div(XM.Init(X.Long(100), X.zero));
+//	while (Token>=.Power) & (Token<=.PolarToRect) {
+//	switch Token {
+//	.Power     : Next(); tmp = tmp.Power(Result);
+//	case .Root      : Next(); tmp = Result.Root(tmp);
+//	case .Squared   : Token = Scanner.Get(); tmp = tmp.Mul(tmp);
+//	case .Cubed     : Token = Scanner.Get(); tmp = tmp.IPower(3);
+//	case .Inverse   : Token = Scanner.Get(); tmp = Complex.one.Div(tmp);
+//	case .Factorial : Token = Scanner.Get();
+//	xtmp =Real.Factorial(ENTIER(tmp.real.Short()));
+//	tmp = Complex(xtmp, Real.zero);
+//	case .PercentOf : Token = Scanner.Get();
+//	Result = tmp.Div(Complex(X.Long(100), Real.zero));
 //	Factor(tmp);
 //	tmp = tmp.Mul(Result);
-//	| sc.PolarToRect:Next(); tmp = XM.ToRectangular(tmp.real, Result.real)
-//	} else { /* skip */  sc.Mark(X.IllegalOperator); sc.Get(Token);
+//	case .PolarToRect:Next(); tmp = Complex.ToRectangular(tmp.real, Result.real)
+//	} else { /* skip */  Scanner.Mark(X.IllegalOperator); Token = Scanner.Get();
 //	};
 //	};
-//	Result  =  tmp;
-//	if X.status != X.Okay { sc.Mark(X.status) };
+//	Result = tmp;
+//	ifReal.status !=Real.Okay { Scanner.Mark(X.status) };
 //	} // Powers;
 //	
 //	
@@ -494,17 +515,17 @@ class Equation {
 //	
 //	func Next;
 //	
-//	sc.Get(Token);
-//	if Token = sc.Minus {
-//	sc.Get(Token); Powers(Result);
-//	Result  =  Result.Neg()
+//	Token = Scanner.Get();
+//	if Token = .Minus {
+//	Token = Scanner.Get(); Powers(Result);
+//	Result = Result.Neg()
 //	} else {
 //	Powers(Result)
 //	};
-//	WITH Result: R.Rational DO
-//	ti = XM.RealToInteger(Result.ToReal())
+//	WITH Result: R.Rational {
+//	ti = Complex.RealToInteger(Result.ToReal())
 //	} else {
-//	ti = XM.RealToInteger(Result.real)
+//	ti = Complex.RealToInteger(Result.real)
 //	}
 //	} // Next;
 //	
@@ -515,36 +536,36 @@ class Equation {
 //	
 //	func Fix;
 //	
-//	tmp = XM.Init(XM.IntegerToReal(ti), X.zero)
+//	tmp = Complex(Complex.IntegerToReal(ti), Real.zero)
 //	} // Fix;
 //	
 //	
 //	tmp = Complex.zero;
 //	Powers(tmp);
-//	WHILE (Token>=sc.Times) & (Token<=sc.nPr) OR (Token=sc.Number) DO
-//	CASE Token OF
-//	sc.Times       : Next(); tmp = tmp.Mul(Result)
-//	| sc.Number      : tmp = tmp.Mul(Result); Next()
-//	| sc.Divide      : Next(); tmp = tmp.Div(Result)
-//	| sc.Div         : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.Div(ti); Fix
-//	| sc.Mod         : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.Mod(ti); Fix
-//	| sc.And         : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.And(ti); Fix
-//	| sc.ShiftRight  : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
-//	| sc.AShiftRight : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
-//	| sc.RotateRight : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
-//	| sc.ShiftLeft   : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.LShift(ToCard(Result)); Fix
-//	| sc.RotateLeft  : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.LShift(ToCard(Result)); Fix
-//	| sc.ClearBit    : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.ClearBit(ToCard(Result)); Fix
-//	| sc.SetBit      : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.SetBit(ToCard(Result)); Fix
-//	| sc.ToggleBit   : Next(); itmp = XM.RealToInteger(tmp.real); ti = itmp.ToggleBit(ToCard(Result)); Fix
-//	| sc.nCr         : Next(); tmp = Combinations(tmp, Result)
-//	| sc.nPr         : Next(); tmp = Permutations(tmp, Result)
+//	while (Token>=.Times) & (Token<=.nPr) || (Token=.Number) {
+//	switch Token {
+//	.Times       : Next(); tmp = tmp.Mul(Result)
+//	case .Number      : tmp = tmp.Mul(Result); Next()
+//	case .Divide      : Next(); tmp = tmp.Div(Result)
+//	case .Div         : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.Div(ti); Fix
+//	case .Mod         : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.Mod(ti); Fix
+//	case .And         : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.And(ti); Fix
+//	case .ShiftRight  : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
+//	case .AShiftRight : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
+//	case .RotateRight : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.RShift(ToCard(Result)); Fix
+//	case .ShiftLeft   : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.LShift(ToCard(Result)); Fix
+//	case .RotateLeft  : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.LShift(ToCard(Result)); Fix
+//	case .ClearBit    : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.ClearBit(ToCard(Result)); Fix
+//	case .SetBit      : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.SetBit(ToCard(Result)); Fix
+//	case .ToggleBit   : Next(); itmp = Complex.RealToInteger(tmp.real); ti = itmp.ToggleBit(ToCard(Result)); Fix
+//	case .nCr         : Next(); tmp = Combinations(tmp, Result)
+//	case .nPr         : Next(); tmp = Permutations(tmp, Result)
 //	} else {
-//	sc.Mark(X.IllegalOperator); sc.Get(Token)
+//	Scanner.Mark(X.IllegalOperator); Token = Scanner.Get()
 //	}
 //	};
-//	Result  =  tmp;
-//	if X.status != X.Okay { sc.Mark(X.status) };
+//	Result = tmp;
+//	ifReal.status !=Real.Okay { Scanner.Mark(X.status) };
 //	} // Term;
 //	
 //	
@@ -557,43 +578,43 @@ class Equation {
 //	
 //	func Next(var Result : Complex);
 //	
-//	sc.Get(Token);
-//	if Token = sc.Minus {
-//	sc.Get(Token); Term(Result);
-//	Result  =  Result.Neg()
+//	Token = Scanner.Get();
+//	if Token = .Minus {
+//	Token = Scanner.Get(); Term(Result);
+//	Result = Result.Neg()
 //	} else {
 //	Term(Result)
 //	};
-//	WITH tmp: R.Rational DO
-//	ires = XM.RealToInteger(tmp.ToReal())
+//	WITH tmp: R.Rational {
+//	ires = Complex.RealToInteger(tmp.ToReal())
 //	} else {
-//	ires = XM.RealToInteger(tmp.real)
+//	ires = Complex.RealToInteger(tmp.real)
 //	}
 //	} // Next;
 //	
 //	func Fix;
 //	
-//	tmp = XM.Init(XM.IntegerToReal(ti), X.zero)
+//	tmp = Complex(Complex.IntegerToReal(ti), Real.zero)
 //	} // Fix;
 //	
 //	
 //	tmp = Complex.zero;
-//	CASE Token OF
-//	sc.Plus  : Next(tmp);
-//	| sc.Minus : Next(tmp); tmp = tmp.Neg()
+//	switch Token {
+//	.Plus  : Next(tmp);
+//	case .Minus : Next(tmp); tmp = tmp.Neg()
 //	} else {       Term(tmp)
 //	};
-//	WHILE (Token >= sc.Plus) & (Token <= sc.Xor) DO
-//	CASE Token OF
-//	sc.Plus  : Next(Result); tmp = tmp.Add(Result);
-//	| sc.Minus : Next(Result); tmp = tmp.Sub(Result);
-//	| sc.Or    : Next(Result); ti = ires.Or(XM.RealToInteger(Result.real)); Fix
-//	| sc.Xor   : Next(Result); ti = ires.Xor(XM.RealToInteger(Result.real)); Fix
+//	while (Token >= .Plus) & (Token <= .Xor) {
+//	switch Token {
+//	.Plus  : Next(Result); tmp = tmp.Add(Result);
+//	case .Minus : Next(Result); tmp = tmp.Sub(Result);
+//	case .Or    : Next(Result); ti = ires.Or(Complex.RealToInteger(Result.real)); Fix
+//	case .Xor   : Next(Result); ti = ires.Xor(Complex.RealToInteger(Result.real)); Fix
 //	} else {         Term(tmp);
 //	};
 //	};
-//	Result  =  tmp;
-//	if X.status != X.Okay { sc.Mark(X.status) }
+//	Result = tmp;
+//	ifReal.status !=Real.Okay { Scanner.Mark(X.status) }
 //	} // SimpleExpression;
 //	
 //	
@@ -604,31 +625,31 @@ class Equation {
 //	
 //	func Next(var Result : Complex);
 //	
-//	sc.Get(Token);
+//	Token = Scanner.Get();
 //	SimpleExpression(Result)
 //	} // Next;
 //	
 //	
 //	SimpleExpression(tmp);
-//	if (Token >= sc.Greater) & (Token <= sc.Assign) {
-//	CASE Token OF
-//	sc.Greater      : Next(Result);
-//	if tmp.Cmp(Result)=1 { tmp = XM.one } else { tmp = zero }
-//	| sc.GreaterEqual : Next(Result);
-//	if tmp.Cmp(Result)>=0 { tmp = XM.one } else { tmp = zero }
-//	| sc.Less         : Next(Result);
-//	if tmp.Cmp(Result)<0 { tmp = XM.one } else { tmp = zero }
-//	| sc.LessEqual    : Next(Result);
-//	if tmp.Cmp(Result)<=0 { tmp = XM.one } else { tmp = zero }
-//	| sc.NotEqual     : Next(Result);
-//	if tmp.Cmp(Result) != 0 { tmp = XM.one } else { tmp = zero }
-//	| sc.Assign       : Next(Result);
-//	if tmp.Cmp(Result)=0 { tmp = XM.one } else { tmp = zero }
-//	} else {                sc.Mark(X.IllegalOperator); sc.Get(Token)
+//	if (Token >= .Greater) & (Token <= .Assign) {
+//	switch Token {
+//	.Greater      : Next(Result);
+//	if tmp.Cmp(Result)=1 { tmp = Complex.one } else { tmp = zero }
+//	case .GreaterEqual : Next(Result);
+//	if tmp.Cmp(Result)>=0 { tmp = Complex.one } else { tmp = zero }
+//	case .Less         : Next(Result);
+//	if tmp.Cmp(Result)<0 { tmp = Complex.one } else { tmp = zero }
+//	case .LessEqual    : Next(Result);
+//	if tmp.Cmp(Result)<=0 { tmp = Complex.one } else { tmp = zero }
+//	case .NotEqual     : Next(Result);
+//	if tmp.Cmp(Result) != 0 { tmp = Complex.one } else { tmp = zero }
+//	case .Assign       : Next(Result);
+//	if tmp.Cmp(Result)=0 { tmp = Complex.one } else { tmp = zero }
+//	} else {                Scanner.Mark(X.IllegalOperator); Token = Scanner.Get()
 //	};
 //	};
 //	Result = tmp;
-//	if X.status != X.Okay { sc.Mark(X.status) }
+//	ifReal.status !=Real.Okay { Scanner.Mark(X.status) }
 //	} // Expression;
 //	
 //	
@@ -641,47 +662,47 @@ class Equation {
 //	r: Complex;
 //	
 //	CommandLine = arg;              /* remember this string for later        */
-//	X.status  =  X.Okay;            /* clear out any previous errors         */
-//	X.err  =  0;
-//	sc.Init(arg); sc.Get(Token);   /* start things off with the first token */
+//	X.status  = Real.Okay;            /* clear out any previous errors         */
+//	X.err = 0;
+//	Scanner.Init(arg); Token = Scanner.Get();   /* start things off with the first token */
 //	
-//	if Token = sc.Let {         /* define a variable or a function */
-//	sc.Get(Token);
-//	if Token  !=  sc.Name { sc.Mark(cli.ExpectingName); name = "Error"
-//	} else { name = sc.s.var
+//	if Token = .Let {         /* define a variable or a function */
+//	Token = Scanner.Get();
+//	if Token  !=  .Name { Scanner.Mark(cli.ExpectingName); name = "Error"
+//	} else { name = Scanner.s.varn
 //	};
-//	sc.Get(Token);
-//	if Token = sc.LeftBrace {
+//	Token = Scanner.Get();
+//	if Token = .LeftBrace {
 //	/* defining a function */
-//	sc.Get(Token);
+//	Token = Scanner.Get();
 //	f.Set(name);                /* define a new function */
-//	WHILE Token = sc.Name DO    /* define the argument list */
-//	f.AddArg(name, sc.s.var, ok);
-//	if !ok { sc.Mark(cli.IllegalArg) };
-//	sc.Get(Token);
-//	if Token = sc.Semi { sc.Get(Token) }
+//	while Token = .Name {    /* define the argument list */
+//	f.AddArg(name, Scanner.s.varn, ok);
+//	if !ok { Scanner.Mark(cli.IllegalArg) };
+//	Token = Scanner.Get();
+//	if Token = .Semi { Token = Scanner.Get() }
 //	};
-//	if Token  !=  sc.RightBrace { sc.Mark(cli.ExpectingRBrace) };
-//	sc.Get(Token);
-//	if Token  !=  sc.Assign { sc.Mark(cli.ExpectingAssign) };
-//	f.SetEquation(name, sc.GetString());
+//	if Token  !=  .RightBrace { Scanner.Mark(cli.ExpectingRBrace) };
+//	Token = Scanner.Get();
+//	if Token  !=  .Assign { Scanner.Mark(cli.ExpectingAssign) };
+//	f.SetEquation(name, Scanner.GetString());
 //	r = Complex.zero
 //	} else {
 //	/* defining a variable */
-//	if Token  !=  sc.Assign { sc.Mark(cli.ExpectingAssign) };
-//	sc.Get(Token);
+//	if Token  !=  .Assign { Scanner.Mark(cli.ExpectingAssign) };
+//	Token = Scanner.Get();
 //	Expression(r);
 //	StoreVariable(name, r)
 //	};
-//	Token = sc.Empty;
+//	Token = .Empty;
 //	} else { Expression(r)
 //	};
-//	if Token != sc.Empty {
-//	sc.Mark(cli.IllegalExpression)
+//	if Token != .Empty {
+//	Scanner.Mark(cli.IllegalExpression)
 //	};
 //	Result = r;
 //	LastAnswer = r;
-//	return X.status=X.Okay
+//	returnReal.status=X.Okay
 //	} // Evaluate;
 //	
 //	
@@ -702,16 +723,16 @@ class Equation {
 //	
 //	f.Load(r);
 //	r.ReadLInt(type);
-//	if type = 1 { NEW(n); n.Load(r); LastAnswer  =  n
+//	if type = 1 { NEW(n); n.Load(r); LastAnswer = n
 //	} else { NEW(LastAnswer); LastAnswer.Load(r)
 //	}
 //	} // Load;
 //	
 //	
 //	
-//	Token = sc.Empty;
-//	zero = XM.Init(X.zero, X.zero);
-//	LastAnswer = XM.Init(X.zero, X.zero);
+//	Token = .Empty;
+//	zero = Complex(Real.zero, Real.zero);
+//	LastAnswer = Complex(Real.zero, Real.zero);
 //	} // Equations.
 	
 	

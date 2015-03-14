@@ -88,35 +88,35 @@ struct Functions {
 //} // Load;
 
 	
-	func Defined () -> Int {
+	static func Defined () -> Int {
 		return Functions.Funcs.count
 	} // Defined;
 
 	
-	func Set (fname: String) {
+	static func Set (fname: String) {
 		var v = FuncType(value: "")   // no equation defined yet
 		Functions.Funcs[fname] = v
 	} // Set;
 
 	
-	func SetEquation (fname: String, value: String) {
+	static func SetEquation (fname: String, value: String) {
 		var pos: Int
 		var v = FuncType(value: value)
 		Functions.Funcs[fname] = v
 	} // SetEquation;
 
 	
-	func Get (fname: String) -> String? {
+	static func Get (fname: String) -> String? {
 		return Functions.Funcs[fname]?.Func
 	} // Get;
 
 	
-	func GetArgValue (fname: String, argName: String) -> Complex? {
+	static func GetArgValue (fname: String, argName: String) -> Complex? {
 		return Functions.Funcs[fname]?.Args[argName]
 	} // GetArg;
 
 	
-	func NumArgs (fname: String) -> Int {
+	static func NumArgs (fname: String) -> Int {
 		if let args = Functions.Funcs[fname]?.Args {
 			return args.count
 		}
@@ -124,7 +124,7 @@ struct Functions {
 	} // NumArgs;
 	
 	
-	func ArgsToString (fname: String) -> String {
+	static func ArgsToString (fname: String) -> String {
 		var s = ""
 		var i = 0
 		if let args = Functions.Funcs[fname]?.Args {
@@ -137,7 +137,7 @@ struct Functions {
 	} // ArgsToString;
 
 
-	func AddArg (fname: String, name: String) -> Bool {
+	static func AddArg (fname: String, name: String) -> Bool {
 		if let args = Functions.Funcs[fname]?.Args {
 			Functions.Funcs[fname]?.Args[name] = Complex(fromDouble: 0)
 			return true
@@ -146,11 +146,11 @@ struct Functions {
 	} // AddArg;
 
 
-	func Delete (fname: String) {
+	static func Delete (fname: String) {
 		Functions.Funcs[fname] = nil
 	} // Delete;
 
-	func Iterate (IterFunc: (String, String, FuncType) -> ()) {
+	static func Iterate (IterFunc: (String, String, FuncType) -> ()) {
 		for (fname, function) in Functions.Funcs {
 			IterFunc(fname, ArgsToString(fname), function)
 		}
