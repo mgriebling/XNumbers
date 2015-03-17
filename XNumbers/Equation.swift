@@ -199,7 +199,7 @@ class Equation {
 			Scanner.PushState()                 /* save current expression's state */
 			ptoken = Token                  /* save the current token */
 			status = .Okay             /* clear out any previous errors */
-//			xNumber.err = 0
+			xNumber.setErr(0)
 			Scanner.Initialize(eqn!); Token = Scanner.Get()    /* start things off with the first token */
 			res = Expression()
 			Scanner.PopState()                  /* restore our previous state */
@@ -648,7 +648,7 @@ class Equation {
 		
 		CommandLine = arg              /* remember this string for later        */
 		status  = .Okay           /* clear out any previous errors         */
-//		xNumber.err = 0;
+		xNumber.setErr(0);
 		Scanner.Initialize(arg); Token = Scanner.Get()   /* start things off with the first token */
 		
 		if Token == .Let {         /* define a variable or a function */

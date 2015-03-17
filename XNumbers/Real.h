@@ -12,11 +12,13 @@ enum NumberType {
 	RealNumber, ComplexNumber, RationalNumber
 };
 
-@interface xNumber : NSObject
+@interface xNumber : NSObject <NSCoding>
 
 // class methods
 + (void)setDigits:(NSInteger)digits;
 + (NSInteger)digits;
++ (void)setErr:(NSInteger)error;
++ (NSInteger)err;
 
 // constructors
 + (xNumber *) realWithString: (NSString *)value;

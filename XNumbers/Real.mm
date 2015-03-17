@@ -18,6 +18,33 @@
 	BOOL rational;
 }
 
+// NSCoder methods -- required
+
+#define RATIONALKEY	@"xNumber.rational"
+#define REALKEY	@"xNumber.z.r"
+#define IMAGKEY	@"xNumber.z.i"
+
+- (id) initWithCoder:(NSCoder *)aDecoder {
+	// No nice way to convert to C++ types so I use strings
+	NSString * sr = [aDecoder decodeObjectForKey:REALKEY];
+	NSString * si = [aDecoder decodeObjectForKey:IMAGKEY];
+	Real::Real r = Real::Real(sr.UTF8String);
+	Real::Real i = Real::Real(si.UTF8String);
+	z = Complex(r, i);
+	rational = [aDecoder decodeBoolForKey:RATIONALKEY];
+	return self;
+}
+
+- (void) encodeWithCoder:(NSCoder *)aCoder {
+	// No nice way to convert from C++ types so I use strings
+	char str[1024];
+	Real::ToString(z.RealPart(), str, 0, 0, 0);
+	[aCoder encodeObject:[NSString stringWithUTF8String:str] forKey:REALKEY];
+	Real::ToString(z.ImagPart(), str, 0, 0, 0);
+	[aCoder encodeObject:[NSString stringWithUTF8String:str] forKey:IMAGKEY];
+	[aCoder encodeBool:rational forKey:RATIONALKEY];
+}
+
 - (Real::Real) x {
 	return z.RealPart();
 }
@@ -32,6 +59,14 @@
 
 + (NSInteger)digits {
 	return Real::sigDigs;
+}
+
++ (NSInteger)err {
+	return Real::err;
+}
+
++ (void)setErr:(NSInteger)error {
+	Real::err = (errCodes)error;
 }
 
 static BOOL isZero (Real::Real r) {

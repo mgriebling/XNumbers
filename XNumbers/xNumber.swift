@@ -8,7 +8,8 @@
 
 import Foundation
 
-extension xNumber : Comparable {}
+extension xNumber : Comparable, Printable {
+}
 
 public func > (lhs: xNumber, rhs: xNumber) -> Bool {
 	return lhs.cmp(rhs) == 1
