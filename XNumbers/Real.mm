@@ -103,6 +103,10 @@ static BOOL isZero (Real::Real r) {
 	return [self initWithRawReal:Real::Real(value)];
 }
 
+- (id) initWithDouble: (double)real andImaginary:(double)imaginary {
+	return [self initWithRawReal:Real::Real(real) andRawImaginary:Real::Real(imaginary)];
+}
+
 - (id) initWithRawReal: (Real::Real)value {
 	return [self initWithRawComplex:Complex(value, Real::zero)];
 }
@@ -161,6 +165,10 @@ static BOOL isZero (Real::Real r) {
 
 + (xNumber *) realWithDouble: (double)value {
 	return [[xNumber alloc] initWithDouble:value];
+}
+
++ (xNumber *) realWithDouble: (double)real andImaginary:(double)imaginary {
+	return [[xNumber alloc] initWithDouble:real andImaginary:imaginary];
 }
 
 + (xNumber *) realWithInt: (NSInteger)value {

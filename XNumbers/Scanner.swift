@@ -205,6 +205,8 @@ struct Scanner {
 		if !self.s.pline.isEmpty {
 			s.ch = self.s.pline[s.pline.startIndex]
 			removeAtIndex(&self.s.pline, s.pline.startIndex)
+		} else {
+			s.ch = "\0"
 		}
 		++s.pos
 	} // Read();
@@ -290,7 +292,7 @@ struct Scanner {
 			
 			/* valid number characters */
 			if nState.LocalBase == 10 {
-				NumChars = NumberChars.substringToIndex(find(NumberChars, "9")!) // .Substring(0, 13)
+				NumChars = NumberChars.substringToIndex(find(NumberChars, "A")!) // .Substring(0, 13)
 			} else {
 				let start = find(NumberChars, "0")!
 				var end = start

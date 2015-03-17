@@ -8,8 +8,8 @@
 
 import Foundation
 
-var x = xNumber(string: "1234567890")
+var eq = Equation(command: "123 + 456");
 
-println("x = \(x)")
+println("Equation \(eq.CommandLine) = \(eq.Evaluate(eq.CommandLine))")
 
 
