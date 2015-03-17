@@ -28,6 +28,8 @@ enum NumberType {
 + (xNumber *) realWithNumerator: (xNumber *)numerator andDenominator:(xNumber *)denominator;
 + (xNumber *) realWithIntNumerator: (NSInteger)numerator andDenominator:(NSInteger)denominator;
 + (xNumber *) realWithString: (NSString *)real andString: (NSString *)imag withRational: (BOOL)isRational andBase: (NSInteger)base;
++ (xNumber *) realWithMagnitude: (xNumber *)magnitude andAngle: (xNumber *)angle;
+
 - (id) initWithString: (NSString *)value;
 - (id) initWithString: (NSString *)value andBase: (NSInteger)base;
 - (id) initWithDouble: (double)value;
@@ -37,6 +39,7 @@ enum NumberType {
 - (id) initWithNumerator: (xNumber *)numerator andDenominator:(xNumber *)denominator;
 - (id) initWithIntNumerator: (NSInteger)numerator andDenominator:(NSInteger)denominator;
 - (id) initWithString: (NSString *)real andString: (NSString *)imag withRational: (BOOL)isRational andBase: (NSInteger)base;
+- (id) initWithMagnitude: (xNumber *)magnitude andAngle: (xNumber *)angle;
 
 // number attributes and conversions
 - (NSInteger)exponent;
@@ -45,6 +48,7 @@ enum NumberType {
 - (xNumber *) entier;
 - (xNumber *) fraction;
 - (xNumber *) real;
+- (xNumber *) conj;
 - (xNumber *) imaginary;
 - (xNumber *) numerator;
 - (xNumber *) denominator;
@@ -68,7 +72,7 @@ enum NumberType {
 
 /* Power and transcendental routines */
 - (xNumber *) power: (xNumber *) exp;
-- (xNumber *) xtoi: (NSInteger) i;
+- (xNumber *) ipower: (NSInteger) i;
 - (xNumber *) iroot: (long) n;
 - (xNumber *) root: (xNumber *) base;
 - (xNumber *) sqrt;

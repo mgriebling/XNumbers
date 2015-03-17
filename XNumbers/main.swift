@@ -8,7 +8,7 @@
 
 import Foundation
 
-var x : xNumber("1234567890")
+var x = xNumber(string: "1234567890")
 
 println("x = \(x)")
 

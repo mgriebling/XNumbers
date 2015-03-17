@@ -83,8 +83,8 @@ class Equation {
 //		var ni, ri: xNumber
 //		var nI: xNumber
 //		
-//		ni = ToxNumber(n.real)
-//		ri = ToxNumber(r.real)
+//		ni = ToxNumber(n)
+//		ri = ToxNumber(r)
 //		nI = ni.Factorial()
 //		nI = nI.div(ni.Sub(ri).Factorial())
 //		return xNumber(ToxNumber(nI))
@@ -100,8 +100,8 @@ class Equation {
 //		var nI: xNumber
 //		var n2 : xNumber
 //		
-//		ni = ToxNumber(n.real)
-//		ri = ToxNumber(r.real)
+//		ni = ToxNumber(n)
+//		ri = ToxNumber(r)
 //		n2 = Permutations(n, r)            /* n=n!/(n-r)! */
 //		nI = ri.Factorial()              /* n=r! */
 //		nI = ni.div(nI);               /* Result=n!/(r!(n-r)!) */
@@ -199,7 +199,7 @@ class Equation {
 			Scanner.PushState()                 /* save current expression's state */
 			ptoken = Token                  /* save the current token */
 			status = .Okay             /* clear out any previous errors */
-			xNumber.err = 0
+//			xNumber.err = 0
 			Scanner.Initialize(eqn!); Token = Scanner.Get()    /* start things off with the first token */
 			res = Expression()
 			Scanner.PopState()                  /* restore our previous state */
@@ -261,7 +261,7 @@ class Equation {
 		func Next() {
 			Token = Scanner.Get()
 			if Token == .Minus {
-				Token = Scanner.Get(); Result = -Factor()
+				Token = Scanner.Get(); Result = Factor().negate()
 			} else {
 				Result = Factor()
 			}
@@ -329,7 +329,7 @@ class Equation {
 		case .True       : Token = Scanner.Get(); Result = one
 		case .False      : Token = Scanner.Get(); Result = zero
 		case .Pi         : Token = Scanner.Get(); Result = xNumber.pi()
-		case .Complement : Next(); i = Result.real; i = i.Invert(); FixI()
+		case .Complement : Next(); i = Result.onesComp(); FixI()
 		case .Sin        : Next(); Result = Result.sin()
 		case .Cos        : Next(); Result = Result.cos()
 		case .Tan        : Next(); Result = Result.tan()
@@ -343,7 +343,7 @@ class Equation {
 		case .ArcCosh    : Next(); Result = Result.arccosh()
 		case .ArcTanh    : Next(); Result = Result.arctanh()
 		case .SquareRoot : Next(); Result = Result.sqrt()
-		case .CubeRoot   : Next(); Result = Result.iRoot(3)
+		case .CubeRoot   : Next(); Result = Result.iroot(3)
 		case .NaturalLog : Next(); Result = Result.ln()
 		case .Log        : Next(); Result = Result.log10()
 		case .PowerOfe   : Next(); Result = Result.exp()
@@ -373,7 +373,7 @@ class Equation {
 			SaveBase = nState.LocalBase
 			nState.LocalBase = 10
 			Next();
-			nState.LocalBase = Int(Result.real.Short())
+			nState.LocalBase = Int(Result.Short())
 			if (nState.LocalBase < 2) || (nState.LocalBase > 36) {
 				nState.LocalBase = SaveBase
 			}
@@ -381,14 +381,14 @@ class Equation {
 		case .Digits :
 			Next()
 			if status == .Okay {
-				Digits = Int(Result.real.Short())
-				xNumber.digits = Digits
+				Digits = Int(Result.Short())
+				xNumber.setDigits(Digits)
 				Result = LastAnswer
 			}
 		case .Decimals :
 			Next()
 			if status == .Okay {
-				nState.DecPoint = Int(Result.real.Short())
+				nState.DecPoint = Int(Result.Short())
 				Result = LastAnswer
 			}
 		case .Notation :
@@ -444,7 +444,7 @@ class Equation {
 		case .rToken     : Next(); t = Result.polarMag(); FixR()
 		case .Theta      : Next(); t = Result.polarAngle(); FixR()
 		case .ImagPart   : Next(); Result = Result.imaginary()
-		case .xNumberPart   : Next(); Result = Result.real()
+		case .RealPart   : Next(); Result = Result.real()
 		case .IntPart    : Next(); t = Result.entier(); FixR()
 		case .FracPart   : Next(); t = Result.fraction(); FixR()
 		case .SignOf     :
@@ -455,13 +455,13 @@ class Equation {
 				Result = one.negate()
 			}
 		case .Abs        : Next(); Result = Result.abs()
-		case .Min        : Result = Args(min)
-		case .Max        : Result = Args(max)
-		case .Sum        : Result = Args(add)
-		case .Average    : n = 1; tmp = Args(Avg); Result = tmp.div(xNumber(fromDouble: Double(n)))
-		case .multiply   : Result = Args(mul)
+		case .Min        : Result = Args(Min)
+		case .Max        : Result = Args(Max)
+		case .Sum        : Result = Args(Add)
+		case .Average    : n = 1; tmp = Args(Avg); Result = tmp.div(xNumber(double: Double(n)))
+		case .Multiply   : Result = Args(Mul)
 		case .Conj       : Next(); Result = Result.conj()
-		case .Rand       : Token = Scanner.Get(); t = t.random(); FixR()
+		case .Rand       : Token = Scanner.Get(); t = xNumber.random(); FixR()
 		default: Scanner.Mark(.IllegalOperator); Result = zero
 		}
 		if status != .Okay { Scanner.Mark(status) }
@@ -479,7 +479,7 @@ class Equation {
 			Token = Scanner.Get()
 			if Token == .Minus {
 				Token = Scanner.Get(); Result = Factor()
-				Result = -Result
+				Result = Result.negate()
 			} else {
 				Result = Factor()
 			}
@@ -491,7 +491,7 @@ class Equation {
 			case .Power     : Next(); tmp = tmp.power(Result)
 			case .Root      : Next(); tmp = Result.root(tmp)
 			case .Squared   : Token = Scanner.Get(); tmp = tmp.mul(tmp)
-			case .Cubed     : Token = Scanner.Get(); tmp = tmp.iPower(3)
+			case .Cubed     : Token = Scanner.Get(); tmp = tmp.ipower(3)
 			case .Inverse   : Token = Scanner.Get(); tmp = one.div(tmp)
 			case .Factorial : Token = Scanner.Get();
 				xtmp = tmp.factorial()
@@ -500,7 +500,7 @@ class Equation {
 				Result = tmp.div(xNumber(int: 100))
 				tmp = Factor()
 				tmp = tmp.mul(Result);
-			case .PolarToRect:Next(); tmp = xNumber(r: tmp.real, theta: Result.real)
+			case .PolarToRect:Next(); tmp = xNumber(magnitude: tmp, andAngle: Result)
 			default:  /* skip */  Scanner.Mark(.IllegalOperator); Token = Scanner.Get()
 			}
 		}
@@ -544,11 +544,11 @@ class Equation {
 			case .Div         : Next(); itmp = tmp; ti = itmp.div(ti); Fix()
 			case .Mod         : Next(); itmp = tmp; ti = itmp.mod(ti); Fix()
 			case .And         : Next(); itmp = tmp; ti = itmp.and(ti); Fix()
-			case .ShiftRight  : Next(); itmp = tmp; ti = itmp.rShift(ToCard(Result)); Fix()
-			case .AShiftRight : Next(); itmp = tmp; ti = itmp.rShift(ToCard(Result)); Fix()
-			case .RotateRight : Next(); itmp = tmp; ti = itmp.rShift(ToCard(Result)); Fix()
-			case .ShiftLeft   : Next(); itmp = tmp; ti = itmp.lShift(ToCard(Result)); Fix()
-			case .RotateLeft  : Next(); itmp = tmp; ti = itmp.lShift(ToCard(Result)); Fix()
+			case .ShiftRight  : Next(); itmp = tmp; ti = itmp.shr(ToCard(Result)); Fix()
+			case .AShiftRight : Next(); itmp = tmp; ti = itmp.shr(ToCard(Result)); Fix()
+			case .RotateRight : Next(); itmp = tmp; ti = itmp.shr(ToCard(Result)); Fix()
+			case .ShiftLeft   : Next(); itmp = tmp; ti = itmp.shl(ToCard(Result)); Fix()
+			case .RotateLeft  : Next(); itmp = tmp; ti = itmp.shl(ToCard(Result)); Fix()
 			case .ClearBit    : Next(); itmp = tmp; ti = itmp.clearBit(ToCard(Result)); Fix()
 			case .SetBit      : Next(); itmp = tmp; ti = itmp.setBit(ToCard(Result)); Fix()
 			case .ToggleBit   : Next(); itmp = tmp; ti = itmp.toggleBit(ToCard(Result)); Fix()
@@ -648,7 +648,7 @@ class Equation {
 		
 		CommandLine = arg              /* remember this string for later        */
 		status  = .Okay           /* clear out any previous errors         */
-		xNumber.err = 0;
+//		xNumber.err = 0;
 		Scanner.Initialize(arg); Token = Scanner.Get()   /* start things off with the first token */
 		
 		if Token == .Let {         /* define a variable or a function */
@@ -664,7 +664,7 @@ class Equation {
 				Token = Scanner.Get();
 				Functions.Set(name)       /* define a new function */
 				while Token == .Name {    /* define the argument list */
-					Functions.addArg(name, name: Scanner.s.varn)
+					Functions.AddArg(name, name: Scanner.s.varn)
 					Token = Scanner.Get()
 					if Token == .Semi { Token = Scanner.Get() }
 				}

@@ -13,6 +13,7 @@
 		47052D971AB835DF0070E278 /* Reals.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 47052D921AB835DF0070E278 /* Reals.cpp */; };
 		47052D9A1AB83C7C0070E278 /* State.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47052D991AB83C7C0070E278 /* State.swift */; };
 		4748DA8F1AA26F2500EB8DF3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4748DA8E1AA26F2500EB8DF3 /* main.swift */; };
+		47CFB10E1AB85836006F778B /* xNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47CFB10D1AB85836006F778B /* xNumber.swift */; };
 		47E655D91AB04F0800C6FD47 /* Equation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E655D81AB04F0800C6FD47 /* Equation.swift */; };
 		47E655DB1AB050A300C6FD47 /* Functions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E655DA1AB050A300C6FD47 /* Functions.swift */; };
 		47E655DD1AB050F100C6FD47 /* Variables.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E655DC1AB050F100C6FD47 /* Variables.swift */; };
@@ -45,6 +46,7 @@
 		4748DA8B1AA26F2500EB8DF3 /* XNumbers */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = XNumbers; sourceTree = BUILT_PRODUCTS_DIR; };
 		4748DA8E1AA26F2500EB8DF3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4766A4901AB4796D00467494 /* XNumbers-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XNumbers-Bridging-Header.h"; sourceTree = "<group>"; };
+		47CFB10D1AB85836006F778B /* xNumber.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = xNumber.swift; sourceTree = "<group>"; };
 		47E655D81AB04F0800C6FD47 /* Equation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Equation.swift; sourceTree = "<group>"; };
 		47E655DA1AB050A300C6FD47 /* Functions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Functions.swift; sourceTree = "<group>"; };
 		47E655DC1AB050F100C6FD47 /* Variables.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Variables.swift; sourceTree = "<group>"; };
@@ -65,6 +67,7 @@
 		47052D981AB836050070E278 /* C++ Code */ = {
 			isa = PBXGroup;
 			children = (
+				4766A4901AB4796D00467494 /* XNumbers-Bridging-Header.h */,
 				47052D8B1AB835DF0070E278 /* Errors.h */,
 				47052D8C1AB835DF0070E278 /* ExComplex.cpp */,
 				47052D8D1AB835DF0070E278 /* ExComplex.h */,
@@ -97,14 +100,14 @@
 		4748DA8D1AA26F2500EB8DF3 /* XNumbers */ = {
 			isa = PBXGroup;
 			children = (
-				47052D981AB836050070E278 /* C++ Code */,
+				47CFB10D1AB85836006F778B /* xNumber.swift */,
 				4748DA8E1AA26F2500EB8DF3 /* main.swift */,
 				47E655DA1AB050A300C6FD47 /* Functions.swift */,
 				47E655DC1AB050F100C6FD47 /* Variables.swift */,
 				47E655DE1AB0524C00C6FD47 /* Scanner.swift */,
 				47052D991AB83C7C0070E278 /* State.swift */,
 				47E655D81AB04F0800C6FD47 /* Equation.swift */,
-				4766A4901AB4796D00467494 /* XNumbers-Bridging-Header.h */,
+				47052D981AB836050070E278 /* C++ Code */,
 			);
 			path = XNumbers;
 			sourceTree = "<group>";
@@ -170,6 +173,7 @@
 				47052D961AB835DF0070E278 /* Real.mm in Sources */,
 				47052D9A1AB83C7C0070E278 /* State.swift in Sources */,
 				47E655DB1AB050A300C6FD47 /* Functions.swift in Sources */,
+				47CFB10E1AB85836006F778B /* xNumber.swift in Sources */,
 				47E655DF1AB0524C00C6FD47 /* Scanner.swift in Sources */,
 				47052D951AB835DF0070E278 /* ExIntegers.cpp in Sources */,
 				4748DA8F1AA26F2500EB8DF3 /* main.swift in Sources */,

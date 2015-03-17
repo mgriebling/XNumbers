@@ -85,6 +85,12 @@ static BOOL isZero (Real::Real r) {
 	return self;
 }
 
+- (id) initWithMagnitude: (xNumber *)magnitude andAngle: (xNumber *)angle {
+	Complex::Complex zi;
+	Complex::ToRectangular(z, magnitude.x, angle.x);
+	return [self initWithRawComplex:zi];
+}
+
 - (id) initWithNumerator: (xNumber *)numerator andDenominator:(xNumber *)denominator {
 	return [self initWithRawNumerator:numerator.x andRawDenominator:denominator.x];
 }
@@ -140,6 +146,10 @@ static BOOL isZero (Real::Real r) {
 
 + (xNumber *) realWithRawReal:(Real::Real)real {
 	return [[xNumber alloc] initWithRawReal:real];
+}
+
++ (xNumber *) realWithMagnitude: (xNumber *)magnitude andAngle: (xNumber *)angle {
+	return [[xNumber alloc] initWithMagnitude:magnitude andAngle:angle];
 }
 
 + (xNumber *) realWithNumerator: (xNumber *)numerator andDenominator:(xNumber *)denominator {
@@ -477,7 +487,7 @@ static xNumber * divRational (Complex::Complex a, Complex::Complex b) {
 	return [xNumber realWithRawComplex:zi];
 }
 
-- (xNumber *) xtoi: (NSInteger) i {
+- (xNumber *) ipower: (NSInteger) i {
 	Complex::Complex zi;
 	Complex::xtoi(zi, self->z, i);
 	return [xNumber realWithRawComplex:zi];

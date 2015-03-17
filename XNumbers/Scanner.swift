@@ -66,7 +66,7 @@ struct Scanner {
 		case NaturalLog; case Log; case PowerOfe; case Name
 		case Base; case Digits; case Decimals; case Notation
 		case DegRadGrad; case Plot; case iToken; case rToken
-		case Theta; case ImagPart; case xNumberPart; case Convert
+		case Theta; case ImagPart; case RealPart; case Convert
 		case IntPart; case FracPart; case SignOf; case Abs
 		case Min; case Max; case Conj; case Rand; case Semi
 		case Pi; case Delete; case List; case Help; case Rat
@@ -138,7 +138,7 @@ struct Scanner {
 		.List:         "list",
 		.Help:         "help",
 		.PolarToRect:  "rect",
-		.xNumberPart:     "re",
+		.RealPart:     "re",
 		.Root:         "root",
 		.Rand:         "rand",
 		.Rat:			"rat",

@@ -1732,19 +1732,19 @@ void Real::SinCos(float *sin, float *cos, const float *arg_a)
 	ia = Sign(ONE, a[0]);
 	na = Min(ENTIER(ABS(a[0])), curMant);
 	
-	if(na == 0)
+	if (na == 0)
 	{
 		copy(xONE, cos);
 		Zero(sin);
 		return;
 	}
 	
-	if(pi.val == NULL)
-	{
-		puts("*** SinCos: pi must be precomputed!");
-		err = errPiValueMissing;
-		return;
-	}
+//	if (pi.val == NULL)
+//	{
+////		puts("*** SinCos: pi must be precomputed!");
+//		err = errPiValueMissing;
+//		return;
+//	}
 	
 	nws = curMant;
 	curMant++;
@@ -1943,12 +1943,12 @@ void Real::ATan2(float *a, const float *arg_x, const float *arg_y)
 		return;
 	}
 	
-	if(pi.val == NULL)
-	{
-		puts("*** ATan2: Pi must be precomputed!");
-		err = errPiValueMissing;
-		return;
-	}
+//	if(pi.val == NULL)
+//	{
+//		puts("*** ATan2: Pi must be precomputed!");
+//		err = errPiValueMissing;
+//		return;
+//	}
 	
 	if(nx == 0)
 	{
