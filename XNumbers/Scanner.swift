@@ -183,10 +183,10 @@ struct Scanner {
 		.Tan:          "tan"
 	]
 
-	static func Mark (errid: xNumber.Status) {
+	static func Mark (errid: Status) {
 		if s.pos > s.errpos {
 //			err.DisplayError(errid, s.pos, s.pline);
-			xNumber.status = errid
+			status = errid
 		}
 		s.errpos = s.pos; s.error = true
 	} // Mark;
@@ -242,7 +242,7 @@ struct Scanner {
 					if LocateChar(NumChars, ch: s.ch, start: 0) != nil {
 						/* valid numerical character */
 						Constant.append(s.ch)
-						if ((s.ch == "E") || (s.ch == ExpChar)) && (xNumber.nState.LocalBase == 10) {
+						if ((s.ch == "E") || (s.ch == ExpChar)) && (nState.LocalBase == 10) {
 							NumChars = "+-0123456789"  /* just exponent digits */
 						} else if (s.ch == "+") || (s.ch == "-") {
 							NumChars = "0123456789"
@@ -262,17 +262,17 @@ struct Scanner {
 				var chars: String
 				
 				/* perform the actual conversion from string to number */
-				xNumber.status = .Okay
-				if xNumber.nState.LocalBase == 10 {
+				status = .Okay
+				if nState.LocalBase == 10 {
 					chars = Constant
-					num = xNumber(chars)
+					num = xNumber(string: chars)
 				} else {
-					num = ToxNumber(Integer(fromString: Constant, withBase: xNumber.nState.LocalBase))
+					num = xNumber(string: Constant, andBase: nState.LocalBase)
 				}
-				if xNumber.status == .Okay {  /* all went OK */
-					s.val = xNumber(num)
+				if status == .Okay {  /* all went OK */
+					s.val = num
 				} else {
-					s.val = xNumber.zero
+					s.val = xNumber.zero()
 					Mark(.IllegalNumber)
 				}
 			} // UnsignInt;
@@ -283,18 +283,18 @@ struct Scanner {
 			PunctuationChars = ",'_"
 			
 			/* check if decimal point is a comma */
-			if (xNumber.nState.DigSep == ".") || (xNumber.nState.FracSep == ".") {
+			if (nState.DigSep == ".") || (nState.FracSep == ".") {
 				PunctuationChars = "." + PunctuationChars.substringFromIndex(find(PunctuationChars, ",")!)  // Substring(1, 2)
 				NumberChars = "," + NumberChars.substringFromIndex(find(NumberChars, "E")!)  // Substring(1, 18)
 			}
 			
 			/* valid number characters */
-			if xNumber.nState.LocalBase == 10 {
+			if nState.LocalBase == 10 {
 				NumChars = NumberChars.substringToIndex(find(NumberChars, "9")!) // .Substring(0, 13)
 			} else {
 				let start = find(NumberChars, "0")!
 				var end = start
-				var i = xNumber.nState.LocalBase
+				var i = nState.LocalBase
 				while i > 0 { end.successor(); i-- }
 				NumChars = NumberChars.substringWithRange(start...end)  // Substring(3, xm.nState.LocalBase+3)
 			}
@@ -311,10 +311,10 @@ struct Scanner {
 			if !Constant.isEmpty {
 				UnsignInt()
 				if (s.ch == "°") || (s.ch == "i") {
-					s.val = xNumber(xNumber.zero, s.val.real); Read()
+					s.val = xNumber(real: xNumber.zero(), andImaginary: s.val.real()); Read()
 				}
 			} else {
-				s.val = xNumber.zero
+				s.val = xNumber.zero()
 				Mark(.IllegalNumber) /* illegal number or constant */
 			}
 		} // number;
@@ -382,7 +382,7 @@ struct Scanner {
 				} else if IsAlphaNumeric(s.ch) {
 					--s.pos; s.ch = "e"; Variable()
 				} else {
-					s.val = xNumber(xNumber.one.Exp())
+					s.val = xNumber.one().exp()
 				}
 			case "*"     :
 				Read(); sym = .Times;

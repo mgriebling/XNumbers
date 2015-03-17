@@ -24,6 +24,7 @@ enum NumberType {
 + (xNumber *) realWithDouble: (double)value;
 + (xNumber *) realWithReal: (xNumber *)real;
 + (xNumber *) realWithInt: (NSInteger)value;
++ (xNumber *) realWithReal: (xNumber *)real andImaginary:(xNumber *)imaginary;
 + (xNumber *) realWithNumerator: (xNumber *)numerator andDenominator:(xNumber *)denominator;
 + (xNumber *) realWithIntNumerator: (NSInteger)numerator andDenominator:(NSInteger)denominator;
 + (xNumber *) realWithString: (NSString *)real andString: (NSString *)imag withRational: (BOOL)isRational andBase: (NSInteger)base;
@@ -32,6 +33,7 @@ enum NumberType {
 - (id) initWithDouble: (double)value;
 - (id) initWithInt: (NSInteger)value;
 - (id) initWithReal: (xNumber *)real;
+- (id) initWithReal: (xNumber *)real andImaginary:(xNumber *)imaginary;
 - (id) initWithNumerator: (xNumber *)numerator andDenominator:(xNumber *)denominator;
 - (id) initWithIntNumerator: (NSInteger)numerator andDenominator:(NSInteger)denominator;
 - (id) initWithString: (NSString *)real andString: (NSString *)imag withRational: (BOOL)isRational andBase: (NSInteger)base;
