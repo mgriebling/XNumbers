@@ -85,7 +85,7 @@ func < (lhs: Real, rhs: Real) -> Bool {
 }
 
 prefix func - (a: Real) -> Real {
-	var b = Real(fromReal: a)
+	var b = Real(a)
 	b.real[0] = -b.real[0]
 	return b
 }
@@ -94,7 +94,7 @@ prefix func + (a: Real) -> Real {
 	return a
 }
 
- struct Real : Printable, Equatable, Comparable /*  :  , Hashable */ {
+struct Real : Printable, Equatable, Comparable /*  :  , Hashable */ {
 	
 	private static let DEBUG = false
 	private static let HALF = 0.5
@@ -136,6 +136,17 @@ prefix func + (a: Real) -> Real {
 		case IllegalOperator
 		case MismatchBraces
 		case IllegalArgument
+		
+		// Scanner errors
+		case ExpectingRBrace
+		case IllegalExpression
+		case IllegalVariable
+		case TooManyVariables
+		case ExpectingName
+		case ExpectingAssign
+		case Undefined
+		case ExpectingArgs
+		case IncompatibleArgs
 	}
 
 	private typealias RealArray = [Double]
@@ -178,45 +189,48 @@ prefix func + (a: Real) -> Real {
 	private static let One = RealArray(arrayLiteral: 1, 0, 1, 0, 0, 0, 0, 0)
 	private static let Zero = RealArray(arrayLiteral: 0, 0)
 	
-	static let one = Real(fromInt: 1)
-	static let zero = Real(fromInt: 0)
+	static let one = Real(1)
+	static let zero = Real(0)
 	static var pi : Real {
 		if Real.Pi.count == 0 {
 			Real.one.Initialize()
 		}
-		return Real(fromArray: Real.Pi)
+		return Real(Real.Pi)
 	}
 	static var ln2 : Real {
 		if Real.Log2.count == 0 {
 			Real.one.Initialize()
 		}
-		return Real(fromArray: Real.Log2)
+		return Real(Real.Log2)
 	}
 	
 	/* Speed up very large factorials */
-	private static let fact100000 = Real(fromString:
+	private static let f1 =
 		"2.82422940796034787429342157802453551847749492609122485057891808654297795090106301787" +
 		"2551771413831163610713611737361962951474996183123918022726073409093832422005556968866" +
 		"7840380377379444961268380147875111966906386044926144538111370090160766866405407170565" +
 		"9522612980419583567789090475415128711408369242515352930962606722710387442460886354543" +
 		"6398293174776177553262185112647485586491818038151987716121968151412990230446382406889" +
-		"65083575002296499396423642566352716149352078013312029433930594819960435395E+456573")
-	private static let fact200000 = Real(fromString:
+		"65083575002296499396423642566352716149352078013312029433930594819960435395E+456573"
+	private static let f2 =
 		"1.42022534547031440496694633368230597608996535674640162269622474462922677851609968565" +
 		"0082553407879081329793135215376044079156034995456792440298907698327157087066286303182" +
 		"5017623219084061256114573810476379717993512721296946450311966946288603601628556916324" +
 		"4648770389480378251602819955788158117868794159097393435551925337859488859955701890215" +
 		"4897701489299055308898497995637308558323762472340297297985768615383843817767617482336" +
-		"58088832083067784773860727948019819421544453708479108922842308732119367523E+973350")
-	private static let fact300000 = Real(fromString:
+		"58088832083067784773860727948019819421544453708479108922842308732119367523E+973350"
+	private static let f3 =
 		"1.47739153173803909429290747493561414549932051952374408795791384376505240135170347653" +
 		"2418899010198829649964892384917975071774129347530818714855332590431274389350896312260" +
 		"9806517049255450392732030550644905383028447932954677114843634677423190476154873121734" +
 		"1025709069449617692835058182617595979172730842885422104493186754451133578337885783639" +
 		"5817086347597543562761254468984063083893218681681196080370667835191599919282226318984" +
-		"62208531038106191099127491142755685344624042273747482199422127053615182013E+1512851")
+		"62208531038106191099127491142755685344624042273747482199422127053615182013E+1512851"
+	private static let fact100000 = Real(f1)
+	private static let fact200000 = Real(f2)
+	private static let fact300000 = Real(f3)
 	
-	private static var Seed = Real(fromInt:4)
+	private static var Seed = Real(4)
 	static var status = Status.Okay
 	
 	var description: String {
@@ -230,29 +244,29 @@ prefix func + (a: Real) -> Real {
 		self.real = RealArray(count: size, repeatedValue:0)
 	}
 	
-	init (fromString string: String) {
+	init (_ string: String) {
 		self.init(size: 0)
 		self = self.fromString(string)
 	}
 	
-	init (fromInt integer: Int) {
-		self.init(fromDouble:Double(integer))
+	init (_ integer: Int) {
+		self.init(Double(integer))
 	}
 	
-	init (fromDouble double: Double) {
+	init (_ double: Double) {
 		/* create a new number */
 		self.init(size:Real.curMantissa+4)
 		NumbExpToReal(double, n: 0, b: &self.real)
 	}
 	
-	private init (fromArray: RealArray) {
+	private init (_ fromArray: RealArray) {
 		self.init(size:Real.curMantissa+4)
 		copy(fromArray, b:&self.real)		/* b = a */
 	}
 
-	init (fromReal real: Real) {
+	init (_ real: Real) {
 		/** return a copy of \e real. */
-		self.init(fromArray: real.real)
+		self.init(real.real)
 	}
 
 	/*---------------------------------------------------------*/
@@ -267,10 +281,10 @@ prefix func + (a: Real) -> Real {
 	} //Max;
 	
 	private func Sign (x: Int, y: Double) -> Int {
-		if y<0 {
-			return -Int(abs(x))
+		if y < 0 {
+			return -Int(x)
 		} else {
-			return Int(abs(x))
+			return Int(x)
 		}
 	} //Sign;
 	
@@ -280,11 +294,7 @@ prefix func + (a: Real) -> Real {
 	} //Zero;
 	
 	private func ToInt (x: Double) -> Int {
-		if x<0 {
-			return -Int(-x)
-		} else {
-			return Int(x)
-		}
+		return Int(x)
 	} //ToInt;
 	
 	private func ODD (x: Int) -> Bool {
@@ -1416,7 +1426,7 @@ prefix func + (a: Real) -> Real {
 		This exception is necessary because Ln calls Exp to
 		initialize ln2 */
 		if (abs(t1-Real.Ln2) > Real.invRadix) && (Real.Log2.count == 0) {
-			Initialize()
+			Real.one.Initialize()
 //			println("*** Exp: ln2 must be precomputed!")
 //			Real.err = 34; return
 		}
@@ -1526,7 +1536,7 @@ prefix func + (a: Real) -> Real {
 		t1 = 0; n1 = 0
 		RealToNumbExp(a, b: &t1, n: &n1)
 		if ((abs(t1-2.0) > 1.0e-3) || (n1 != 0)) && (Real.Log2.count == 0) {
-			Initialize()
+			Real.one.Initialize()
 //			println("*** Ln: Ln(2) must be precomputed!"); Real.err = 51; return
 		}
 		
@@ -1604,7 +1614,7 @@ prefix func + (a: Real) -> Real {
 		
 		/* check if pi has been precomputed */
 		if Real.Pi.count == 0 {
-			Initialize()
+			Real.one.Initialize()
 //			println("*** SinCos: pi must be precomputed!")
 //			Real.err = 28; return
 		}
@@ -1625,10 +1635,10 @@ prefix func + (a: Real) -> Real {
 		t1 = 0; n1 = 0
 		RealToNumbExp(k3.r, b:&t1, n:&n1)
 		if n1 >= -Real.NBT {
-			t1 = t1*ipower(2, base: n1); t2 = 4*t1
-			if t2 < 0 { ka = -Int(Real.HALF-t2) } else { ka = Int(t2+Real.HALF) }  /* ka = rm.round(t2) */
+			t1 *= ipower(2, base: n1); t2 = 4*t1
+			ka = lround(t2)  // t2 < 0 ? -Int(Real.HALF-t2) : Int(t2+Real.HALF)   /* ka = rm.round(t2) */
 			t1 = 8 * (t2 - Double(ka))
-			if t1 < 0 { kb = -Int(Real.HALF-t1) } else { kb = Int(t1+Real.HALF) }  /* kb = rm.round(8*(t2-ka)) */
+			kb = lround(t1)   // t1 < 0 ? -Int(Real.HALF-t1) : Int(t1+Real.HALF)   /* kb = rm.round(8*(t2-ka)) */
 			/* ka = Int(t2); kb = rm.round(8*(t2-ka)) */
 		} else {
 			ka = 0; kb = 0
@@ -1769,7 +1779,7 @@ prefix func + (a: Real) -> Real {
 		
 		/* check if pi has been precomputed */
 		if Real.Pi.count == 0 {
-			Initialize()
+			Real.one.Initialize()
 //			println("*** ATan2: Pi must be precomputed!")
 //			Real.err = 8; return
 		}
@@ -2354,10 +2364,10 @@ prefix func + (a: Real) -> Real {
 		var n: Int = Int(self.Entier().Short())
 		
 		if (n < 0) || (n > MAXFACT) {
-			Real.status = Status.IllegalArgument; return Real(fromInt: 0)  /* out of range */
+			Real.status = Status.IllegalArgument; return Real.zero  /* out of range */
 		}
 		if n < 2 {
-			return Real(fromInt: 0)         /* 0! & 1! */
+			return Real.zero         /* 0! & 1! */
 		} else if n >= 300000 {
 			copy(Real.fact300000.real, b:&f.real); min = 300000
 		} else if n >= 200000 {
@@ -2487,32 +2497,30 @@ prefix func + (a: Real) -> Real {
 		/** return a random number between 0 and 1 */
 		var res = Real(size: Real.curMantissa+4)
 		var t: Real
-		if Real.Pi.count == 0 { Initialize() }
+		if Real.Pi.count == 0 { Real.one.Initialize() }
 		Add(&res.real, a:Real.Seed.real, b:Real.Pi)
-		t = res.Ln(); t = t.Mul(Real(fromInt: 5))
+		t = res.Ln(); t = t.Mul(Real(5))
 		t = t.Exp(); res = t; t = t.Entier()
 		Real.Seed = res.Sub(t)
 		return Real.Seed
 	} //Random;
 
-	func Test() {
+	static func Test() {
 		
 		func MakeReal (x: RealArray) -> Real {
-			var xr = Real(size: x.count)
-			copy(x, b: &xr.real)
-			return xr
+			return Real(x)
 		}
 		
 		var s, n, m: Real
 		
-		Initialize()
+		Real.one.Initialize()
 		Real.sigDigs = 100
 		println("zero=\(Real.zero)")
 		println("one=\(Real.one)")
 		println("pi=\(MakeReal(Real.Pi))")
 		println("ln2=\(MakeReal(Real.Log2))")
-		n = Real(fromString: "123456789012345678901234567890123456789")
-		m = Real(fromString: "0.123456789012345678901234567890123456790")
+		n = Real("123456789012345678901234567890123456789")
+		m = Real("0.123456789012345678901234567890123456790")
 		switch n.Cmp(m) {
 		case 0: println("n=m")
 		case 1: println("n>m")
@@ -2528,49 +2536,49 @@ prefix func + (a: Real) -> Real {
 		println("n-m=\(s)")
 		s = n.Div(m)
 		println("n/m=\(s)")
-		n = Real(fromInt:1)
-		s = n.Div(Real(fromInt:3));
+		n = Real(1)
+		s = n.Div(Real(3));
 		println("1/3=\(s)")
 		println("1/3+1/3=\(s.Add(s))")
 		println("1/3*1/3=\(s.Mul(s))")
-		println("1/3*3=\(s.Mul(Real(fromInt:3)))")
-		n = Real(fromInt:2)
-		s = n.Power(Real(fromInt:64))
+		println("1/3*3=\(s.Mul(Real(3)))")
+		n = Real(2)
+		s = n.Power(Real(64))
 		println("2^64=\(s)")
-		n = Real(fromString:"1.010E-10")
+		n = Real("1.010E-10")
 		println("1.010E-10=\(n)")
-		n = Real(fromString:"-12.0E+10")
+		n = Real("-12.0E+10")
 		println("-12.0E+10=\(n)")
-		n = Real(fromString:"0.00045E-10")
+		n = Real("0.00045E-10")
 		println("0.00045E-10=\(n)")
-		n = Real(fromString:"-12 345 678")
+		n = Real("-12 345 678")
 		println("-12 345 678=\(n)")
-		n = Real(fromString:"1E10000")
+		n = Real("1E10000")
 		println("1E10000=\(n)")
-		MakeReal(Real.Pi).SinCos(&m, cos: &n)
+		Real.pi.SinCos(&m, cos: &n)
 		println("Sin(pi)=\(m)")
 		println("Cos(pi)=\(n)")
-		m = MakeReal(Real.Pi).Div(Real(fromInt:8))
+		m = Real.pi.Div(Real(8))
 		m.SinCos(&m, cos: &n)
 		println("Sin(pi/8)=\(m)")
 		println("Cos(pi/8)=\(n)")
-		m = Real(fromInt:1)
+		m = one
 		m.SinCos(&m, cos: &n)
 		println("Sin(1)=\(m)")
 		println("Cos(1)=\(n)")
-		m = Real(fromInt:-8)
+		m = Real(-8)
 		println("-8^(-1/3)=\(m.IRoot(3))")
-		m = Real(fromInt:2); m = m.Power(Real(fromInt:64));
+		m = Real(2); m = m.Power(Real(64));
 		println("(2^64)^(-1/64)=\(m.IRoot(64))")
-		m = Real(fromInt:4)
+		m = Real(4)
 		println("4*arctan(1)=\(m.Mul(Real.one.Arctan()))")
 		m = Real.one.Sin()
 		println("arcsin(sin(1))=\(m.Arcsin())")
 		m = Real.one.Cos()
 		println("arccos(cos(1))=\(m.Arccos())")
-		m = Real(fromDouble:3.6)
+		m = Real(3.6)
 		println("Entier(3.6)=\(m.Entier())")
-		m = Real(fromDouble:-3.6)
+		m = Real(-3.6)
 		println("Entier(-3.6)=\(m.Entier())")
 	} //Test;
 

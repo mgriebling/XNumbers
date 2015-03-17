@@ -160,13 +160,13 @@ struct Rational : Printable, Equatable, Comparable {
 		var x, y, MAX : Real
 		var neg : Bool
 		
-		x = Real(fromInt: 0)
-		MAX = Real(fromInt: MAXC); iMAX = Integer(fromInt: MAXC)
-		neg = false; y = Real(fromInt: 1)
+		x = Real(0)
+		MAX = Real(MAXC); iMAX = Integer(fromInt: MAXC)
+		neg = false; y = Real(1)
 		if A.Sign() == -1 { A = A.Abs(); neg = true }
 		while A.Sign() == 1 {
 			ia = A.Mod(iMAX)
-			x = x.Add(y.Mul(Real(fromInt: ia.ToInt())))
+			x = x.Add(y.Mul(Real(ia.ToInt())))
 			A = A.Div(iMAX); y = y.Mul(MAX)
 		}
 		if neg { x = Real.zero.Sub(x) }

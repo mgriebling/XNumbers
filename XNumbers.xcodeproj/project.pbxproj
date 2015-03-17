@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2FD71DAE1AA4AAEE003ED6B6 /* Integer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FD71DAD1AA4AAEE003ED6B6 /* Integer.swift */; };
+		47052D941AB835DF0070E278 /* ExComplex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 47052D8C1AB835DF0070E278 /* ExComplex.cpp */; };
+		47052D951AB835DF0070E278 /* ExIntegers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 47052D8E1AB835DF0070E278 /* ExIntegers.cpp */; };
+		47052D961AB835DF0070E278 /* Real.mm in Sources */ = {isa = PBXBuildFile; fileRef = 47052D911AB835DF0070E278 /* Real.mm */; };
+		47052D971AB835DF0070E278 /* Reals.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 47052D921AB835DF0070E278 /* Reals.cpp */; };
 		4748DA8F1AA26F2500EB8DF3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4748DA8E1AA26F2500EB8DF3 /* main.swift */; };
-		47A21E181AAEF85C00A09546 /* Rational.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47A21E171AAEF85C00A09546 /* Rational.swift */; };
-		47B31EFB1AA723D3002A5EB4 /* Real.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47B31EFA1AA723D3002A5EB4 /* Real.swift */; };
-		47D678971AA8720200EACAAB /* Complex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47D678961AA8720200EACAAB /* Complex.swift */; };
 		47E655D91AB04F0800C6FD47 /* Equation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E655D81AB04F0800C6FD47 /* Equation.swift */; };
 		47E655DB1AB050A300C6FD47 /* Functions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E655DA1AB050A300C6FD47 /* Functions.swift */; };
 		47E655DD1AB050F100C6FD47 /* Variables.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E655DC1AB050F100C6FD47 /* Variables.swift */; };
@@ -31,12 +31,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		2FD71DAD1AA4AAEE003ED6B6 /* Integer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Integer.swift; sourceTree = "<group>"; };
+		47052D8B1AB835DF0070E278 /* Errors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Errors.h; sourceTree = "<group>"; };
+		47052D8C1AB835DF0070E278 /* ExComplex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ExComplex.cpp; sourceTree = "<group>"; };
+		47052D8D1AB835DF0070E278 /* ExComplex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExComplex.h; sourceTree = "<group>"; };
+		47052D8E1AB835DF0070E278 /* ExIntegers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ExIntegers.cpp; sourceTree = "<group>"; };
+		47052D8F1AB835DF0070E278 /* ExIntegers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExIntegers.h; sourceTree = "<group>"; };
+		47052D901AB835DF0070E278 /* Real.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Real.h; sourceTree = "<group>"; };
+		47052D911AB835DF0070E278 /* Real.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Real.mm; sourceTree = "<group>"; };
+		47052D921AB835DF0070E278 /* Reals.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Reals.cpp; sourceTree = "<group>"; };
+		47052D931AB835DF0070E278 /* Reals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Reals.h; sourceTree = "<group>"; };
 		4748DA8B1AA26F2500EB8DF3 /* XNumbers */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = XNumbers; sourceTree = BUILT_PRODUCTS_DIR; };
 		4748DA8E1AA26F2500EB8DF3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		47A21E171AAEF85C00A09546 /* Rational.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Rational.swift; sourceTree = "<group>"; };
-		47B31EFA1AA723D3002A5EB4 /* Real.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Real.swift; sourceTree = "<group>"; };
-		47D678961AA8720200EACAAB /* Complex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Complex.swift; sourceTree = "<group>"; };
+		4766A4901AB4796D00467494 /* XNumbers-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "XNumbers-Bridging-Header.h"; sourceTree = "<group>"; };
 		47E655D81AB04F0800C6FD47 /* Equation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Equation.swift; sourceTree = "<group>"; };
 		47E655DA1AB050A300C6FD47 /* Functions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Functions.swift; sourceTree = "<group>"; };
 		47E655DC1AB050F100C6FD47 /* Variables.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Variables.swift; sourceTree = "<group>"; };
@@ -54,6 +60,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		47052D981AB836050070E278 /* C++ Code */ = {
+			isa = PBXGroup;
+			children = (
+				47052D8B1AB835DF0070E278 /* Errors.h */,
+				47052D8C1AB835DF0070E278 /* ExComplex.cpp */,
+				47052D8D1AB835DF0070E278 /* ExComplex.h */,
+				47052D8E1AB835DF0070E278 /* ExIntegers.cpp */,
+				47052D8F1AB835DF0070E278 /* ExIntegers.h */,
+				47052D901AB835DF0070E278 /* Real.h */,
+				47052D911AB835DF0070E278 /* Real.mm */,
+				47052D921AB835DF0070E278 /* Reals.cpp */,
+				47052D931AB835DF0070E278 /* Reals.h */,
+			);
+			name = "C++ Code";
+			sourceTree = "<group>";
+		};
 		4748DA821AA26F2400EB8DF3 = {
 			isa = PBXGroup;
 			children = (
@@ -73,15 +95,13 @@
 		4748DA8D1AA26F2500EB8DF3 /* XNumbers */ = {
 			isa = PBXGroup;
 			children = (
-				2FD71DAD1AA4AAEE003ED6B6 /* Integer.swift */,
-				47B31EFA1AA723D3002A5EB4 /* Real.swift */,
+				47052D981AB836050070E278 /* C++ Code */,
 				4748DA8E1AA26F2500EB8DF3 /* main.swift */,
-				47D678961AA8720200EACAAB /* Complex.swift */,
-				47A21E171AAEF85C00A09546 /* Rational.swift */,
 				47E655DA1AB050A300C6FD47 /* Functions.swift */,
 				47E655DC1AB050F100C6FD47 /* Variables.swift */,
 				47E655DE1AB0524C00C6FD47 /* Scanner.swift */,
 				47E655D81AB04F0800C6FD47 /* Equation.swift */,
+				4766A4901AB4796D00467494 /* XNumbers-Bridging-Header.h */,
 			);
 			path = XNumbers;
 			sourceTree = "<group>";
@@ -142,12 +162,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				47D678971AA8720200EACAAB /* Complex.swift in Sources */,
-				2FD71DAE1AA4AAEE003ED6B6 /* Integer.swift in Sources */,
+				47052D941AB835DF0070E278 /* ExComplex.cpp in Sources */,
+				47052D971AB835DF0070E278 /* Reals.cpp in Sources */,
+				47052D961AB835DF0070E278 /* Real.mm in Sources */,
 				47E655DB1AB050A300C6FD47 /* Functions.swift in Sources */,
-				47A21E181AAEF85C00A09546 /* Rational.swift in Sources */,
 				47E655DF1AB0524C00C6FD47 /* Scanner.swift in Sources */,
-				47B31EFB1AA723D3002A5EB4 /* Real.swift in Sources */,
+				47052D951AB835DF0070E278 /* ExIntegers.cpp in Sources */,
 				4748DA8F1AA26F2500EB8DF3 /* main.swift in Sources */,
 				47E655D91AB04F0800C6FD47 /* Equation.swift in Sources */,
 				47E655DD1AB050F100C6FD47 /* Variables.swift in Sources */,
@@ -235,15 +255,22 @@
 		4748DA931AA26F2500EB8DF3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "XNumbers/XNumbers-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		4748DA941AA26F2500EB8DF3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_USE_OPTIMIZATION_PROFILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "XNumbers/XNumbers-Bridging-Header.h";
 			};
 			name = Release;
 		};

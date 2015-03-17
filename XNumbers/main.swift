@@ -8,10 +8,8 @@
 
 import Foundation
 
-println("Hello, World!")
+var x : xNumber("1234567890")
 
-var x = Rational(n: 0, d: 1)
-
-x.Test()
+println("x = \(x)")
 
 

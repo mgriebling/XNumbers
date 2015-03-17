@@ -37,7 +37,7 @@ func ToInteger (var A : Real) -> Integer {
 	
 	A = A.Entier()
 	x = Integer.zero; exp = 0
-	MAX = Real(fromInt: MAXC); iMAX = Integer(fromInt: MAXC)
+	MAX = Real(MAXC); iMAX = Integer(fromInt: MAXC)
 	neg = false;
 	if A.isNegative() { A = A.Abs(); neg = true }
 	while A > MAX {
@@ -50,7 +50,7 @@ func ToInteger (var A : Real) -> Integer {
 		A = MAX.Mul(A.Fraction())
 		--exp
 	} while !(exp < 0)
-	if neg { x = Integer.zero.Sub(x) }
+	if neg { x = -x }
 	return x
 } // RealToInteger;
 
@@ -60,16 +60,16 @@ func ToReal (var A : Integer) -> Real {
 	var x, y, MAX : Real
 	var neg : Bool
 	
-	x = Real(fromInt: 0)
-	MAX = Real(fromInt: MAXC); iMAX = Integer(fromInt: MAXC)
-	neg = false; y = Real(fromInt: 1)
+	x = Real(0)
+	MAX = Real(MAXC); iMAX = Integer(fromInt: MAXC)
+	neg = false; y = Real(1)
 	if A.Sign() == -1 { A = A.Abs(); neg = true }
 	while A.Sign() == 1 {
 		ia = A.Mod(iMAX)
-		x = x.Add(y.Mul(Real(fromInt: ia.ToInt())))
+		x = x.Add(y.Mul(Real(ia.ToInt())))
 		A = A.Div(iMAX); y = y.Mul(MAX)
 	}
-	if neg { x = Real.zero.Sub(x) }
+	if neg { x = -x }
 	return x
 } // IntegerToReal;
 
@@ -77,10 +77,10 @@ func ToReal (var A : Integer) -> Real {
 func FromRadians (radianAngle: Real) -> Real {
 	/* conversion from radians to an angular measure */
 	if Complex.nState.DegRadFlag == Complex.AngularMeasure.Degrees {
-		let K180 = Real(fromInt: 180)
+		let K180 = Real(180)
 		return radianAngle.Mul(K180.Div(Real.pi))
 	} else if Complex.nState.DegRadFlag == Complex.AngularMeasure.Gradians {
-		let K200 = Real(fromInt: 200)
+		let K200 = Real(200)
 		return radianAngle.Mul(K200.Div(Real.pi))
 	} else {
 		return radianAngle
@@ -91,9 +91,9 @@ func FromRadians (radianAngle: Real) -> Real {
 func ToRadians (radianAngle : Real) -> Real {
 	/* Convert an angular measure into radians */
 	if Complex.nState.DegRadFlag == Complex.AngularMeasure.Degrees {
-		return radianAngle.Mul(Real.pi.Div(Real(fromInt: 180)))
+		return radianAngle.Mul(Real.pi.Div(Real(180)))
 	} else if Complex.nState.DegRadFlag == Complex.AngularMeasure.Gradians {
-		return radianAngle.Mul(Real.pi.Div(Real(fromInt: 200)))
+		return radianAngle.Mul(Real.pi.Div(Real(200)))
 	} else {
 		return radianAngle
 	}
@@ -101,7 +101,7 @@ func ToRadians (radianAngle : Real) -> Real {
 
 
 func Long (x : Double) -> Complex {
-	return Complex(re: Real(fromDouble: x), im: Real.zero)
+	return Complex(Real(x), Real.zero)
 } // Long;
 
 struct Complex : Printable, Equatable, Comparable {
@@ -175,7 +175,8 @@ struct Complex : Printable, Equatable, Comparable {
 	}
 	
 	static let zero = Complex()
-	static let one = Complex(re: Real.one, im: Real.zero)
+	static let one = Complex(Real.one, Real.zero)
+	static let i = Complex(Real.zero, Real.one)
 	static var nState = NumbState()
 	
 	/*---------------------------------------------------------*/
@@ -190,20 +191,24 @@ struct Complex : Printable, Equatable, Comparable {
 		self.imag = Real.zero
 	}
 	
-	init (re: Real, im : Real) {
+	init (_ int : Int) {
+		self.init(fromDouble:Double(int))
+	}
+	
+	init (_ re: Real, _ im : Real) {
 		self.real = re; self.imag = im
 	} // Init;
 	
 	init (fromDouble: Double) {
-		self.init(fromReal:Real(fromDouble: fromDouble))
+		self.init(Real(fromDouble))
 	}
 	
 	init (fromComplex c: Complex) {
-		self.init(re:c.real, im:c.imag)
+		self.init(c.real, c.imag)
 	}
 	
-	init (fromReal: Real) {
-		self.init(re:fromReal, im:Real.zero)
+	init (_ fromReal: Real) {
+		self.init(fromReal, Real.zero)
 	}
 	
 	init (r: Real, theta: Real) {
@@ -211,7 +216,7 @@ struct Complex : Printable, Equatable, Comparable {
 		var t: Complex
 		c = Real.zero
 		s = ToRadians(theta); s.SinCos(&s, cos: &c)
-		t = Complex.one.Add(Complex(re: r.Mul(c), im: r.Mul(s)))   /* force rounding */
+		t = Complex.one.Add(Complex(r.Mul(c), r.Mul(s)))   /* force rounding */
 		self = t.Sub(Complex.one)
 	} // ToRectangular;
 	
@@ -323,7 +328,7 @@ struct Complex : Printable, Equatable, Comparable {
 	} // Format;
 	
 	func Conj () -> Complex {
-		return Complex(re: self.real, im: Real.zero.Sub(self.imag))
+		return Complex(self.real, Real.zero.Sub(self.imag))
 	} // Conj;
 	
 	
@@ -352,26 +357,26 @@ struct Complex : Printable, Equatable, Comparable {
 	
 	
 	func Neg () -> Complex {
-		return Complex(re: Real.zero.Sub(self.real), im: Real.zero.Sub(self.imag))
+		return Complex(Real.zero.Sub(self.real), Real.zero.Sub(self.imag))
 	} // Neg;
 	
 	
 	func Add (C : Complex) -> Complex {
 		/** A = B + C = (a + bi) + (c + di) = (a+c) + (b+d)i */
-		return Complex(re: self.real.Add(C.real), im: self.imag.Add(C.imag))
+		return Complex(self.real.Add(C.real), self.imag.Add(C.imag))
 	} // Add;
 	
 	
 	func Sub (C : Complex) -> Complex {
 		/** A = B - C = (a + bi) - (c + di) = (a-c) + (b-d)i */
-		return Complex(re: self.real.Sub(C.real), im: self.imag.Sub(C.imag))
+		return Complex(self.real.Sub(C.real), self.imag.Sub(C.imag))
 	} // Sub;
 	
 	func Mul (C : Complex) -> Complex {
 		var r, i: Real
 		/* A = B * C = (a + bi) * (c + di) = (ac-bd) + (ad+bc)i */
 		r = self.real.Mul(C.real); i = self.real.Mul(C.imag);
-		return Complex(re: r.Sub(self.imag.Mul(C.imag)), im: i.Add(self.imag.Mul(C.real)))
+		return Complex(r.Sub(self.imag.Mul(C.imag)), i.Add(self.imag.Mul(C.real)))
 	} // Mul;
 	
 	func Div (C : Complex) -> Complex {
@@ -383,7 +388,7 @@ struct Complex : Printable, Equatable, Comparable {
 		div = C.real.Mul(C.real); div = div.Add(C.imag.Mul(C.imag));
 		r = self.real.Mul(C.real); r = r.Add(self.imag.Mul(C.imag));
 		i = self.imag.Mul(C.real); i = i.Sub(self.real.Mul(C.imag));
-		return Complex(re: r.Div(div), im: i.Div(div))
+		return Complex(r.Div(div), i.Div(div))
 	} // Div;
 	
 	func Cmp (b: Complex) -> Int {
@@ -442,26 +447,26 @@ struct Complex : Printable, Equatable, Comparable {
 		var x = self
 		let izero = x.imag.isZero()
 		if izero && !x.real.isZero() {
-			return Complex(re: x.real.IRoot(i), im: Real.zero)
+			return Complex(x.real.IRoot(i), Real.zero)
 		} else if izero && ((i&1) != 0) {
 			r = x.real.Abs(); r = r.IRoot(i);
-			return Complex(re: Real.zero.Sub(r), im: Real.zero)
+			return Complex(Real.zero.Sub(r), Real.zero)
 		} else {
 			r = x.PolarMag(); theta = x.PolarAngle()
-			return Complex(r: r.IRoot(i), theta: theta.Div(Real(fromInt: i)))
+			return Complex(r: r.IRoot(i), theta: theta.Div(Real(i)))
 		}
 	} // IRoot;
 
 	
 	func fromRadians () -> Complex {
 		/* Convert a radian measure into current angle measure */
-		return Complex(re: FromRadians(self.real), im: FromRadians(self.imag))
+		return Complex(FromRadians(self.real), FromRadians(self.imag))
 	} // fromRadians;
 	
 	
 	func toRadians () -> Complex {
 		/* Convert an angle measure into radians */
-		return Complex(re: ToRadians(self.real), im: ToRadians(self.imag))
+		return Complex(ToRadians(self.real), ToRadians(self.imag))
 	} // toRadians;
 	
 	
@@ -478,16 +483,16 @@ struct Complex : Printable, Equatable, Comparable {
 		if x.imag.isZero() {
 			pos = !x.real.isNegative()
 			t = x.real.Abs()
-			if pos { return Complex(re: t.Ln(), im: Real.zero)
-			} else { return Complex(re: t.Ln(), im: Real.pi)
+			if pos { return Complex(t.Ln(), Real.zero)
+			} else { return Complex(t.Ln(), Real.pi)
 			}
 		} else if x.real.isZero() {
 			pos = !x.imag.isNegative()
-			t = x.imag.Abs(); half = Real(fromDouble: 0.5)
+			t = x.imag.Abs(); half = Real(0.5)
 			if !pos {
-				return Complex(re: t.Ln(), im: Real.zero.Sub(half.Mul(Real.pi)))
+				return Complex(t.Ln(), Real.zero.Sub(half.Mul(Real.pi)))
 			} else {
-				return Complex(re: t.Ln(), im: half.Mul(Real.pi))
+				return Complex(t.Ln(), half.Mul(Real.pi))
 			}
 		} else {
 			t = x.PolarMag()
@@ -513,7 +518,7 @@ struct Complex : Printable, Equatable, Comparable {
 		
 		if y.imag.isZero() && !y.real.isNegative() { /* just real powers */
 			if x.imag.isZero() && !x.real.isNegative() { /* real numbers */
-				return Complex(re: x.real.Power(y.real), im: Real.zero)
+				return Complex(x.real.Power(y.real))
 			} else {
 				p = y.Short()
 				if (abs(p) < Double(Int.max)) && y.real.Fraction().isZero() {
@@ -534,7 +539,7 @@ struct Complex : Printable, Equatable, Comparable {
 		
 		if y.imag.isZero() && !y.real.isNegative() { /* just real roots */
 			if x.imag.isZero() && !x.real.isNegative() { /* real numbers */
-				return Complex(re: x.real.IRoot(Int(y.real.Short())), im: Real.zero)
+				return Complex(x.real.IRoot(Int(y.real.Short())))
 			} else {
 				r = y.Short()
 				if (abs(r) < Double(Int.max)) && y.real.Fraction().isZero() {
@@ -554,7 +559,7 @@ struct Complex : Printable, Equatable, Comparable {
 		var x = self
 		s = ToRadians(x.real); c = Real.zero; ch = Real.zero; sh = Real.zero
 		s.SinCos(&s, cos: &c); x.imag.SinhCosh(&sh, cosh: &ch)
-		return Complex(re: s.Mul(ch), im: c.Mul(sh))
+		return Complex(s.Mul(ch), c.Mul(sh))
 	} // Sin;
 	
 	
@@ -563,7 +568,7 @@ struct Complex : Printable, Equatable, Comparable {
 		var x = self
 		s = ToRadians(x.real); c = Real.zero; ch = Real.zero; sh = Real.zero
 		s.SinCos(&s, cos: &c); x.imag.SinhCosh(&sh, cosh: &ch)
-		return Complex(re: c.Mul(ch), im: Real.zero.Sub(s.Mul(sh)))
+		return Complex(c.Mul(ch), Real.zero.Sub(s.Mul(sh)))
 	} // Cos;
 	
 	
@@ -572,8 +577,8 @@ struct Complex : Printable, Equatable, Comparable {
 		var x = self
 		s = ToRadians(x.real); c = Real.zero; ch = Real.zero; sh = Real.zero
 		s.SinCos(&s, cos: &c); x.imag.SinhCosh(&sh, cosh: &ch)
-		sin = Complex(re: s.Mul(ch), im: c.Mul(sh))
-		cos = Complex(re: s.Mul(c), im: Real.zero.Sub(sh.Mul(sh)))
+		sin = Complex(s.Mul(ch), c.Mul(sh))
+		cos = Complex(s.Mul(c), Real.zero.Sub(sh.Mul(sh)))
 	} // SinCosC;
 	
 	
@@ -581,19 +586,19 @@ struct Complex : Printable, Equatable, Comparable {
 		var d, s, c, sh, ch: Real
 		var x = self
 		
-		let TWO = Real(fromInt: 2); s = ToRadians(x.real)
+		let TWO = Real(2); s = ToRadians(x.real)
 		s = TWO.Mul(s); sh = TWO.Mul(x.imag)
 		c = Real.zero; ch = Real.zero; sh = Real.zero
 		s.SinCos(&s, cos: &c); sh.SinhCosh(&sh, cosh: &ch)
 		d = ch.Add(c);
-		return Complex(re: s.Div(d), im: sh.Div(d))
+		return Complex(s.Div(d), sh.Div(d))
 	} // Tan;
 	
 	
 	private func CalcAlphaBeta (inout a: Real, inout b: Real) {
 		var x, x2, y, r, t: Real
 		var z = self
-		let HALF = Real(fromDouble: 0.5)
+		let HALF = Real(0.5)
 		x = z.real.Add(Real.one); x = x.Mul(x); y = z.imag.Mul(z.imag)
 		x2 = z.real.Sub(Real.one); x2 = x2.Mul(x2)
 		t = x.Add(y); r = t.Sqrt(); t = x2.Add(y)
@@ -609,7 +614,7 @@ struct Complex : Printable, Equatable, Comparable {
 		a = Real.zero; b = Real.zero
 		x.CalcAlphaBeta(&a, b: &b)
 		t = a.Mul(a); t = t.Sub(Real.one); t = a.Add(t.Sqrt());
-		return Complex(re: FromRadians(b.Arcsin()), im: t.Ln())
+		return Complex(FromRadians(b.Arcsin()), t.Ln())
 	} // Arcsin;
 	
 	func Arccos () -> Complex {
@@ -618,16 +623,16 @@ struct Complex : Printable, Equatable, Comparable {
 		a = Real.zero; b = Real.zero
 		x.CalcAlphaBeta(&a, b: &b)
 		t = a.Mul(a); t = t.Sub(Real.one); t = a.Add(t.Sqrt())
-		return Complex(re: FromRadians(b.Arccos()), im: Real.zero.Sub(t.Ln()))
+		return Complex(FromRadians(b.Arccos()), Real.zero.Sub(t.Ln()))
 	} // Arccos;
 	
 	
 	func Arctan () -> Complex {
 		var x, x2, y2, y, yp, t: Real
 		var z = self
-		let TWO = Real(fromInt: 2)
-		let HALF = Real(fromDouble: 0.5)
-		let QUARTER = Real(fromDouble: 0.25)
+		let TWO = Real(2)
+		let HALF = Real(0.5)
+		let QUARTER = Real(0.25)
 		x = TWO.Mul(z.real); y = z.imag.Add(Real.one); y = y.Mul(y)
 		yp = z.imag.Sub(Real.one); yp = yp.Mul(yp)
 		x2 = z.real.Mul(z.real); y2 = z.imag.Mul(z.imag)
@@ -635,7 +640,7 @@ struct Complex : Printable, Equatable, Comparable {
 		x = HALF.Mul(t.Arctan())
 		t = x2.Add(y); t = t.Div(x2.Add(yp))
 		y = QUARTER.Mul(t.Ln())
-		return Complex(re: FromRadians(x), im: y)
+		return Complex(FromRadians(x), y)
 	} // Arctan;
 	
 	
@@ -644,7 +649,7 @@ struct Complex : Printable, Equatable, Comparable {
 		var x = self
 		s1 = Real.zero; c1 = Real.zero; c2 = Real.zero; s2 = Real.zero
 		x.real.SinhCosh(&s1, cosh: &c1); x.imag.SinhCosh(&s2, cosh: &c2)
-		return Complex(re: s1.Mul(c2), im: c1.Mul(s2))
+		return Complex(s1.Mul(c2), c1.Mul(s2))
 	} // Sinh;
 	
 	
@@ -653,7 +658,7 @@ struct Complex : Printable, Equatable, Comparable {
 		var x = self
 		s1 = Real.zero; c1 = Real.zero; c2 = Real.zero; s2 = Real.zero
 		x.real.SinhCosh(&s1, cosh: &c1); x.imag.SinhCosh(&s2, cosh: &c2)
-		return Complex(re: c1.Mul(c2), im: s1.Mul(s2))
+		return Complex(c1.Mul(c2), s1.Mul(s2))
 	} // Cosh;
 	
 	
@@ -662,8 +667,8 @@ struct Complex : Printable, Equatable, Comparable {
 		var x = self
 		s1 = Real.zero; c1 = Real.zero; c2 = Real.zero; s2 = Real.zero
 		x.real.SinhCosh(&s1, cosh: &c1); x.imag.SinhCosh(&s2, cosh: &c2)
-		sinh = Complex(re: s1.Mul(c2), im: c1.Mul(s2))
-		cosh = Complex(re: c1.Mul(c2), im: s1.Mul(s2))
+		sinh = Complex(s1.Mul(c2), c1.Mul(s2))
+		cosh = Complex(c1.Mul(c2), s1.Mul(s2))
 	} // SinhCoshC;
 	
 	
@@ -749,11 +754,11 @@ struct Complex : Printable, Equatable, Comparable {
 		
 		xi = ToInteger(Real.pi)
 		println("Real = \(Real.pi); Int = \(xi)")
-		x = Real(fromString: "1234567890.12345")
+		x = Real("1234567890.12345")
 		xi = ToInteger(x)
 		println("Real = \(x); Int = \(xi)")
 		
-		x = Real(fromString: "1234567890123456789012345678901234567890.12345")
+		x = Real("1234567890123456789012345678901234567890.12345")
 		xi = ToInteger(x)
 		println("Real = \(x); Int = \(xi)")
 		

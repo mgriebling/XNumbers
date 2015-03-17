@@ -32,9 +32,9 @@ struct Variables {
 
 //	struct VarType {
 //		var Name: String
-//		var Value: Complex
+//		var Value: xNumber
 //		
-//		init (variable: String, value: Complex) {
+//		init (variable: String, value: xNumber) {
 //			self.Name = variable
 //			self.Value = value
 //		} // New;
@@ -63,8 +63,8 @@ struct Variables {
 //		} // ToString;
 //	}
 	
-	private static var fvar = [String: Complex]()	/* function variables */
-	private static var Var = [String: Complex]()	/* all defined variables */
+	private static var fvar = [String: xNumber]()	/* function variables */
+	private static var Var = [String: xNumber]()	/* all defined variables */
 
 //func (a: VarType) Store* (w: Storable.Writer) RAISES IO.Error;
 ///** Write 'a' to the 'w' writer. */
@@ -91,13 +91,13 @@ struct Variables {
 		return Variables.Var.count
 	} // Defined;
 
-	static func Set (variable: String, value : Complex) -> Bool {
+	static func Set (variable: String, value : xNumber) -> Bool {
 		/** Define a permanent variable */
 		Variables.Var[variable] = value
 		return true  // can't fail
 	} // Set;
 
-	static func Setf (variable: String, value : Complex) -> Bool {
+	static func Setf (variable: String, value : xNumber) -> Bool {
 		/** Define a temporary stack variable 'variable' = 'value' */
 		if let found = Variables.Var[variable] {
 			return false
@@ -107,7 +107,7 @@ struct Variables {
 		}
 	} // Setf;
 
-	static func Get (variable: String) -> Complex? {
+	static func Get (variable: String) -> xNumber? {
 		/** Return the current definition of 'variable' */
 		return Variables.Var[variable]
 	} // Get;
@@ -119,7 +119,7 @@ struct Variables {
 	
 	static func Deletef () {
 		/** Delete all temporary stack variables */
-		Variables.fvar = [String: Complex]()
+		Variables.fvar = [String: xNumber]()
 	} // Deletef;
 
 	static func Iterate (IterFunc: (String, String) -> ()) {

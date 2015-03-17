@@ -66,7 +66,7 @@ struct Scanner {
 		case NaturalLog; case Log; case PowerOfe; case Name
 		case Base; case Digits; case Decimals; case Notation
 		case DegRadGrad; case Plot; case iToken; case rToken
-		case Theta; case ImagPart; case RealPart; case Convert
+		case Theta; case ImagPart; case xNumberPart; case Convert
 		case IntPart; case FracPart; case SignOf; case Abs
 		case Min; case Max; case Conj; case Rand; case Semi
 		case Pi; case Delete; case List; case Help; case Rat
@@ -86,7 +86,7 @@ struct Scanner {
 	static let ExpChar : Character = "E"
 	
 	struct StateType {
-		var val     : Complex  /* number value */
+		var val     : xNumber  /* number value */
 		var varn    : VarStr
 		var ch      : Character
 		var pos     : Int
@@ -95,7 +95,7 @@ struct Scanner {
 		var pline   : String
 		
 		init () {
-			self.val = Complex(fromDouble: 0)
+			self.val = xNumber(int: 0)
 			self.varn = ""
 			self.ch = "\0"
 			self.pos = 0
@@ -138,7 +138,7 @@ struct Scanner {
 		.List:         "list",
 		.Help:         "help",
 		.PolarToRect:  "rect",
-		.RealPart:     "re",
+		.xNumberPart:     "re",
 		.Root:         "root",
 		.Rand:         "rand",
 		.Rat:			"rat",
@@ -183,10 +183,10 @@ struct Scanner {
 		.Tan:          "tan"
 	]
 
-	static func Mark (errid: Real.Status) {
+	static func Mark (errid: xNumber.Status) {
 		if s.pos > s.errpos {
 //			err.DisplayError(errid, s.pos, s.pline);
-			Real.status = errid
+			xNumber.status = errid
 		}
 		s.errpos = s.pos; s.error = true
 	} // Mark;
@@ -242,7 +242,7 @@ struct Scanner {
 					if LocateChar(NumChars, ch: s.ch, start: 0) != nil {
 						/* valid numerical character */
 						Constant.append(s.ch)
-						if ((s.ch == "E") || (s.ch == ExpChar)) && (Complex.nState.LocalBase == 10) {
+						if ((s.ch == "E") || (s.ch == ExpChar)) && (xNumber.nState.LocalBase == 10) {
 							NumChars = "+-0123456789"  /* just exponent digits */
 						} else if (s.ch == "+") || (s.ch == "-") {
 							NumChars = "0123456789"
@@ -258,21 +258,21 @@ struct Scanner {
 			} // GetNumber;
 			
 			func UnsignInt() {
-				var num: Real
+				var num: xNumber
 				var chars: String
 				
 				/* perform the actual conversion from string to number */
-				Real.status = .Okay
-				if Complex.nState.LocalBase == 10 {
+				xNumber.status = .Okay
+				if xNumber.nState.LocalBase == 10 {
 					chars = Constant
-					num = Real(fromString: chars)
+					num = xNumber(chars)
 				} else {
-					num = ToReal(Integer(fromString: Constant, withBase: Complex.nState.LocalBase))
+					num = ToxNumber(Integer(fromString: Constant, withBase: xNumber.nState.LocalBase))
 				}
-				if Real.status == .Okay {  /* all went OK */
-					s.val = Complex(re: num, im: Real.zero)
+				if xNumber.status == .Okay {  /* all went OK */
+					s.val = xNumber(num)
 				} else {
-					s.val = Complex.zero
+					s.val = xNumber.zero
 					Mark(.IllegalNumber)
 				}
 			} // UnsignInt;
@@ -283,18 +283,18 @@ struct Scanner {
 			PunctuationChars = ",'_"
 			
 			/* check if decimal point is a comma */
-			if (Complex.nState.DigSep == ".") || (Complex.nState.FracSep == ".") {
+			if (xNumber.nState.DigSep == ".") || (xNumber.nState.FracSep == ".") {
 				PunctuationChars = "." + PunctuationChars.substringFromIndex(find(PunctuationChars, ",")!)  // Substring(1, 2)
 				NumberChars = "," + NumberChars.substringFromIndex(find(NumberChars, "E")!)  // Substring(1, 18)
 			}
 			
 			/* valid number characters */
-			if Complex.nState.LocalBase == 10 {
+			if xNumber.nState.LocalBase == 10 {
 				NumChars = NumberChars.substringToIndex(find(NumberChars, "9")!) // .Substring(0, 13)
 			} else {
 				let start = find(NumberChars, "0")!
 				var end = start
-				var i = Complex.nState.LocalBase
+				var i = xNumber.nState.LocalBase
 				while i > 0 { end.successor(); i-- }
 				NumChars = NumberChars.substringWithRange(start...end)  // Substring(3, xm.nState.LocalBase+3)
 			}
@@ -307,14 +307,14 @@ struct Scanner {
 				Constant = Constant.stringByReplacingOccurrencesOfString(",", withString: ".")
 			}
 			
-			/* convert to a Real */
+			/* convert to a xNumber */
 			if !Constant.isEmpty {
 				UnsignInt()
 				if (s.ch == "°") || (s.ch == "i") {
-					s.val = Complex(re: Real.zero, im: s.val.real); Read()
+					s.val = xNumber(xNumber.zero, s.val.real); Read()
 				}
 			} else {
-				s.val = Complex.zero
+				s.val = xNumber.zero
 				Mark(.IllegalNumber) /* illegal number or constant */
 			}
 		} // number;
@@ -382,7 +382,7 @@ struct Scanner {
 				} else if IsAlphaNumeric(s.ch) {
 					--s.pos; s.ch = "e"; Variable()
 				} else {
-					s.val = Complex(re: Real.one.Exp(), im: Real.zero)
+					s.val = xNumber(xNumber.one.Exp())
 				}
 			case "*"     :
 				Read(); sym = .Times;
