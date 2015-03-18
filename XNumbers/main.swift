@@ -8,7 +8,7 @@
 
 import Foundation
 
-var eq = Equation(command: "0xBCDE")
+var eq = Equation(command: "cbrt(-8)")
 println("Equation \(eq.CommandLine) = \(eq.Evaluate(eq.CommandLine))")
 
 

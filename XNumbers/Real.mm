@@ -322,12 +322,12 @@ static xNumber* InitRational (Real::Real n, Real::Real d) {
 	return [xNumber realWithRawNumerator:n andRawDenominator:d];
 }
 
-static void FixRational (xNumber *n) {
+static Complex FixRational (xNumber *n) {
 	if (n->rational) {
 		// fix up rational number to real
-		n.x = Real::div(n->z.RealPart(), n->z.ImagPart());
-		n->rational = NO;
+		return Complex::Complex(Real::div(n->z.RealPart(), n->z.ImagPart()));
 	}
+	return n->z;
 }
 
 static xNumber * addRational (Complex::Complex a, Complex::Complex b) {
@@ -366,13 +366,18 @@ static xNumber * divRational (Complex::Complex a, Complex::Complex b) {
 	return InitRational(Real::mul(anum, bden), Real::mul(aden, bnum));
 }
 
+static long cmpRational (Complex::Complex a, Complex::Complex b) {
+	Real::Real ar = Real::div(a.RealPart(), a.ImagPart());
+	Real::Real br = Real::div(b.RealPart(), b.ImagPart());
+	return Real::cmp(ar, br);
+}
+
 - (xNumber *) add: (xNumber *) r {
 	if (self->rational && r->rational) {
 		return addRational(self->z, r->z);
 	} else {
-		FixRational(self); FixRational(r);
 		Complex::Complex zi;
-		Complex::Add(zi, self->z, r->z);
+		Complex::Add(zi, FixRational(self), FixRational(r));
 		return [xNumber realWithRawComplex:zi];
 	}
 }
@@ -381,9 +386,8 @@ static xNumber * divRational (Complex::Complex a, Complex::Complex b) {
 	if (self->rational && r->rational) {
 		return subRational(self->z, r->z);
 	} else {
-		FixRational(self); FixRational(r);
 		Complex::Complex zi;
-		Complex::Sub(zi, self->z, r->z);
+		Complex::Sub(zi, FixRational(self), FixRational(r));
 		return [xNumber realWithRawComplex:zi];
 	}
 }
@@ -392,9 +396,8 @@ static xNumber * divRational (Complex::Complex a, Complex::Complex b) {
 	if (self->rational && r->rational) {
 		return mulRational(self->z, r->z);
 	} else {
-		FixRational(self); FixRational(r);
 		Complex::Complex zi;
-		Complex::Mult(zi, self->z, r->z);
+		Complex::Mult(zi, FixRational(self), FixRational(r));
 		return [xNumber realWithRawComplex:zi];
 	}
 }
@@ -403,30 +406,45 @@ static xNumber * divRational (Complex::Complex a, Complex::Complex b) {
 	if (self->rational && r->rational) {
 		return divRational(self->z, r->z);
 	} else {
-		FixRational(self); FixRational(r);
 		Complex::Complex zi;
-		Complex::Div(zi, self->z, r->z);
+		Complex::Div(zi, FixRational(self), FixRational(r));
 		return [xNumber realWithRawComplex:zi];
 	}
 }
 
 - (xNumber *) abs {
-	return [xNumber realWithRawReal:Real::abs(self.x)];
+	if (self->rational) {
+		return [xNumber realWithRawNumerator:Real::abs(self->z.RealPart()) andRawDenominator:self->z.ImagPart()];
+	}
+	return self.polarMag;
 }
 
 - (NSInteger) sign {
+	if ([self isComplex]) return 1;
 	if (isZero(self.x)) return 0;
 	return Real::sign(self.x);
 }
 
 - (NSInteger) cmp: (xNumber *) r {
-	return Real::cmp(self.x, r.x);
+	if (self->rational && r->rational) {
+		return cmpRational(self->z, r->z);
+	} else {
+		Complex az = FixRational(self);
+		Complex bz = FixRational(r);
+		Real a = [self isComplex] ? [self abs].x : self.x;
+		Real b = [self isComplex] ? [r abs].x : r.x;
+		return Real::cmp(a, b);
+	}
 }
 
 - (xNumber *) round {
-	Real::Real xi = self.x;
-	Real::round(xi);
-	return [xNumber realWithRawReal:xi];
+	if (self->rational) {
+		return self;		// no rounding needed
+	}
+	Real::Real r = self->z.RealPart();
+	Real::Real i = self->z.ImagPart();
+	Real::round(r); Real::round(i);
+	return [xNumber realWithRawComplex:Complex::Complex(r, i)];
 }
 
 
@@ -434,175 +452,176 @@ static xNumber * divRational (Complex::Complex a, Complex::Complex b) {
 
 - (xNumber *) power: (xNumber *) exp {
 	Complex::Complex zi;
-	Complex::power(zi, self->z, exp->z);
+	FixRational(self); FixRational(exp);
+	Complex::power(zi, FixRational(self), exp->z);
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) sqrt {
 	Complex::Complex zi;
-	Complex::sqrt(zi, self->z);
+	Complex::sqrt(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) exp {
 	Complex::Complex zi;
-	Complex::exp(zi, self->z);
+	Complex::exp(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) ln {
 	Complex::Complex zi;
-	Complex::ln(zi, self->z);
+	Complex::ln(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) sin {
 	Complex::Complex zi;
-	Complex::sin(zi, self->z);
+	Complex::sin(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) cos {
 	Complex::Complex zi;
-	Complex::cos(zi, self->z);
+	Complex::cos(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) tan {
 	Complex::Complex zi;
-	Complex::tan(zi, self->z);
+	Complex::tan(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) arcsin {
 	Complex::Complex zi;
-	Complex::arcsin(zi, self->z);
+	Complex::arcsin(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) arccos {
 	Complex::Complex zi;
-	Complex::arccos(zi, self->z);
+	Complex::arccos(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) arctan {
 	Complex::Complex zi;
-	Complex::arctan(zi, self->z);
+	Complex::arctan(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];;
 }
 
 - (xNumber *) sinh {
 	Complex::Complex zi;
-	Complex::sinh(zi, self->z);
+	Complex::sinh(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) cosh {
 	Complex::Complex zi;
-	Complex::sinh(zi, self->z);
+	Complex::sinh(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) tanh {
 	Complex::Complex zi;
-	Complex::tanh(zi, self->z);
+	Complex::tanh(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) conj {
-	Complex::Complex zi = self->z;
+	Complex::Complex zi = FixRational(self);
 	Complex::Conj(zi);
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) polarMag {
 	Real::Real xi;
-	Complex::PolarMag(xi, self->z);
+	Complex::PolarMag(xi, FixRational(self));
 	return [xNumber realWithRawReal:xi];
 }
 
 - (xNumber *) polarAngle {
 	Real::Real xi;
-	Complex::PolarAngle(xi, self->z);
+	Complex::PolarAngle(xi, FixRational(self));
 	return [xNumber realWithRawReal:xi];
 }
 
 - (xNumber *) negate {
-	Complex::Complex zi = self->z;
+	Complex::Complex zi = FixRational(self);
 	Complex::ChgSign(zi);
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) ipower: (NSInteger) i {
 	Complex::Complex zi;
-	Complex::xtoi(zi, self->z, i);
+	Complex::xtoi(zi, FixRational(self), i);
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) iroot: (NSInteger) n {
 	Complex::Complex zi;
-	Complex::Root(zi, self->z, n);
+	Complex::Root(zi, FixRational(self), n);
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) root: (xNumber *) x {
 	Complex::Complex zi;
-	Complex::root(zi, self->z, x->z);
+	Complex::root(zi, FixRational(self), x->z);
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) log10 {
 	Complex::Complex zi;
-	Complex::log(zi, self->z);
+	Complex::log(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) log2 {
 	Complex::Complex zi;
-	Complex::log2(zi, self->z);
+	Complex::log2(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) cot {
 	Complex::Complex zi;
-	Complex::cot(zi, self->z);
+	Complex::cot(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) arccot {
 	Complex::Complex zi;
-	Complex::arccot(zi, self->z);
+	Complex::arccot(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) coth {
 	Complex::Complex zi;
-	Complex::coth(zi, self->z);
+	Complex::coth(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) arcsinh {
 	Complex::Complex zi;
-	Complex::arcsinh(zi, self->z);
+	Complex::arcsinh(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) arccosh {
 	Complex::Complex zi;
-	Complex::arccosh(zi, self->z);
+	Complex::arccosh(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) arctanh {
 	Complex::Complex zi;
-	Complex::arctanh(zi, self->z);
+	Complex::arctanh(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) arccoth {
 	Complex::Complex zi;
-	Complex::arccoth(zi, self->z);
+	Complex::arccoth(zi, FixRational(self));
 	return [xNumber realWithRawComplex:zi];
 }
 
