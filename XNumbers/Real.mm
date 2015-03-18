@@ -69,6 +69,10 @@
 	Real::err = (errCodes)error;
 }
 
++ (void)setAngularMeasure:(NSInteger)measure {
+	Complex::SetAngle(msAngle(measure));
+}
+
 static BOOL isZero (Real::Real r) {
 	return Real::sign(r) == 0;
 }

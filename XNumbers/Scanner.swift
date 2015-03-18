@@ -107,80 +107,85 @@ struct Scanner {
 	
 	static var s = StateType()
 	static var stack: [StateType] = []
-
-	static let keyTab: [Tokens: String] = [
-		.nCr:          "nCr",
-		.nPr:          "nPr",
-		.Let:          "let",
-		.FracPart:     "frac",
-		.Sum:          "sum",
-		.Average:      "avg",
-		.Multiply:     "mul",
-		.Mod:          "mod",
-		.Max:          "max",
-		.rToken:       "mag",
-		.Min:          "min",
-		.ImagPart:     "im",
-		.If:           "if",
-		.True:         "true",
-		.False:        "false",
-		.IntPart:      "int",
-		.Base:         "bas",
-		.Or:           "or",
-		.Xor:          "xor",
-		.Complement:   "not",
-		.Pi:           "pi",
-		.And:          "and",
-		.Theta:        "angle",
-		.Abs:          "abs",
-		.Log:          "log",
-		.NaturalLog:   "ln",
-		.List:         "list",
-		.Help:         "help",
-		.PolarToRect:  "rect",
-		.RealPart:     "re",
-		.Root:         "root",
-		.Rand:         "rand",
-		.Rat:			"rat",
-		.Div:          "div",
-		.Decimals:     "dp",
-		.DegRadGrad:   "drg",
-		.Digits:       "dig",
-		.SetBit:       "sbit",
-		.ShiftRight:   "shr",
-		.ShiftLeft:    "shl",
-		.SquareRoot:   "sqrt",
-		.Delete:       "del",
-		.Notation:     "sci",
-		.SignOf:       "sign",
-		.ClearBit:     "cbit",
-		.CubeRoot:     "cbrt",
-		.ToggleBit:    "tbit",
-		.Conj:         "conj",
-		.ArcSinh:      "sinhØπ",
-		.ArcSinh:      "sinh-π",
-		.ArcSinh:      "asinh",
-		.ArcCosh:      "coshØπ",
-		.ArcCosh:      "cosh-π",
-		.ArcCosh:      "acosh",
-		.ArcTanh:      "tanhØπ",
-		.ArcTanh:      "tanh-π",
-		.ArcTanh:      "atanh",
-		.ArcSin:       "sinØπ",
-		.ArcSin:       "sin-π",
-		.ArcSin:       "asin",
-		.ArcCos:       "cosØπ",
-		.ArcCos:       "cos-π",
-		.ArcCos:       "acos",
-		.ArcTan:       "tanØπ",
-		.ArcTan:       "tan-π",
-		.ArcTan:       "atan",
-		.Sinh:         "sinh",
-		.Cosh:         "cosh",
-		.Tanh:         "tanh",
-		.Sin:          "sin",
-		.Cos:          "cos",
-		.Tan:          "tan"
+	
+	struct Symbol {
+		let sym : Tokens
+		let id : String
+	}
+	
+	static let keyTab: [Symbol] = [
+		Symbol(sym: .nCr,			id: "nCr"),
+		Symbol(sym: .nPr,			id: "nPr"),
+		Symbol(sym: .Let,			id: "let"),
+		Symbol(sym: .FracPart,		id: "frac"),
+		Symbol(sym: .Sum,			id: "sum"),
+		Symbol(sym: .Average,		id: "avg"),
+		Symbol(sym: .Multiply,		id: "mul"),
+		Symbol(sym: .Mod,			id: "mod"),
+		Symbol(sym: .Max,			id: "max"),
+		Symbol(sym: .rToken,		id: "mag"),
+		Symbol(sym: .Min,			id: "min"),
+		Symbol(sym: .ImagPart,		id: "im"),
+		Symbol(sym: .If,			id: "if"),
+		Symbol(sym: .True,			id: "true"),
+		Symbol(sym: .False,			id: "false"),
+		Symbol(sym: .IntPart,		id: "int"),
+		Symbol(sym: .Base,			id: "bas"),
+		Symbol(sym: .Or,			id: "or"),
+		Symbol(sym: .Xor,			id: "xor"),
+		Symbol(sym: .Complement,	id: "not"),
+		Symbol(sym: .Pi,			id: "pi"),
+		Symbol(sym: .And,			id: "and"),
+		Symbol(sym: .Theta,			id: "angle"),
+		Symbol(sym: .Abs,			id: "abs"),
+		Symbol(sym: .Log,			id: "log"),
+		Symbol(sym: .NaturalLog,	id: "ln"),
+		Symbol(sym: .List,			id: "list"),
+		Symbol(sym: .Help,			id: "help"),
+		Symbol(sym: .PolarToRect,	id: "rect"),
+		Symbol(sym: .RealPart,		id: "re"),
+		Symbol(sym: .Root,			id: "root"),
+		Symbol(sym: .Rand,			id: "rand"),
+		Symbol(sym: .Rat,			id: "rat"),
+		Symbol(sym: .Div,			id: "div"),
+		Symbol(sym: .Decimals,		id: "dp"),
+		Symbol(sym: .DegRadGrad,	id: "drg"),
+		Symbol(sym: .Digits,		id: "dig"),
+		Symbol(sym: .SetBit,		id: "sbit"),
+		Symbol(sym: .ShiftRight,	id: "shr"),
+		Symbol(sym: .ShiftLeft,		id: "shl"),
+		Symbol(sym: .SquareRoot,	id: "sqrt"),
+		Symbol(sym: .Delete,		id: "del"),
+		Symbol(sym: .Notation,		id: "sci"),
+		Symbol(sym: .SignOf,		id: "sign"),
+		Symbol(sym: .ClearBit,		id: "cbit"),
+		Symbol(sym: .CubeRoot,		id: "cbrt"),
+		Symbol(sym: .ToggleBit,		id: "tbit"),
+		Symbol(sym: .Conj,			id: "conj"),
+		Symbol(sym: .ArcSinh,		id: "sinh⁻¹"),
+		Symbol(sym: .ArcSinh,		id: "sinh-¹"),
+		Symbol(sym: .ArcSinh,		id: "asinh"),
+		Symbol(sym: .ArcCosh,		id: "cosh⁻¹"),
+		Symbol(sym: .ArcCosh,		id: "cosh-¹"),
+		Symbol(sym: .ArcCosh,		id: "acosh"),
+		Symbol(sym: .ArcTanh,		id: "tanh⁻¹"),
+		Symbol(sym: .ArcTanh,		id: "tanh-¹"),
+		Symbol(sym: .ArcTanh,		id: "atanh"),
+		Symbol(sym: .ArcSin,		id: "sin⁻¹"),
+		Symbol(sym: .ArcSin,		id: "sin-¹"),
+		Symbol(sym: .ArcSin,		id: "asin"),
+		Symbol(sym: .ArcCos,		id: "cos⁻¹"),
+		Symbol(sym: .ArcCos,		id: "cos-¹"),
+		Symbol(sym: .ArcCos,		id: "acos"),
+		Symbol(sym: .ArcTan,		id: "tan⁻¹"),
+		Symbol(sym: .ArcTan,		id: "tan-¹"),
+		Symbol(sym: .ArcTan,		id: "atan"),
+		Symbol(sym: .Sinh,			id: "sinh"),
+		Symbol(sym: .Cosh,			id: "cosh"),
+		Symbol(sym: .Tanh,			id: "tanh"),
+		Symbol(sym: .Sin,			id: "sin"),
+		Symbol(sym: .Cos,			id: "cos"),
+		Symbol(sym: .Tan,			id: "tan")
 	]
 
 	static func Mark (errid: Status) {
@@ -230,7 +235,7 @@ struct Scanner {
 		let pi  : Character = "π"
 		var sym : Tokens = .Empty
 		
-		func number() {
+		func number(base : Int) {
 			var Constant    : String = ""
 			var NumChars    : String = ""
 			var NumberChars : String
@@ -244,7 +249,7 @@ struct Scanner {
 					if LocateChar(NumChars, ch: s.ch, start: 0) != nil {
 						/* valid numerical character */
 						Constant.append(s.ch)
-						if ((s.ch == "E") || (s.ch == ExpChar)) && (nState.LocalBase == 10) {
+						if ((s.ch == "E") || (s.ch == ExpChar)) && (base == 10) {
 							NumChars = "+-0123456789"  /* just exponent digits */
 						} else if (s.ch == "+") || (s.ch == "-") {
 							NumChars = "0123456789"
@@ -265,11 +270,11 @@ struct Scanner {
 				
 				/* perform the actual conversion from string to number */
 				status = .Okay
-				if nState.LocalBase == 10 {
+				if base == 10 {
 					chars = Constant
 					num = xNumber(string: chars)
 				} else {
-					num = xNumber(string: Constant, andBase: nState.LocalBase)
+					num = xNumber(string: Constant, andBase: base)
 				}
 				if status == .Okay {  /* all went OK */
 					s.val = num
@@ -286,18 +291,19 @@ struct Scanner {
 			
 			/* check if decimal point is a comma */
 			if (nState.DigSep == ".") || (nState.FracSep == ".") {
+				println("nState = \(nState.DigSep) & \(nState.FracSep)");
 				PunctuationChars = "." + PunctuationChars.substringFromIndex(find(PunctuationChars, ",")!)  // Substring(1, 2)
 				NumberChars = "," + NumberChars.substringFromIndex(find(NumberChars, "E")!)  // Substring(1, 18)
 			}
 			
 			/* valid number characters */
-			if nState.LocalBase == 10 {
+			if base == 10 {
 				NumChars = NumberChars.substringToIndex(find(NumberChars, "A")!) // .Substring(0, 13)
 			} else {
 				let start = find(NumberChars, "0")!
 				var end = start
-				var i = nState.LocalBase
-				while i > 0 { end.successor(); i-- }
+				var i = base-1
+				while i > 0 { end = end.successor(); i-- }
 				NumChars = NumberChars.substringWithRange(start...end)  // Substring(3, xm.nState.LocalBase+3)
 			}
 			
@@ -312,7 +318,7 @@ struct Scanner {
 			/* convert to a xNumber */
 			if !Constant.isEmpty {
 				UnsignInt()
-				if (s.ch == "°") || (s.ch == "i") {
+				if (s.ch == "ⅈ") || (s.ch == "i") {
 					s.val = xNumber(real: xNumber.zero(), andImaginary: s.val.real()); Read()
 				}
 			} else {
@@ -337,9 +343,9 @@ struct Scanner {
 				s.varn.append(s.ch); Read()
 			} while IsAlphaNumeric(s.ch)
 			sym = .Name
-			for (key, name) in keyTab {
-				if s.varn.compare(name) == NSComparisonResult.OrderedSame {
-					sym = key; break
+			for rec in keyTab {
+				if s.varn == rec.id {
+					sym = rec.sym; break
 				}
 			}
 		} // Variable;
@@ -349,70 +355,77 @@ struct Scanner {
 			sym = .Empty
 		} else {
 			switch s.ch {
-			case "0"..."9", "." : number()
-			case "+"     : Read(); sym = .Plus
-			case "-"     :
-				Read(); sym = .Minus
-				if s.ch == "¹" { Read(); sym = .Inverse }
-			case sqrt    : Read(); sym = .SquareRoot
-			case "²"     : Read(); sym = .Squared
-			case "³"     : Read(); sym = .Cubed;
-				if s.ch == sqrt { Read(); sym = .CubeRoot }
-			case "ⅈ"      : Read(); sym = .iToken
-			case "i"     : Read();
-				if IsAlphaNumeric(s.ch) {
-					--s.pos; s.ch = "i"; Variable()
-				} else {
-					sym = .iToken
-				}
-			case "~"     : Read(); sym = .Complement
-			case "×"     : Read(); sym = .Times
-			case ";"     : Read(); sym = .Semi
-			case "/","÷" : Read(); sym = .Divide
-			case "("     : Read(); sym = .LeftBrace
-			case ")"     : Read(); sym = .RightBrace
-			case "^"     : Read(); sym = .Power
-			case "%"     : Read(); sym = .PercentOf
-			case "!"     : Read(); sym = .Factorial
-			case "&"     : Read(); sym = .And
-			case "|"     : Read(); sym = .VertBrace
-			case pi      : Read(); sym = .Pi
-			case "e"     :
-				Read(); sym = .Number
-				if s.ch == "^" {
-					Read(); sym = .PowerOfe
-				} else if IsAlphaNumeric(s.ch) {
-					--s.pos; s.ch = "e"; Variable()
-				} else {
-					s.val = xNumber.one().exp()
-				}
-			case "*"     :
-				Read(); sym = .Times;
-				if s.ch == "*" {
-					Read(); sym = .Power
-				} else if s.ch == sqrt {
-					Read(); sym = .Root
-				}
-			case "→"     : Read(); if s.ch == "ℝ" { Read(); sym = .PolarToRect } else { Illegal() }
-			case "="     : Read(); sym = .Assign
-			case "#"     : Read(); sym = .NotEqual
-			case ">"     : Read();
-				if s.ch == "=" {
-					Read(); sym = .GreaterEqual
-				} else {
-					sym = .Greater
+				case "0": Read(); sym = .Number
+					switch s.ch {
+						case "x", "X": Read(); number(16)
+						case "o", "O": Read(); number(8)
+						case "b", "B": Read(); number(2)
+						default: number(nState.LocalBase)
 					}
-				case "<"     : Read();
-				if s.ch == "=" {
-					Read(); sym = .LessEqual
-				} else if s.ch == ">" {
-					Read(); sym = .NotEqual
-				} else {
-					sym = .Less
-				}
-			case "⁻"     : Read(); if s.ch == "¹" { Read(); sym = .Inverse } else { Illegal() }
-			case "A"..."Z", "a"..."d", "f"..."h", "j"..."z" : Variable()
-			default: Read(); sym = .Empty
+				case "1"..."9", "." : number(nState.LocalBase)
+				case "+"     : Read(); sym = .Plus
+				case "-"     :
+					Read(); sym = .Minus
+					if s.ch == "¹" { Read(); sym = .Inverse }
+				case sqrt    : Read(); sym = .SquareRoot
+				case "²"     : Read(); sym = .Squared
+				case "³"     : Read(); sym = .Cubed;
+					if s.ch == sqrt { Read(); sym = .CubeRoot }
+				case "ⅈ"      : Read(); sym = .iToken
+				case "i"     : Read();
+					if IsAlphaNumeric(s.ch) {
+						--s.pos; s.ch = "i"; Variable()
+					} else {
+						sym = .iToken
+					}
+				case "~"     : Read(); sym = .Complement
+				case "×"     : Read(); sym = .Times
+				case ";"     : Read(); sym = .Semi
+				case "/","÷" : Read(); sym = .Divide
+				case "("     : Read(); sym = .LeftBrace
+				case ")"     : Read(); sym = .RightBrace
+				case "^"     : Read(); sym = .Power
+				case "%"     : Read(); sym = .PercentOf
+				case "!"     : Read(); sym = .Factorial
+				case "&"     : Read(); sym = .And
+				case "|"     : Read(); sym = .VertBrace
+				case pi      : Read(); sym = .Pi
+				case "e"     :
+					Read(); sym = .Number
+					if s.ch == "^" {
+						Read(); sym = .PowerOfe
+					} else if IsAlphaNumeric(s.ch) {
+						--s.pos; s.ch = "e"; Variable()
+					} else {
+						s.val = xNumber.one().exp()
+					}
+				case "*"     :
+					Read(); sym = .Times;
+					if s.ch == "*" {
+						Read(); sym = .Power
+					} else if s.ch == sqrt {
+						Read(); sym = .Root
+					}
+				case "→"     : Read(); if s.ch == "ℝ" { Read(); sym = .PolarToRect } else { Illegal() }
+				case "="     : Read(); sym = .Assign
+				case "#"     : Read(); sym = .NotEqual
+				case ">"     : Read();
+					if s.ch == "=" {
+						Read(); sym = .GreaterEqual
+					} else {
+						sym = .Greater
+						}
+					case "<"     : Read();
+					if s.ch == "=" {
+						Read(); sym = .LessEqual
+					} else if s.ch == ">" {
+						Read(); sym = .NotEqual
+					} else {
+						sym = .Less
+					}
+				case "⁻"     : Read(); if s.ch == "¹" { Read(); sym = .Inverse } else { Illegal() }
+				case "A"..."Z", "a"..."d", "f"..."h", "j"..."z" : Variable()
+				default: Read(); sym = .Empty
 			}
 		}
 		return sym

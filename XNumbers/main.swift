@@ -8,8 +8,7 @@
 
 import Foundation
 
-var eq = Equation(command: "123 + 456");
-
+var eq = Equation(command: "0xBCDE")
 println("Equation \(eq.CommandLine) = \(eq.Evaluate(eq.CommandLine))")
 
 

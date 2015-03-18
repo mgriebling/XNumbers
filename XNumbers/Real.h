@@ -19,6 +19,7 @@ enum NumberType {
 + (NSInteger)digits;
 + (void)setErr:(NSInteger)error;
 + (NSInteger)err;
++ (void)setAngularMeasure:(NSInteger)measure;
 
 // constructors
 + (xNumber *) realWithString: (NSString *)value;

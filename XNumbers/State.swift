@@ -8,13 +8,13 @@
 
 import Foundation
 
-enum NotationType {
-	case Normal
+enum NotationType : Int {
+	case Normal = 0
 	case Scientific
 	case Engineering
 }
-enum AngularMeasure {
-	case Degrees
+enum AngularMeasure : Int {
+	case Degrees = 0
 	case Radians
 	case Gradians
 }
@@ -47,20 +47,20 @@ enum Status {
 struct NumbState {
 	init () {
 		LocalBase = 10
-		Notation = NotationType.Normal
+		Notation = .Normal
 		DecPoint = 0
-		DegRadFlag = AngularMeasure.Degrees
-		DigSep = ","
-		FracSep = "."
+		DegRadFlag = .Degrees
+		DigSep = "\0"
+		FracSep = "\0"
 		Rational = false
 	}
 	
 	mutating func Default() {
 		/* set up default state */
 		LocalBase = 10
-		Notation = NotationType.Normal
+		Notation = .Normal
 		DecPoint = 0
-		DegRadFlag = AngularMeasure.Degrees
+		DegRadFlag = .Degrees
 		DigSep = "\0"
 		FracSep = "\0"
 		Rational = false
@@ -69,7 +69,11 @@ struct NumbState {
 	var LocalBase  : Int
 	var Notation   : NotationType
 	var DecPoint   : Int
-	var DegRadFlag : AngularMeasure
+	var DegRadFlag : AngularMeasure {
+		willSet (newMeasure) {
+			xNumber.setAngularMeasure(newMeasure.rawValue)
+		}
+	}
 	var DigSep     : Character
 	var FracSep    : Character
 	var Rational   : Bool
