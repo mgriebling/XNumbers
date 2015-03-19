@@ -43,6 +43,22 @@ class Equation {
 		self.Token = .Empty
 	}
 	
+	init (decoder: NSCoder) {
+		Functions.Load(decoder)
+		Variables.Load(decoder)
+		
+	}
+	
+	//	func Store* (w: Storable.Writer) RAISES IO.Error;
+	//	/** Store the defined functions to writer 'w' */
+	//
+	//	f.Store(w);
+	//	if LastAnswer IS R.Rational { w.WriteLInt(1) } else { w.WriteLInt(0) };
+	//	LastAnswer.Store(w)
+	//	} // Store;
+	//	
+	//
+	
 	private func StoreVariable (Location: String, Value : xNumber) {
 		/* Store the `Value' argument in the `Location' variable. */
 		Variables.Set(Location, value: Value)
@@ -80,14 +96,6 @@ class Equation {
 		/** Return the number of permutations of n different objects
 		taken r at a time (i.e., n!/(n-r)! )
 		*/
-//		var ni, ri: xNumber
-//		var nI: xNumber
-//		
-//		ni = ToxNumber(n)
-//		ri = ToxNumber(r)
-//		nI = ni.Factorial()
-//		nI = nI.div(ni.Sub(ri).Factorial())
-//		return xNumber(ToxNumber(nI))
 		return n.permutations(r)
 	} // Permutations;
 	
@@ -96,15 +104,6 @@ class Equation {
 		/** Return the combinations of n different objects taken
 		r at a time (i.e., n!/(r!(n-r)!))
 		*/
-//		var ni, ri: xNumber
-//		var nI: xNumber
-//		var n2 : xNumber
-//		
-//		ni = ToxNumber(n)
-//		ri = ToxNumber(r)
-//		n2 = Permutations(n, r)            /* n=n!/(n-r)! */
-//		nI = ri.Factorial()              /* n=r! */
-//		nI = ni.div(nI);               /* Result=n!/(r!(n-r)!) */
 		return n.combinations(r)
 	} // Combinations;
 	
@@ -694,16 +693,7 @@ class Equation {
 		return nil
 	} // Evaluate;
 	
-	
-//	func Store* (w: Storable.Writer) RAISES IO.Error;
-//	/** Store the defined functions to writer 'w' */
-//	
-//	f.Store(w);
-//	if LastAnswer IS R.Rational { w.WriteLInt(1) } else { w.WriteLInt(0) };
-//	LastAnswer.Store(w)
-//	} // Store;
-//	
-//	
+
 //	func Load * (r: Storable.Reader) RAISES IO.Error;
 //	/** Load functions from the reader 'r' */
 //	var
