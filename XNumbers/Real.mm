@@ -82,7 +82,7 @@ static BOOL isZero (Real::Real r) {
 	if (self) {
 		Real::Real xi, yi;
 		rational = isRational;
-		if (rational || base != 10) {
+		if (rational) {
 			rational = YES;
 			Integer::StrToInt(real.UTF8String, base, xi);
 			Integer::StrToInt(imag.UTF8String, base, yi);
@@ -96,10 +96,17 @@ static BOOL isZero (Real::Real r) {
 }
 
 - (id) initWithString: (NSString *)value {
-	return [self initWithString:value andString:@"" withRational:NO andBase:10];
+	BOOL isDouble = ([value rangeOfString:@"."].location != NSNotFound) || ([value rangeOfString:@"E"].location != NSNotFound);
+	if (isDouble) {
+		return [self initWithString:value andString:@"" withRational:NO andBase:10];
+	}
+	return [self initWithString:value andString:@"1" withRational:YES andBase:10];
 }
 
 - (id) initWithString: (NSString *)value andBase: (NSInteger)base {
+	if (base == 10) {
+		return [self initWithString:value];  // check if it could be rational
+	}
 	return [self initWithString:value andString:@"1" withRational:YES andBase:base];
 }
 
