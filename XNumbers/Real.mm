@@ -330,7 +330,7 @@ static Complex FixRational (xNumber *n) {
 	return n->z;
 }
 
-static xNumber * addRational (Complex::Complex a, Complex::Complex b) {
+static xNumber * addRational (Complex::Complex &a, Complex::Complex &b) {
 	Real::Real z;
 	Real::Real anum = a.RealPart();
 	Real::Real aden = a.ImagPart();
@@ -340,7 +340,7 @@ static xNumber * addRational (Complex::Complex a, Complex::Complex b) {
 	return InitRational(Real::add(z, Real::mul(bnum, aden)), Real::mul(aden, bden));
 }
 
-static xNumber * subRational (Complex::Complex a, Complex::Complex b) {
+static xNumber * subRational (Complex::Complex &a, Complex::Complex &b) {
 	Real::Real z;
 	Real::Real anum = a.RealPart();
 	Real::Real aden = a.ImagPart();
@@ -350,7 +350,7 @@ static xNumber * subRational (Complex::Complex a, Complex::Complex b) {
 	return InitRational(Real::sub(z, Real::mul(bnum, aden)), Real::mul(aden, bden));
 }
 
-static xNumber * mulRational (Complex::Complex a, Complex::Complex b) {
+static xNumber * mulRational (Complex::Complex &a, Complex::Complex &b) {
 	Real::Real anum = a.RealPart();
 	Real::Real aden = a.ImagPart();
 	Real::Real bnum = b.RealPart();
@@ -358,7 +358,7 @@ static xNumber * mulRational (Complex::Complex a, Complex::Complex b) {
 	return InitRational(Real::mul(anum, bnum), Real::mul(aden, bden));
 }
 
-static xNumber * divRational (Complex::Complex a, Complex::Complex b) {
+static xNumber * divRational (Complex::Complex &a, Complex::Complex &b) {
 	Real::Real anum = a.RealPart();
 	Real::Real aden = a.ImagPart();
 	Real::Real bnum = b.RealPart();
@@ -366,7 +366,7 @@ static xNumber * divRational (Complex::Complex a, Complex::Complex b) {
 	return InitRational(Real::mul(anum, bden), Real::mul(aden, bnum));
 }
 
-static long cmpRational (Complex::Complex a, Complex::Complex b) {
+static long cmpRational (Complex::Complex &a, Complex::Complex &b) {
 	Real::Real ar = Real::div(a.RealPart(), a.ImagPart());
 	Real::Real br = Real::div(b.RealPart(), b.ImagPart());
 	return Real::cmp(ar, br);
