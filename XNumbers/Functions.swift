@@ -54,6 +54,7 @@ struct Functions {
 	}
 	
 	static let FUNCSKEY = "Functions.Funcs"
+	static let FUNCSSIZEKEY = "Functions.Funcs.count"
 	
 	private static var Funcs = [String: FuncType]()
 	
@@ -131,21 +132,22 @@ struct Functions {
 	} // Iterate;
 	
 	static func Load (decoder: NSCoder) {
-		Funcs = decoder.decodeObjectForKey(FUNCSKEY) as [String: FuncType]
+		let size = decoder.decodeIntegerForKey(FUNCSSIZEKEY)
+		var cnt : Int
+		Functions.Funcs = [String: FuncType]();
+		for cnt=0; cnt<size; cnt++ {
+			let name : String = decoder.decodeObject() as String
+			let function = FuncType(decoder: decoder)
+			Functions.Funcs[name] = function
+		}
 	}
 	
 	static func Save (encoder: NSCoder) {
-		encoder.encodeObject(Var, forKey: FUNCSKEY)
+		encoder.encodeInteger(Functions.Funcs.count, forKey: FUNCSSIZEKEY)
+		for (name, function) in Functions.Funcs {
+			encoder.encodeObject(name)
+			function.Save(encoder)
+		}
 	}
-
-//func Store * (w: Storable.Writer) RAISES IO.Error;
-//
-//Funcs.Store(w)
-//} // Store;
-//
-//func Load * (r: Storable.Reader) RAISES IO.Error;
-//
-//Funcs.Load(r)
-//} // Load;
 	
 }
