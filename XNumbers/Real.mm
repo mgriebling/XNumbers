@@ -240,10 +240,21 @@ static NSString * toString (Real::Real const &xi) {
 
 - (NSString *) toString {
 	if (rational) {
-		NSString *first = toString(self->z.RealPart());
-		NSString *second = toString(self->z.ImagPart());
+		Real::Real n = self->z.RealPart();
+		Real::Real d = self->z.ImagPart();
+		NSString *first = toString(n);
+		NSString *second = toString(d);
 		if ([second isEqualToString:@"1"]) {
 			return first;
+		} else if (Real::cmp(n, d) > 0) {
+			// format 4/3 like 1 1/3
+			Real::Real integral;
+			Real::Real remainder;
+			Integer::IntDiv(integral, n, d);
+			Integer::Mod(remainder, n, d);
+			NSString *whole = toString(integral);
+			first = toString(remainder);
+			return [NSString stringWithFormat:@"%@ %@/%@", whole, first, second];
 		}
 		return [NSString stringWithFormat:@"%@/%@", first, second];
 	} else {
