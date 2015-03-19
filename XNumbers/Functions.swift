@@ -38,55 +38,24 @@ struct Functions {
 			self.Func = value
 			self.Args = [String]()
 		} // New;
+		
+		let FUNCKEY = "FuncType.Func"
+		let ARGSKEY = "FuncType.Args"
+		
+		init (decoder: NSCoder) {
+			Func = decoder.decodeObjectForKey(FUNCKEY) as String
+			Args = decoder.decodeObjectForKey(ARGSKEY) as [String]
+		}
+		
+		func Save (encoder: NSCoder) {
+			encoder.encodeObject(Func, forKey: FUNCKEY)
+			encoder.encodeObject(Args, forKey: ARGSKEY)
+		}
 	}
 	
+	static let FUNCSKEY = "Functions.Funcs"
+	
 	private static var Funcs = [String: FuncType]()
-
-//func (v: FuncType) Equals * (y: Object.Object) -> Bool;
-//
-//WITH y: FuncType DO
-//return v.Name.Equals(y.Name)
-//}
-//} // Equals;
-//
-//func (a: FuncType) Cmp * (b: Object.Object) -> Int;
-///**
-//This routine compares the variables `a' and `b' and
-//returns the value -1, 0, or 1 depending on whether `a'<`b',
-//`a'=`b', or `a'>`b'.  It is faster than merely subtracting
-//`a' and `b' and looking at the sign of the result.
-//*/
-//
-//WITH b: FuncType DO
-//return a.Name.Compare(b.Name)
-//}
-//} // Cmp;
-//
-//func^ ArgsToString (fname: String) -> String;
-//
-//func (v: FuncType) ToString * () -> String;
-//
-//return v.Name + "(" + ArgsToString(v.Name) + ") = " + v.Func.ToString()
-//} // ToString;
-//
-//func (a: FuncType) Store* (w: Storable.Writer) RAISES IO.Error;
-///** Write 'a' to the 'w' writer. */
-//
-//w.WriteStr(a.Name);
-//w.WriteStr(a.Func);
-//a.Args.Store(w)
-//} // Store;
-//
-//func (a: FuncType) Load*(r: Storable.Reader) RAISES IO.Error;
-///** Read 'a' from the 'r' reader. */
-//
-//a.Name = Object.NewLatin1("dummy");
-//a.Func = a.Name;
-//r.ReadStr(a.Name);
-//r.ReadStr(a.Func);
-//a.Args = el.New(); a.Args.Load(r)
-//} // Load;
-
 	
 	static func Defined () -> Int {
 		return Functions.Funcs.count
@@ -160,6 +129,14 @@ struct Functions {
 			IterFunc(fname, ArgsToString(fname), function)
 		}
 	} // Iterate;
+	
+	static func Load (decoder: NSCoder) {
+		Funcs = decoder.decodeObjectForKey(FUNCSKEY) as [String: FuncType]
+	}
+	
+	static func Save (encoder: NSCoder) {
+		encoder.encodeObject(Var, forKey: FUNCSKEY)
+	}
 
 //func Store * (w: Storable.Writer) RAISES IO.Error;
 //

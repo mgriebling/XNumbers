@@ -244,6 +244,7 @@ static NSString * toString (Real::Real const &xi) {
 		Real::Real d = self->z.ImagPart();
 		NSString *first = toString(n);
 		NSString *second = toString(d);
+
 		if ([second isEqualToString:@"1"]) {
 			return first;
 		} else if (Real::cmp(n, d) > 0) {

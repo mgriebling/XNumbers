@@ -29,62 +29,19 @@ struct Variables {
 	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 	
 	*/
-
-//	struct VarType {
-//		var Name: String
-//		var Value: xNumber
-//		
-//		init (variable: String, value: xNumber) {
-//			self.Name = variable
-//			self.Value = value
-//		} // New;
-//		
-//		func Equals (y: VarType) -> Bool {
-//			return (self.Name.compare(y.Name) == .OrderedSame)
-//		} // Equals;
-//		
-//		func Cmp (b: VarType) -> Int {
-//			/**
-//			This routine compares the variables `a' and `b' and
-//			returns the value -1, 0, or 1 depending on whether `a'<`b',
-//			`a'=`b', or `a'>`b'.  It is faster than merely subtracting
-//			`a' and `b' and looking at the sign of the result.
-//			*/
-//			let cmp = self.Name.compare(b.Name)
-//			switch cmp {
-//			case .OrderedSame: return 0
-//			case .OrderedAscending: return -1
-//			case .OrderedDescending: return 1
-//			}
-//		} // Cmp;
-//		
-//		func ToString() -> String {
-//			return self.Name + " = \(self.Value)"
-//		} // ToString;
-//	}
 	
 	private static var fvar = [String: xNumber]()	/* function variables */
 	private static var Var = [String: xNumber]()	/* all defined variables */
-
-//func (a: VarType) Store* (w: Storable.Writer) RAISES IO.Error;
-///** Write 'a' to the 'w' writer. */
-//
-//if a.Value IS R.Rational { w.WriteLInt(1) } else { w.WriteLInt(0) };  /* type of variable */
-//w.WriteStr(a.Name);
-//a.Value.Store(w)
-//} // Store;
-//
-//func (a: VarType) Load*(r: Storable.Reader) RAISES IO.Error;
-///** Read 'a' from the 'r' reader. */
-//var
-//type: Int;
-//c: R.Rational;
-//
-//r.ReadLInt(type);
-//if type = 1 { NEW(c); a.Value  =  c } else { NEW(a.Value) };
-//a.Name = Object.NewLatin1("dummy"); r.ReadStr(a.Name);
-//a.Value.Load(r)
-//} // Load;
+	
+	static let VARKEY = "Variables.fvar"
+	
+	static func Load (decoder: NSCoder) {
+		Var = decoder.decodeObjectForKey(VARKEY) as [String: xNumber]
+	}
+	
+	static func Save (encoder: NSCoder) {
+		encoder.encodeObject(Var, forKey: VARKEY)
+	}
 
 	static func Defined () -> Int {
 		/** Return the number of permanent variables */
@@ -130,17 +87,5 @@ struct Variables {
 			IterFunc(name, n)
 		}
 	} // Iterate;
-
-//func Store * (w: Storable.Writer) RAISES IO.Error;
-///** Store the variables to writer 'w' */
-//
-//Var.Store(w)
-//} // Store;
-//
-//func Load * (r: Storable.Reader) RAISES IO.Error;
-///** Load the variables from the reader 'r' */
-//
-//Var.Load(r)
-//} // Load;
 
 }
