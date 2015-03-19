@@ -247,19 +247,19 @@ static NSString * toString (Real::Real const &xi) {
 }
 
 - (NSInteger)exponent {
-	return self.x.exponent();
+	return FixRational(self).RealPart().exponent();
 }
 
 - (double) Short {
-	return Real::Short(self.x);
+	return Real::Short(FixRational(self).RealPart());
 }
 
 - (xNumber *) entier {
-	return [xNumber realWithRawReal:Real::entier(self.x)];
+	return [xNumber realWithRawReal:Real::entier(FixRational(self).RealPart())];
 }
 
 - (xNumber *) fraction {
-	return [xNumber realWithRawReal:Real::fraction(self.x)];
+	return [xNumber realWithRawReal:Real::fraction(FixRational(self).RealPart())];
 }
 
 - (xNumber *) real {
@@ -372,6 +372,15 @@ static long cmpRational (Complex::Complex &a, Complex::Complex &b) {
 	return Real::cmp(ar, br);
 }
 
+static xNumber * powerRational (Complex::Complex a, long b) {
+	Real::Real bc;
+	Complex::Complex n;
+	Complex::Complex d ;
+	Complex::xtoi(n, a.RealPart(), b);
+	Complex::xtoi(d, a.ImagPart(), b);
+	return [xNumber realWithRawNumerator:n.RealPart() andRawDenominator:d.RealPart()];
+}
+
 - (xNumber *) add: (xNumber *) r {
 	if (self->rational && r->rational) {
 		return addRational(self->z, r->z);
@@ -452,8 +461,7 @@ static long cmpRational (Complex::Complex &a, Complex::Complex &b) {
 
 - (xNumber *) power: (xNumber *) exp {
 	Complex::Complex zi;
-	FixRational(self); FixRational(exp);
-	Complex::power(zi, FixRational(self), exp->z);
+	Complex::power(zi, FixRational(self), FixRational(exp));
 	return [xNumber realWithRawComplex:zi];
 }
 
@@ -548,13 +556,20 @@ static long cmpRational (Complex::Complex &a, Complex::Complex &b) {
 }
 
 - (xNumber *) negate {
-	Complex::Complex zi = FixRational(self);
+	Complex::Complex zi = self->z;
+	if (self->rational) {
+		return [xNumber realWithRawNumerator:Real::negate(zi.RealPart()) andRawDenominator:zi.ImagPart()];
+	}
+	zi = FixRational(self);
 	Complex::ChgSign(zi);
 	return [xNumber realWithRawComplex:zi];
 }
 
 - (xNumber *) ipower: (NSInteger) i {
 	Complex::Complex zi;
+	if (self->rational) {
+		return powerRational(self->z, i);
+	}
 	Complex::xtoi(zi, FixRational(self), i);
 	return [xNumber realWithRawComplex:zi];
 }
@@ -630,115 +645,115 @@ static long cmpRational (Complex::Complex &a, Complex::Complex &b) {
 /* Integer routines */
 - (xNumber *) setBit: (NSInteger) bit {
 	Real::Real t;
-	Integer::SetBit(t, self.x, bit);
+	Integer::SetBit(t, FixRational(self).RealPart(), bit);
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) clearBit: (NSInteger) bit {
 	Real::Real t;
-	Integer::ClearBit(t, self.x, bit);
+	Integer::ClearBit(t, FixRational(self).RealPart(), bit);
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) toggleBit: (NSInteger) bit {
 	Real::Real t;
-	Integer::ToggleBit(t, self.x, bit);
+	Integer::ToggleBit(t, FixRational(self).RealPart(), bit);
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) and: (xNumber *) i {
 	Real::Real t;
-	Integer::And(t, self.x, i.x);
+	Integer::And(t, FixRational(self).RealPart(), FixRational(i).RealPart());
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) nand: (xNumber *) i {
 	Real::Real t;
-	Integer::Nand(t, self.x, i.x);
+	Integer::Nand(t, FixRational(self).RealPart(), FixRational(i).RealPart());
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) or: (xNumber *) i {
 	Real::Real t;
-	Integer::Or(t, self.x, i.x);
+	Integer::Or(t, FixRational(self).RealPart(), FixRational(i).RealPart());
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) nor: (xNumber *) i {
 	Real::Real t;
-	Integer::Nor(t, self.x, i.x);
+	Integer::Nor(t, FixRational(self).RealPart(), FixRational(i).RealPart());
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) xor: (xNumber *) i {
 	Real::Real t;
-	Integer::Xor(t, self.x, i.x);
+	Integer::Xor(t, FixRational(self).RealPart(), FixRational(i).RealPart());
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) count {
 	Real::Real t;
-	Integer::Count(t, self.x);
+	Integer::Count(t, FixRational(self).RealPart());
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) intDiv: (xNumber *) i {
 	Real::Real t;
-	Integer::IntDiv(t, self.x, i.x);
+	Integer::IntDiv(t, FixRational(self).RealPart(), FixRational(i).RealPart());
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) mod: (xNumber *) i {
 	Real::Real t;
-	Integer::Mod(t, self.x, i.x);
+	Integer::Mod(t, FixRational(self).RealPart(), FixRational(i).RealPart());
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) onesComp {
 	Real::Real t;
-	Integer::OnesComp(t, self.x);
+	Integer::OnesComp(t, FixRational(self).RealPart());
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) shl: (NSInteger) bit {
 	Real::Real t;
-	Integer::Shl(t, self.x, bit);
+	Integer::Shl(t, FixRational(self).RealPart(), bit);
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) rol: (NSInteger) bit {
 	Real::Real t;
-	Integer::Rol(t, self.x, bit);
+	Integer::Rol(t, FixRational(self).RealPart(), bit);
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) shr: (NSInteger) bit {
 	Real::Real t;
-	Integer::Shr(t, self.x, bit);
+	Integer::Shr(t, FixRational(self).RealPart(), bit);
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) ashr: (NSInteger) bit {
 	Real::Real t;
-	Integer::Ashr(t, self.x, bit);
+	Integer::Ashr(t, FixRational(self).RealPart(), bit);
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) ror: (NSInteger) bit {
 	Real::Real t;
-	Integer::Ror(t, self.x, bit);
+	Integer::Ror(t, FixRational(self).RealPart(), bit);
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) fib {
 	Real::Real t;
-	Integer::Fib(t, self.x);
+	Integer::Fib(t, FixRational(self).RealPart());
 	return [xNumber realWithRawReal:t];
 }
 
 - (xNumber *) gcd: (xNumber *) i {
 	Real::Real t;
-	Integer::GCD(t, self.x, i.x);
+	Integer::GCD(t, FixRational(self).RealPart(), FixRational(i).RealPart());
 	return [xNumber realWithRawReal:t];
 }
 
@@ -750,22 +765,22 @@ static long cmpRational (Complex::Complex &a, Complex::Complex &b) {
 
 - (NSString *) intToStr: (NSInteger)base {
 	char result[1024];
-	Integer::IntToStr(self.x, base, result);
+	Integer::IntToStr(FixRational(self).RealPart(), base, result);
 	return [NSString stringWithCString:result encoding:NSASCIIStringEncoding];
 }
 
 
 /* Misc. routines */
 - (xNumber *) factorial {
-	return [xNumber realWithRawReal:Real::factorial(self.x)];
+	return [xNumber realWithRawReal:Real::factorial(FixRational(self).RealPart())];
 }
 
 - (xNumber *) permutations: (xNumber *) r {
-	return [xNumber realWithRawReal:Real::permutations(self.x, r.x)];
+	return [xNumber realWithRawReal:Real::permutations(FixRational(self).RealPart(), FixRational(r).RealPart())];
 }
 
 - (xNumber *) combinations: (xNumber *) r {
-	return [xNumber realWithRawReal:Real::combinations(self.x, r.x)];
+	return [xNumber realWithRawReal:Real::combinations(FixRational(self).RealPart(), FixRational(r).RealPart())];
 }
 
 + (xNumber *) random {
