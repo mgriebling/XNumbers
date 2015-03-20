@@ -8,7 +8,9 @@
 
 import Foundation
 
-var eq = Equation(command: "10a")
+var eq = Equation(command: "let a = 10")
+eq.Evaluate(eq.CommandLine)
+eq.CommandLine = "10a"
 println("Equation \(eq.CommandLine) = \(eq.Evaluate(eq.CommandLine))")
 
 

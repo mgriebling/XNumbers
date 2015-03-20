@@ -660,7 +660,7 @@ class Equation : NSCoding {
 		} else {
 			do {
 				r = r.mul(Expression())  // handle implicit multiplication
-			} while (Token != .Empty)
+			} while (Token != .Empty && status == .Okay)
 		}
 		if Token != .Empty {
 			Scanner.Mark(.IllegalExpression)
