@@ -302,6 +302,7 @@ class Equation : NSCoding {
 			} else {
 				Scanner.Mark(.MismatchBraces)
 			}
+		case .Empty : break  // do nothing
 		case .Number :
 			Result = Scanner.s.val
 			Token = Scanner.Get()
@@ -504,9 +505,7 @@ class Equation : NSCoding {
 	private func Term () -> xNumber {
 		/** 'Result' = <Powers> @{<Term Operator> <Powers>@} */
 		var tmp: xNumber = zero
-		var itmp : xNumber
-		var ti : xNumber = zero
-		var Result : xNumber = zero
+		var Result: xNumber = zero
 		
 		func Next () {
 			Token = Scanner.Get();
@@ -516,34 +515,29 @@ class Equation : NSCoding {
 			} else {
 				Result = Powers()
 			}
-			ti = Result
 		} // Next;
 		
 		func ToCard(Ex : xNumber) -> Int {
 			return Int(Ex.Short())
 		} // ToCard;
 		
-		func Fix () {
-			tmp = ti
-		} // Fix;
-		
 		tmp = Powers()
 		while (Token >= .Times && Token <= .nPr) || (Token == .Number) {
 			switch Token {
 			case .Times       : Next(); tmp = tmp.mul(Result)
-			case .Number      : tmp = tmp.mul(Result); Next()
+			case .Number      : tmp = tmp.mul(Scanner.s.val); Next()
 			case .Divide      : Next(); tmp = tmp.div(Result)
-			case .Div         : Next(); itmp = tmp; ti = itmp.div(ti); Fix()
-			case .Mod         : Next(); itmp = tmp; ti = itmp.mod(ti); Fix()
-			case .And         : Next(); itmp = tmp; ti = itmp.and(ti); Fix()
-			case .ShiftRight  : Next(); itmp = tmp; ti = itmp.shr(ToCard(Result)); Fix()
-			case .AShiftRight : Next(); itmp = tmp; ti = itmp.shr(ToCard(Result)); Fix()
-			case .RotateRight : Next(); itmp = tmp; ti = itmp.shr(ToCard(Result)); Fix()
-			case .ShiftLeft   : Next(); itmp = tmp; ti = itmp.shl(ToCard(Result)); Fix()
-			case .RotateLeft  : Next(); itmp = tmp; ti = itmp.shl(ToCard(Result)); Fix()
-			case .ClearBit    : Next(); itmp = tmp; ti = itmp.clearBit(ToCard(Result)); Fix()
-			case .SetBit      : Next(); itmp = tmp; ti = itmp.setBit(ToCard(Result)); Fix()
-			case .ToggleBit   : Next(); itmp = tmp; ti = itmp.toggleBit(ToCard(Result)); Fix()
+			case .Div         : Next(); tmp = tmp.div(Result)
+			case .Mod         : Next(); tmp = tmp.mod(Result)
+			case .And         : Next(); tmp = tmp.and(Result)
+			case .ShiftRight  : Next(); tmp = tmp.shr(ToCard(Result))
+			case .AShiftRight : Next(); tmp = tmp.shr(ToCard(Result))
+			case .RotateRight : Next(); tmp = tmp.shr(ToCard(Result))
+			case .ShiftLeft   : Next(); tmp = tmp.shl(ToCard(Result))
+			case .RotateLeft  : Next(); tmp = tmp.shl(ToCard(Result))
+			case .ClearBit    : Next(); tmp = tmp.clearBit(ToCard(Result))
+			case .SetBit      : Next(); tmp = tmp.setBit(ToCard(Result))
+			case .ToggleBit   : Next(); tmp = tmp.toggleBit(ToCard(Result))
 			case .nCr         : Next(); tmp = Combinations(tmp, Result)
 			case .nPr         : Next(); tmp = Permutations(tmp, Result)
 			default: 			Scanner.Mark(.IllegalOperator); Token = Scanner.Get()
@@ -556,39 +550,29 @@ class Equation : NSCoding {
 	
 	private func SimpleExpression () -> xNumber {
 		/** 'Result' = [+|-] <Term> @{+|- <Term>@} */
-		var tmp : xNumber = zero
-		var ti  : xNumber = zero
-		var ires : xNumber = zero
-		var Result : xNumber
+		var tmp = zero
+		var Result = zero
 		
-		func Next() -> xNumber {
-			var Result : xNumber
+		func Next() {
 			Token = Scanner.Get()
 			if Token == .Minus {
 				Token = Scanner.Get(); Result = Term().negate()
 			} else {
 				Result = Term()
 			}
-			ires = tmp
-			return Result
 		} // Next;
 		
-		func Fix() {
-			tmp = ti
-		} // Fix;
-		
-		tmp = zero
 		switch Token {
-			case .Plus  : tmp = Next()
-			case .Minus : tmp = Next().negate()
-			default:      tmp = Term()
+		case .Plus  : Next(); tmp = Result
+		case .Minus : Next(); tmp = Result.negate()
+		default:      tmp = Term()
 		}
 		while (Token >= .Plus) && (Token <= .Xor) {
 			switch Token {
-				case .Plus  : Result = Next(); tmp = tmp.add(Result)
-				case .Minus : Result = Next(); tmp = tmp.sub(Result)
-				case .Or    : Result = Next(); ti = ires.or(Result); Fix()
-				case .Xor   : Result = Next(); ti = ires.xor(Result); Fix()
+				case .Plus  : Next(); tmp = tmp.add(Result)
+				case .Minus : Next(); tmp = tmp.sub(Result)
+				case .Or    : Next(); tmp = tmp.or(Result)
+				case .Xor   : Next(); tmp = tmp.xor(Result)
 				default		: tmp = Term()
 			}
 		}
@@ -635,7 +619,7 @@ class Equation : NSCoding {
 		function returns true if there were no evaluation errors. */
 		var name: String
 		var ok: Bool;
-		var r: xNumber;
+		var r = one
 		var Result: xNumber
 		
 		CommandLine = arg              /* remember this string for later        */
@@ -674,7 +658,9 @@ class Equation : NSCoding {
 			}
 			Token = .Empty
 		} else {
-			r = Expression()
+			do {
+				r = r.mul(Expression())  // handle implicit multiplication
+			} while (Token != .Empty)
 		}
 		if Token != .Empty {
 			Scanner.Mark(.IllegalExpression)

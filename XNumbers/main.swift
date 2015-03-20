@@ -8,7 +8,7 @@
 
 import Foundation
 
-var eq = Equation(command: "100/3")
+var eq = Equation(command: "10a")
 println("Equation \(eq.CommandLine) = \(eq.Evaluate(eq.CommandLine))")
 
 
