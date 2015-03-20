@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Equation {
+class Equation : NSCoding {
 	
  /*
 	Equations - Equation evaluation.
@@ -43,21 +43,22 @@ class Equation {
 		self.Token = .Empty
 	}
 	
-	init (decoder: NSCoder) {
+	required init (coder decoder: NSCoder) {
+		self.Token = .Empty
+		self.LastAnswer = decoder.decodeObject() as xNumber
+		self.CommandLine = decoder.decodeObject() as String
+		nState = NumbState(decoder: decoder)
 		Functions.Load(decoder)
 		Variables.Load(decoder)
-		
 	}
 	
-	//	func Store* (w: Storable.Writer) RAISES IO.Error;
-	//	/** Store the defined functions to writer 'w' */
-	//
-	//	f.Store(w);
-	//	if LastAnswer IS R.Rational { w.WriteLInt(1) } else { w.WriteLInt(0) };
-	//	LastAnswer.Store(w)
-	//	} // Store;
-	//	
-	//
+	func encodeWithCoder (encoder: NSCoder) {
+		encoder.encodeObject(self.LastAnswer)
+		encoder.encodeObject(self.CommandLine)
+		nState.Save(encoder)
+		Functions.Save(encoder)
+		Variables.Save(encoder)
+	}
 	
 	private func StoreVariable (Location: String, Value : xNumber) {
 		/* Store the `Value' argument in the `Location' variable. */
@@ -75,20 +76,12 @@ class Equation {
 	
 	
 	private func Min (a: xNumber, b: xNumber) -> xNumber {
-		if a.cmp(b) > 0 {
-			return b
-		} else {
-			return a
-		}
+		return a > b ? b : a
 	} // Min;
 	
 	
 	private func Max (a: xNumber, b: xNumber) -> xNumber {
-		if a.cmp(b) > 0 {
-			return a
-		} else {
-			return b
-		}
+		return a > b ? a : b
 	} // Max;
 
 
