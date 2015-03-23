@@ -133,12 +133,12 @@ enum NumberType {
 
 // initialization and constants
 + (void)initialize;
-+ (xNumber *)pi;
-+ (xNumber *)eps;
-+ (xNumber *)ln2;
-+ (xNumber *)ln10;
-+ (xNumber *)zero;
-+ (xNumber *)one;
++ (xNumber *)pif;
++ (xNumber *)epsf;
++ (xNumber *)ln2f;
++ (xNumber *)ln10f;
++ (xNumber *)zerof;
++ (xNumber *)onef;
 
 @end
 

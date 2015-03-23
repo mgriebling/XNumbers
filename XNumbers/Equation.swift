@@ -30,8 +30,8 @@ class Equation : NSCoding {
 	
 	*/
 	
-	let zero = xNumber.zero()
-	let one = xNumber.one()
+	let zero = xNumber.zero
+	let one = xNumber.one
 	
 	var Token: Scanner.Tokens
 	var CommandLine : String
@@ -321,7 +321,7 @@ class Equation : NSCoding {
 		case .If         : Token = Scanner.Get(); Result = IfCondition();
 		case .True       : Token = Scanner.Get(); Result = one
 		case .False      : Token = Scanner.Get(); Result = zero
-		case .Pi         : Token = Scanner.Get(); Result = xNumber.pi()
+		case .Pi         : Token = Scanner.Get(); Result = xNumber.pi
 		case .Complement : Next(); i = Result.onesComp(); FixI()
 		case .Sin        : Next(); Result = Result.sin()
 		case .Cos        : Next(); Result = Result.cos()
@@ -488,7 +488,7 @@ class Equation : NSCoding {
 			case .Inverse   : Token = Scanner.Get(); tmp = one.div(tmp)
 			case .Factorial : Token = Scanner.Get();
 				xtmp = tmp.factorial()
-				tmp = xNumber(real: xtmp, andImaginary: xNumber.zero())
+				tmp = xNumber(real: xtmp, andImaginary: zero)
 			case .PercentOf : Token = Scanner.Get()
 				Result = tmp.div(xNumber(int: 100))
 				tmp = Factor()

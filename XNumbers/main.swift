@@ -13,4 +13,10 @@ eq.Evaluate(eq.CommandLine)
 eq.CommandLine = "10a"
 println("Equation \(eq.CommandLine) = \(eq.Evaluate(eq.CommandLine))")
 
-
+// singleton example
+//class var sharedInstance: VehicleList {
+//	struct Singleton {
+//		static let instance = VehicleList()
+//	}
+//	return Singleton.instance
+//}

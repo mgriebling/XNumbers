@@ -293,14 +293,14 @@ static NSString * toString (Real::Real const &xi) {
 	if (rational) {
 		return [xNumber realWithRawReal:z.RealPart()];
 	}
-	return xNumber.zero;
+	return xNumber.zerof;
 }
 
 - (xNumber *) denominator {
 	if (rational) {
 		return [xNumber realWithRawReal:z.ImagPart()];
 	}
-	return xNumber.one;
+	return xNumber.onef;
 }
 
 
@@ -811,7 +811,7 @@ static xNumber * powerRational (Complex::Complex a, long b) {
 	Complex::InitComplex();		// initialize the Integer, Real, & Complex C++ classes
 }
 
-+ (xNumber *)zero {
++ (xNumber *)zerof {
 	static xNumber *zerov;
 	if (zerov == NULL) {
 		zerov = [xNumber realWithDouble:0];
@@ -819,7 +819,7 @@ static xNumber * powerRational (Complex::Complex a, long b) {
 	return zerov;
 }
 
-+ (xNumber *)one {
++ (xNumber *)onef {
 	static xNumber *onev;
 	if (onev == NULL) {
 		onev = [xNumber realWithDouble:1];
@@ -827,7 +827,7 @@ static xNumber * powerRational (Complex::Complex a, long b) {
 	return onev;
 }
 
-+ (xNumber *)pi {
++ (xNumber *)pif {
 	static xNumber *piv;
 	if (piv == NULL) {
 		piv = [xNumber realWithRawReal:Real::pi];
@@ -835,7 +835,7 @@ static xNumber * powerRational (Complex::Complex a, long b) {
 	return piv;
 }
 
-+ (xNumber *)eps {
++ (xNumber *)epsf {
 	static xNumber *epsv;
 	if (epsv == NULL) {
 		epsv = [xNumber realWithRawReal:Real::eps];
@@ -843,7 +843,7 @@ static xNumber * powerRational (Complex::Complex a, long b) {
 	return epsv;
 }
 
-+ (xNumber *)ln2 {
++ (xNumber *)ln2f {
 	static xNumber *ln2v;
 	if (ln2v == NULL) {
 		ln2v = [xNumber realWithRawReal:Real::ln2];
@@ -851,7 +851,7 @@ static xNumber * powerRational (Complex::Complex a, long b) {
 	return ln2v;
 }
 
-+ (xNumber *)ln10 {
++ (xNumber *)ln10f {
 	static xNumber *ln10v;
 	if (ln10v == NULL) {
 		ln10v = [xNumber realWithRawReal:Real::ln10];

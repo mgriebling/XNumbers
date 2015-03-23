@@ -279,7 +279,7 @@ struct Scanner {
 				if status == .Okay {  /* all went OK */
 					s.val = num
 				} else {
-					s.val = xNumber.zero()
+					s.val = xNumber.zero
 					Mark(.IllegalNumber)
 				}
 			} // UnsignInt;
@@ -319,10 +319,10 @@ struct Scanner {
 			if !Constant.isEmpty {
 				UnsignInt()
 				if (s.ch == "ⅈ") || (s.ch == "i") {
-					s.val = xNumber(real: xNumber.zero(), andImaginary: s.val.real()); Read()
+					s.val = xNumber(real: xNumber.zero, andImaginary: s.val.real()); Read()
 				}
 			} else {
-				s.val = xNumber.zero()
+				s.val = xNumber.zero
 				Mark(.IllegalNumber) /* illegal number or constant */
 			}
 		} // number;
@@ -397,7 +397,7 @@ struct Scanner {
 					} else if IsAlphaNumeric(s.ch) {
 						--s.pos; s.ch = "e"; Variable()
 					} else {
-						s.val = xNumber.one().exp()
+						s.val = xNumber.one.exp()
 					}
 				case "*"     :
 					Read(); sym = .Times;
