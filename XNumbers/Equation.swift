@@ -275,15 +275,6 @@ class Equation : NSCoding {
 			return tmp
 		} // Args;
 		
-		func FixR () {
-			Result = t
-		} // FixR;
-		
-		func FixI () {
-			Result = i
-		} // FixI;
-		
-		
 		switch Token {
 		case .LeftBrace :
 			Token = Scanner.Get()
@@ -296,7 +287,7 @@ class Equation : NSCoding {
 		case .VertBrace :
 			Token = Scanner.Get()
 			Result = Expression()
-			t = Result.polarMag(); FixR()
+			Result = Result.polarMag()
 			if Token == .VertBrace {
 				Token = Scanner.Get()
 			} else {
@@ -306,23 +297,11 @@ class Equation : NSCoding {
 		case .Number :
 			Result = Scanner.s.val
 			Token = Scanner.Get()
-			/*
-			if Token = .Number {
-			Result = Result.mul(Scanner.val);
-			Token = Scanner.Get()
-			} else if Token = .LeftBrace {
-			Token = Scanner.Get(); Expression(tmp);
-			if Token = .RightBrace { Token = Scanner.Get();
-			} else { Scanner.Mark(X.MismatchBraces)
-			};
-			Result = Result.mul(tmp)
-			}
-			*/
 		case .If         : Token = Scanner.Get(); Result = IfCondition();
 		case .True       : Token = Scanner.Get(); Result = one
 		case .False      : Token = Scanner.Get(); Result = zero
 		case .Pi         : Token = Scanner.Get(); Result = xNumber.pi
-		case .Complement : Next(); i = Result.onesComp(); FixI()
+		case .Complement : Next(); Result = Result.onesComp()
 		case .Sin        : Next(); Result = Result.sin()
 		case .Cos        : Next(); Result = Result.cos()
 		case .Tan        : Next(); Result = Result.tan()
@@ -434,27 +413,21 @@ class Equation : NSCoding {
 			}
 			Result = zero; Token = Scanner.Get()
 		case .iToken     : Token = Scanner.Get(); Result = xNumber(real: zero, andImaginary: one)
-		case .rToken     : Next(); t = Result.polarMag(); FixR()
-		case .Theta      : Next(); t = Result.polarAngle(); FixR()
+		case .rToken     : Next(); Result = Result.polarMag()
+		case .Theta      : Next(); Result = Result.polarAngle()
 		case .ImagPart   : Next(); Result = Result.imaginary()
 		case .RealPart   : Next(); Result = Result.real()
-		case .IntPart    : Next(); t = Result.entier(); FixR()
-		case .FracPart   : Next(); t = Result.fraction(); FixR()
-		case .SignOf     :
-			Next();
-			if Result.sign() > 0 {
-				Result = one
-			} else {
-				Result = one.negate()
-			}
+		case .IntPart    : Next(); Result = Result.entier()
+		case .FracPart   : Next(); Result = Result.fraction()
+		case .SignOf     : Next(); Result = xNumber(int: Result.sign())
 		case .Abs        : Next(); Result = Result.abs()
 		case .Min        : Result = Args(Min)
 		case .Max        : Result = Args(Max)
 		case .Sum        : Result = Args(Add)
-		case .Average    : n = 1; tmp = Args(Avg); Result = tmp.div(xNumber(double: Double(n)))
+		case .Average    : n = 1; tmp = Args(Avg); Result = tmp.div(xNumber(int: n))
 		case .Multiply   : Result = Args(Mul)
 		case .Conj       : Next(); Result = Result.conj()
-		case .Rand       : Token = Scanner.Get(); t = xNumber.random(); FixR()
+		case .Rand       : Token = Scanner.Get(); Result = xNumber.random()
 		default: Scanner.Mark(.IllegalOperator); Result = zero
 		}
 		if status != .Okay { Scanner.Mark(status) }
@@ -671,19 +644,5 @@ class Equation : NSCoding {
 		}
 		return nil
 	} // Evaluate;
-	
-
-//	func Load * (r: Storable.Reader) RAISES IO.Error;
-//	/** Load functions from the reader 'r' */
-//	var
-//	type: Int
-//	n: R.Rational;
-//	
-//	f.Load(r);
-//	r.ReadLInt(type);
-//	if type = 1 { NEW(n); n.Load(r); LastAnswer = n
-//	} else { NEW(LastAnswer); LastAnswer.Load(r)
-//	}
-//	} // Load;
 	
 }
